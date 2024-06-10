@@ -1,0 +1,62 @@
+﻿@using Services;
+
+<MudThemeProvider Theme="_theme" IsDarkMode="true" />
+<MudDialogProvider FullWidth="true"
+                   MaxWidth="MaxWidth.Small"
+                   CloseButton="false"
+                   DisableBackdropClick="true"
+                   Position="DialogPosition.TopCenter"
+                   CloseOnEscapeKey="true" />
+
+<MudLayout>
+    <MudDrawer @bind-Open="@DrawOpen" Elevation="2">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">PZ Recorder</MudText>
+        </MudDrawerHeader>
+        <MudNavMenu>
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Checklist" Href="/records">@LD.Record</MudNavLink>
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dataset" Href="/kind-manager">@LD.KindManager</MudNavLink>
+            <MudDivider Class="my-4" />
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CalendarMonth" Href="/daily-week">@LD.Daily</MudNavLink>
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.EditCalendar" Href="/daily-manager">@LD.DailyManager</MudNavLink>
+            <MudDivider Class="my-4" />
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Settings" Href="/setting">@LD.Setting</MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Filled.ExitToApp" OnClick="OnExitClick">@LD.Exit</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent Style="padding-top: 0; height: 100%; background-color: var(--mud-palette-background-grey);">
+        <Router AppAssembly="typeof(Program).Assembly">
+            <Found Context="routeData">
+                <RouteView RouteData="routeData" />
+            </Found>
+            <NotFound>
+                <div class="content">
+                    <h1>PAGE NOT FOUND</h1>
+                    <p>
+                        The page you have requested could not be found. <a href="/">Return to the home page.</a>
+                    </p>
+                </div>
+            </NotFound>
+        </Router>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private MudTheme _theme = new();
+    bool DrawOpen = true;
+
+    private void OnExitClick()
+    {
+        Application.Exit();
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        Translate.LanguageChanged += (sender, e) =>
+        {
+            StateHasChanged();
+        };
+    }
+}

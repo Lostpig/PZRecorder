@@ -1,0 +1,34 @@
+﻿@page "/setting";
+
+@using Services;
+
+<MudPaper Width="100%" Height="100%" class="pa-4">
+    <MudSelect T="string" @bind-Value="language" @bind-Value:after="OnLanguageChanged" Label="@LD.Language" Class="mb-4">
+        @foreach(var l in languages)
+        {
+            <MudSelectItem Value="l">@l</MudSelectItem>
+        }
+    </MudSelect>
+    <MudDivider Class="my-2" />
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ImportExport" Color="Color.Tertiary">@LD.Import</MudButton>
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ImportExport" Color="Color.Primary">@LD.Export</MudButton>
+</MudPaper>
+
+@code {
+    private string language;
+    private IList<string> languages;
+
+    private void OnLanguageChanged()
+    {
+        Translate.ChangeLanguage(language);
+        StateHasChanged();
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        language = Translate.Current;
+        languages = Translate.Languages;
+    }
+}

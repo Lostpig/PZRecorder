@@ -1,0 +1,254 @@
+﻿@page "/records";
+
+@using Services;
+@using Data;
+@using Dialogs;
+
+<div class="d-flex flex-column" style="height: 100%; width: 100%; min-width: 1080px; position: relative; background-color: var(--mud-palette-background-grey);">
+    @if (disable)
+    {
+        <MudText Color="Color.Error">@LD.NoKindsError</MudText>
+    }
+    else
+    {
+        <MudTabs Elevation="2" Rounded="true" @bind-ActivePanelIndex="kindIndex" @bind-ActivePanelIndex:after="OnFilterChanged">
+            @foreach (var kind in kinds)
+            {
+                <MudTabPanel Text="@kind.Name" ID="@kind.Id" />
+            }
+        </MudTabs>
+
+        <div class="records-container">
+            <div class="records-tool-panel pa-3">
+                <MudPaper Elevation="2" Class="pa-2" >
+                    <MudTextField T="string" @bind-Value="searchString" @bind-Value:after="OnFilterChanged" Placeholder="@LD.Search" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                    <MudText Typo="Typo.h6" Class="mt-4">@LD.State</MudText>
+                    <MudChipSet Mandatory="false" @bind-SelectedChip="selectedStateChip" @bind-SelectedChip:after="OnFilterChanged">
+                        <MudChip Value="0" Variant="Variant.Text" Color="Color.Default" SelectedColor="Color.Primary" Size="Size.Medium">@LD.Wish</MudChip>
+                        <MudChip Value="1" Variant="Variant.Text" Color="Color.Default" SelectedColor="Color.Primary" Size="Size.Medium">@LD.Doing</MudChip>
+                        <MudChip Value="2" Variant="Variant.Text" Color="Color.Default" SelectedColor="Color.Primary" Size="Size.Medium">@LD.Complete</MudChip>
+                        <MudChip Value="3" Variant="Variant.Text" Color="Color.Default" SelectedColor="Color.Primary" Size="Size.Medium">@LD.Giveup</MudChip>
+                    </MudChipSet>
+                    <MudDivider Class="my-2" />
+                    <MudText Typo="Typo.h6">@LD.PublishYear</MudText>
+                    <MudChipSet Mandatory="false" @bind-SelectedChip="selectedYearChip" @bind-SelectedChip:after="OnFilterChanged">
+                        @foreach(var year in years)
+                        {
+                            <MudChip Value="year" Variant="Variant.Text" Color="Color.Default" SelectedColor="Color.Primary" Size="Size.Medium">@year</MudChip>
+                        }
+                    </MudChipSet>
+                    <MudDivider Class="my-2" />
+                    <MudText Typo="Typo.h6">@LD.PublishMonth</MudText>
+                    <MudChipSet Mandatory="false" @bind-SelectedChip="selectedMonthChip" @bind-SelectedChip:after="OnFilterChanged">
+                        @for (int i = 1; i <= 12; i++)
+                        {
+                            var month = i;
+                            <MudChip Class="month-chip" Value="month" Variant="Variant.Text" Color="Color.Default" SelectedColor="Color.Primary" Size="Size.Medium">@month</MudChip>
+                        }
+                    </MudChipSet>
+                </MudPaper>
+                <MudButton Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           Color="Color.Primary"
+                           Style="text-transform:none"
+                           Class="mt-4"
+                           OnClick="OnAddClick">@LD.Add</MudButton>
+            </div>
+            <div class="records-list pa-3">
+                @if (records.Count == 0)
+                {
+                    <div class="no-data-container">
+                        <MudText Color="Color.Error">@LD.NoData</MudText>
+                    </div>
+                }
+                @foreach(var record in records)
+                {
+                    MudBlazor.Color stateColor = record.State switch
+                    {
+                        RecordState.Wish => Color.Warning,
+                        RecordState.Doing => Color.Primary,
+                        RecordState.Giveup => Color.Secondary,
+                        RecordState.Complete => Color.Success,
+                        _ => Color.Default
+                    };
+                    <MudCard Elevation="2" Class="pl-4 pr-2 py-2 d-flex flex-row mb-4">
+                        <div class="flex-1">
+                            <div>
+                                <MudText Typo="Typo.h6" Class="flex-1" Inline="true" Color="Color.Info">@record.Name</MudText>
+                                <MudText Typo="Typo.subtitle1" Class="flex-1" Inline="true" Style="color: var(--mud-palette-text-secondary);">@record.Alias</MudText>
+                            </div>
+                            <div class="mt-2">
+                                <MudText Typo="Typo.body1" Class="mr-4" Inline="true">@record.Episode / @record.EpisodeCount</MudText>
+                                <MudText Typo="Typo.body1" Class="ml-4" Inline="true">@record.PublishYear-@record.PublishMonth</MudText>
+                                <MudText Typo="Typo.body1" Class="fl-r" Inline="true">@record.ModifyDate.ToString("yyyy-MM-dd HH:mm")</MudText>
+                            </div>
+                            <MudText Typo="Typo.body2" Class="mt-4" Style="color: var(--mud-palette-text-secondary);">@record.Remark</MudText>
+                        </div>
+                        <MudDivider Vertical="true" FlexItem="true" Class="mx-2" />
+                        <MudStack Row="false">
+                            <MudText Color="stateColor" Typo="Typo.body1" Style="text-align: center;">@record.StateText</MudText>
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="@LD.Edit" OnClick="() => OnEditClick(record.Id)"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" aria-label="@LD.Delete" OnClick="() => OnDeleteClick(record.Id)"></MudIconButton>
+                        </MudStack>
+                    </MudCard>
+                }
+                <div class="d-flex flex-row align-center">
+                    <MudPagination @bind-Selected="page" @bind-Selected:after="OnPageChanged"
+                                   ShowFirstButton="true" ShowLastButton="true"
+                                   Count="pageCount"
+                                   Class="pa-4 flex-1" />
+                    <MudText>@startCount - @endCount / @totalCount</MudText>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Inject] private IDialogService DialogService { get; set; }
+    private bool disable = false;
+
+    private IList<Kind> kinds = new List<Kind>();
+    private IList<Record> records = new List<Record>();
+    private IList<int> years = new List<int>();
+
+    private string searchString = "";
+    private int kindIndex = 0;
+    private int page = 1;
+    private int pageCount = 0;
+    private int pageSize = 10;
+
+    private MudChip? selectedStateChip;
+    private MudChip? selectedYearChip;
+    private MudChip? selectedMonthChip;
+
+    private int totalCount = 0;
+    private int startCount = 0;
+    private int endCount = 0;
+
+    private void OnFilterChanged()
+    {
+        page = 1;
+
+        LoadPageCount();
+        LoadRecords();
+        StateHasChanged();
+    }
+
+    private void OnPageChanged()
+    {
+        LoadRecords();
+        StateHasChanged();
+    }
+
+    private void LoadPageCount()
+    {
+        int kindId = kinds[kindIndex].Id;
+        RecordState? recordState = selectedStateChip?.Value is not null ? (RecordState)selectedStateChip.Value : null;
+        int? year = selectedYearChip?.Value is not null ? (int)selectedYearChip.Value : null;
+        int? month = selectedMonthChip?.Value is not null ? (int)selectedMonthChip.Value : null;
+
+        totalCount = RecordService.GetCount(kindId, searchString.Trim(), year, month, recordState);
+        int n = totalCount % pageSize;
+        pageCount = (totalCount - n) / pageSize + (n > 0 ? 1 : 0);
+    }
+    private void LoadRecords()
+    {
+        int kindId = kinds[kindIndex].Id;
+        int offset = (page - 1) * pageSize;
+        int limit = pageSize;
+        RecordState? recordState = selectedStateChip?.Value is not null ? (RecordState)selectedStateChip.Value : null;
+        int? year = selectedYearChip?.Value is not null ? (int)selectedYearChip.Value : null;
+        int? month = selectedMonthChip?.Value is not null ? (int)selectedMonthChip.Value : null;
+
+        records = RecordService.GetRecords(kindId, searchString, year, month, recordState, limit, offset);
+        startCount = offset + 1;
+        endCount = offset + records.Count;
+    }
+    private void LoadYears()
+    {
+        years = RecordService.GetYears();
+    }
+
+    private async void OnAddClick()
+    {
+        int kindId = kinds[kindIndex].Id;
+
+        DialogParameters<RecordDialog> paramters = new();
+        paramters.Add(d => d.IsEdit, false);
+        paramters.Add(d => d.RecordId, -1);
+        paramters.Add(d => d.KindId, kindId);
+
+        var dialog = await DialogService.ShowAsync<RecordDialog>(LD.AddRecord, paramters);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            page = 1;
+            LoadRecords();
+            LoadPageCount();
+            LoadYears();
+            StateHasChanged();
+        }
+    }
+    private async void OnEditClick(int id)
+    {
+        int kindId = kinds[kindIndex].Id;
+
+        DialogParameters<RecordDialog> paramters = new();
+        paramters.Add(d => d.IsEdit, true);
+        paramters.Add(d => d.RecordId, id);
+        paramters.Add(d => d.KindId, kindId);
+
+        var dialog = await DialogService.ShowAsync<RecordDialog>(LD.AddRecord, paramters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            LoadRecords();
+            StateHasChanged();
+        }
+    }
+    private async void OnDeleteClick(int id)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            LD.Warning,
+            LD.SureToDelete,
+            yesText: LD.Delete, cancelText: LD.Cancel);
+        if (result != null && result == true)
+        {
+            try
+            {
+                RecordService.DeleteRecord(id);
+                if (records.Count == 1 && page > 1) page = page - 1;
+
+                int year = selectedYearChip?.Value is not null ? (int)selectedYearChip.Value : 0;
+
+                LoadRecords();
+                LoadPageCount();
+                LoadYears();
+                if (!years.Contains(year)) selectedYearChip = null;
+
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await DialogService.ShowMessageBox(LD.Error, ex.Message);
+            }
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        kinds = KindService.GetKinds();
+        if (kinds.Count == 0)
+        {
+            disable = true;
+            return;
+        }
+
+        LoadRecords();
+        LoadPageCount();
+        LoadYears();
+    }
+}

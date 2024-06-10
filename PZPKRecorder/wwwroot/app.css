@@ -1,0 +1,95 @@
+html, body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+#app {
+    height: 100vh;
+}
+
+table {
+    table-layout: fixed;
+}
+
+.text-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ta-c {
+    text-align: center;
+}
+.ta-l {
+    text-align: left;
+}
+.ta-r { 
+    text-align: right; 
+}
+.fl-l {
+    float: left;
+}
+.fl-r {
+    float: right;
+}
+
+.no-data-container {
+    text-align: center;
+    padding: 32px;
+    font-size: large;
+}
+
+.records-container {
+    flex-grow: 1;
+    padding-right: 300px;
+    height: 100%;
+    overflow-y: auto;
+}
+.records-tool-panel {
+    position: absolute;
+    right: calc(50% - 492px);
+    top: 48px;
+    width: 300px;
+    float: right;
+}
+.records-list {
+    max-width: 720px;
+    margin: auto;
+}
+
+.month-chip {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    text-align: center;
+}
+
+td.dailyweek-cell,
+th.dailyweek-cell {
+    width: 80px;
+    text-align: center !important;
+}
+
+.today-cell {
+    background-color: var(--mud-palette-background-grey) !important;
+}
+
+.daily-statistic {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+.daily-statistic .item {
+    width: 12px;
+    height: 12px;
+    margin: 4px;
+}
+.daily-statistic .checkin {
+    background-color: var(--mud-palette-success) !important;
+}
+.daily-statistic .notcheck {
+    background-color: var(--mud-palette-error) !important;
+}
+.daily-statistic .unknown {
+    background-color: var(--mud-palette-action-default) !important;
+}

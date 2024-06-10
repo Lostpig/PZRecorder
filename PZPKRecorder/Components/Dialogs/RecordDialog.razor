@@ -1,0 +1,110 @@
+﻿@using Data;
+@using Services;
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="success">
+            <MudTextField @bind-Value="record.Name" Label="@LD.Name" Variant="Variant.Text" MaxLength="50" Counter="50" 
+                          Immediate="true" Required="true" RequiredError="@LD.RequiredError"></MudTextField>
+            <MudTextField @bind-Value="record.Alias" Label="@LD.Alias" Variant="Variant.Text" MaxLength="50" Counter="50"
+                          Immediate="true"></MudTextField>
+            <MudTextField @bind-Value="record.Remark" Label="@LD.Remark" Variant="Variant.Text" MaxLength="100" Counter="100" Immediate="true"></MudTextField>
+            <MudDivider Class="my-2" />
+            <MudToggleGroup T="int" Outline="true" Delimiters="true" @bind-Value="stateInt">
+                <MudToggleItem Value="0" Text="@LD.Wish" />
+                <MudToggleItem Value="1" Text="@LD.Doing" />
+                <MudToggleItem Value="2" Text="@LD.Complete" />
+                <MudToggleItem Value="3" Text="@LD.Giveup" />
+            </MudToggleGroup>
+            <MudDivider Class="my-2" />
+            <MudStack Row="true">
+                <MudNumericField @bind-Value="record.Episode" Label="@LD.Episode" Variant="Variant.Text" Min="0" Max="100" />
+                <MudNumericField @bind-Value="record.EpisodeCount" Label="@LD.EpisodeCount" Variant="Variant.Text" Min="1" Max="100" />
+            </MudStack>
+            <MudDivider Class="my-2" />
+            <MudDatePicker Label="@LD.PublishDate"
+                           @bind-Date="publishDate"
+                           OpenTo="OpenTo.Year" 
+                           FixDay="1" DisableToolbar="true"
+                           DateFormat="yyyy-MM" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@LD.Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit" Disabled="@(!success)">@LD.OK</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public bool IsEdit { get; set; }
+    [Parameter] public int RecordId { get; set; }
+    [Parameter] public int KindId { get; set; }
+
+    private MudForm form;
+    private bool success = false;
+
+    private Record record;
+    private int stateInt = 0;
+    private DateTime? publishDate = DateTime.Today;
+
+    private bool CheckRecord() 
+    {
+        if (string.IsNullOrWhiteSpace(record.Name) || record.Name.Length > 50)
+        {
+            return false;
+        }
+        if (record.Remark.Length > 100)
+        {
+            return false;
+        }
+
+        return true;
+    }
+    void Submit()
+    {
+        if (!success) 
+        {
+            return;
+        }
+
+        record.State = (RecordState)stateInt;
+        record.PublishYear = publishDate?.Year ?? 0;
+        record.PublishMonth = publishDate?.Month ?? 0;
+        record.ModifyDate = DateTime.Now;
+
+        if (IsEdit) RecordService.UpdateRecord(record);
+        else RecordService.InsertRecord(record);
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+    void Cancel() => MudDialog.Cancel();
+
+    protected override void OnInitialized() 
+    {
+        if (IsEdit) 
+        {
+            record = RecordService.GetRecord(RecordId);
+            stateInt = (int)record.State;
+            publishDate = new DateTime(record.PublishYear, record.PublishMonth, 1);
+            success = true;
+        }
+        else 
+        {
+            record = new Record()
+                {
+                    Name = "",
+                    Alias = "",
+                    Remark = "",
+                    Episode = 0,
+                    EpisodeCount = 1,
+                    State = RecordState.Wish,
+                    Kind = KindId,
+                    PublishYear = DateTime.Today.Year,
+                    PublishMonth = DateTime.Today.Month
+                };
+        }
+    }
+
+
+}

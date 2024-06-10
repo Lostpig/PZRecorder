@@ -1,0 +1,129 @@
+﻿@using Data;
+@using Services;
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6">@daily.Name</MudText>
+        <MudDivider/>
+        <MudText>@dateText</MudText>
+        <MudText>@checkinText</MudText>
+        <div class="mt-6">
+            <MudToolBar Class="mud-elevation-2">
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowLeft" OnClick="() => OnYearChanged(-1)"></MudIconButton>
+                <MudSpacer />
+                <MudText Class="ta-c">@year</MudText>
+                <MudSpacer />
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowRight" OnClick="() => OnYearChanged(1)"></MudIconButton>
+            </MudToolBar>
+            <div class="daily-statistic">
+                @for (int i = 0; i < dailyDatas.Length; i++)
+                {
+                    string date = yearFirstDay.AddDays(i).ToString("yyyy-MM-dd");
+                    string cls = dailyDatas[i] == 1 ? "checkin" : dailyDatas[i] == 2 ? "notcheck" : "unknown";
+                    <MudTooltip Text="@date">
+                        <div class="@("item " + cls)"></div>
+                    </MudTooltip>
+                }
+            </div>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Cancel">@LD.OK</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public int DailyId { get; set; }
+    private Daily daily;
+    IList<DailyWeek> datas;
+
+    private int year = 2024;
+    private int[] dailyDatas;
+    private DateOnly yearFirstDay;
+
+    private string dateText = "";
+    private string checkinText = "";
+
+    void Cancel() => MudDialog.Cancel();
+
+    private void OnYearChanged(int add)
+    {
+        year = year + add;
+        UpdateYearDailyData();
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        year = DateTime.Today.Year;
+        daily = DailyService.GetDaily(DailyId);
+        datas = DailyService.GetDailyDatas(daily.Id);
+
+        int checkinCount = 0;
+        int firstDayNum = 0;
+        int lastDayNum = 0;
+
+        foreach(var dw in datas)
+        {
+            for (int d = 1; d <= 7; d++)
+            {
+                DayOfWeek dayOfWeek = d == 7 ? DayOfWeek.Sunday : (DayOfWeek)d;
+                int dayNum = dw.MondayDay + d - 1;
+
+                if (dw[dayOfWeek] != 0)
+                {
+                    if (dw[dayOfWeek] == 1) checkinCount++;
+                    if (dayNum < firstDayNum || firstDayNum == 0) firstDayNum = dayNum;
+                    if (dayNum > lastDayNum || firstDayNum == 0) lastDayNum = dayNum;
+                }
+            }
+        }
+
+        if (checkinCount > 0)
+        {
+            var firstDay = DateOnly.FromDayNumber(firstDayNum);
+            var lastDay = DateOnly.FromDayNumber(lastDayNum);
+            int totalDays = lastDayNum - firstDayNum + 1;
+            double checkinPrec = (double)checkinCount / totalDays * 100.0;
+
+            dateText = String.Format(LD.StatisticTextDate, firstDay.ToString("yyyy-MM-dd"), lastDay.ToString("yyyy-MM-dd"));
+            checkinText = string.Format(LD.StatisticTextCount, totalDays, checkinCount, checkinPrec.ToString("F2"));
+        } 
+        else
+        {
+            dateText = LD.NoStatisticData;
+        }
+
+        UpdateYearDailyData();
+    }
+    private void UpdateYearDailyData()
+    {
+        yearFirstDay = new DateOnly(year, 1, 1);
+        DateOnly yearLastDay = new DateOnly(year, 12, 31);
+
+        dailyDatas = new int[yearLastDay.DayOfYear];
+        for (int i = 0; i < dailyDatas.Length; i++)
+        {
+            dailyDatas[i] = 0;
+        }
+
+        foreach (var dw in datas)
+        {
+            for(int d = 1; d <= 7; d++)
+            {
+                DayOfWeek dayOfWeek = d == 7 ? DayOfWeek.Sunday : (DayOfWeek)d;
+                int dayNum = dw.MondayDay + d - 1;
+
+                int diff = dayNum - yearFirstDay.DayNumber;
+                if (diff >= 0 && diff < dailyDatas.Length)
+                {
+                    dailyDatas[diff] = dw[dayOfWeek];
+                }
+            }
+        }
+
+        StateHasChanged();
+    }
+}

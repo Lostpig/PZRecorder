@@ -1,0 +1,58 @@
+﻿@using Data;
+@using Services;
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@success">
+            <MudTextField @bind-Value="daily.Name" Label="@LD.Name"
+                          Immediate="true"
+                          Variant="Variant.Text" MaxLength="10" Counter="10"
+                          Required="true" RequiredError="@LD.RequiredError"></MudTextField>
+            <MudTextField @bind-Value="daily.Alias" Label="@LD.Alias"
+                          Immediate="true"
+                          Variant="Variant.Text" MaxLength="30" Counter="30"></MudTextField>
+            <MudDivider Class="my-2" />
+            <MudToggleGroup T="DailyState" Outline="true" Delimiters="true" @bind-Value="daily.State">
+                <MudToggleItem Value="DailyState.Enabled" Text="@LD.Enabled" />
+                <MudToggleItem Value="DailyState.Disabled" Text="@LD.Disabled" />
+            </MudToggleGroup>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@LD.Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit" Disabled="@(!success)">@LD.OK</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    private MudForm form;
+    private bool success = false;
+    private Daily daily;
+
+    protected override void OnInitialized()
+    {
+        daily = new Daily()
+            {
+                Name = "",
+                Alias = "",
+                State = DailyState.Enabled,
+                Remark = ""
+            };
+    }
+
+    void Submit()
+    {
+        if (!success)
+        {
+            return;
+        }
+
+        daily.ModifyDate = DateTime.Now;
+        DailyService.InsertDaily(daily);
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+    void Cancel() => MudDialog.Cancel();
+}

@@ -1,0 +1,25 @@
+﻿<div>
+    @if (DayState == 1)
+    {
+        <MudIconButton Icon="@Icons.Material.Outlined.BookmarkAdded" Color="Color.Success" OnClick="OnChangeClick"></MudIconButton>
+    }
+    else if (DayState == 2)
+    {
+        <MudIconButton Icon="@Icons.Material.Outlined.BookmarkRemove" Color="Color.Error" OnClick="OnChangeClick"></MudIconButton>
+    }
+    else
+    {
+        <MudIconButton Icon="@Icons.Material.Outlined.BookmarkBorder" Color="Color.Default" OnClick="OnChangeClick"></MudIconButton>
+    }
+</div>
+
+@code {
+    [Parameter] public int DayState { get; set; } = 0;
+    [Parameter] public EventCallback<int> DayStateChanged { get; set; }
+
+    private void OnChangeClick()
+    {
+        int nextState = DayState >= 2 ? 0 : DayState + 1;
+        DayStateChanged.InvokeAsync(nextState);
+    }
+}

@@ -1,0 +1,133 @@
+﻿@page "/daily-week";
+
+@using Services;
+@using Data;
+@using PZPKRecorder.Components.Controls;
+
+<MudPaper Width="100%" Height="100%" class="d-flex flex-column">
+    <MudToolBar Class="mud-elevation-2">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowLeft" OnClick="() => WeekChange(-1)"></MudIconButton>
+        <MudSpacer />
+        <MudText Class="ta-c">@weekText</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowRight" OnClick="() => WeekChange(1)"></MudIconButton>
+    </MudToolBar>
+    <MudSimpleTable Hover="true" FixedHeader="true" Elevation="0" Style="height: calc(100% - 76px); margin-top: 12px;">
+        <thead>
+            <tr>
+                <th></th>
+                @foreach (var d in weekDays)
+                {
+                    string todayCls = d == today ? "today-cell" : "";
+                    <th class="@todayCls dailyweek-cell ta-c">
+                        <MudText>@(WeekdayName(d.DayOfWeek, true))</MudText>
+                        <MudText Typo="Typo.caption" Style="color: var(--mud-palette-text-secondary);">@(formatDay(d))</MudText>
+                    </th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var (d, dw) in datas)
+            {
+                <tr>
+                    <td>@d.Name</td>
+                    @foreach (var day in weekDays)
+                    {
+                        string todayCls = day == today ? "today-cell" : "";
+                        <td class="@todayCls dailyweek-cell ta-c">
+                            <WeekDailyMarker @bind-DayState="dw[day.DayOfWeek]" @bind-DayState:after="() => AfterDayStateChanged(dw)"></WeekDailyMarker>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+</MudPaper>
+
+@code {
+    private string weekText = "";
+    private DateOnly mondayDate;
+    private DateOnly today;
+    private DateOnly[] weekDays = new DateOnly[7];
+    private IList<Daily> dailies = new List<Daily>();
+    private Dictionary<Daily, Data.DailyWeek> datas = new Dictionary<Daily, Data.DailyWeek>();
+
+    private string formatDay(DateOnly date)
+    {
+        return $"{date.Month}/{date.Day}";
+    }
+    private string WeekdayName(DayOfWeek d, bool isShort)
+    {
+        return d switch
+        {
+            DayOfWeek.Sunday => isShort ? LD.Sun : LD.Sunday,
+            DayOfWeek.Monday => isShort ? LD.Mon : LD.Monday,
+            DayOfWeek.Tuesday => isShort ? LD.Tue : LD.Tuesday,
+            DayOfWeek.Wednesday => isShort ? LD.Wed : LD.Wednesday,
+            DayOfWeek.Thursday => isShort ? LD.Thu : LD.Thursday,
+            DayOfWeek.Friday => isShort ? LD.Fri : LD.Friday,
+            DayOfWeek.Saturday => isShort ? LD.Sat : LD.Saturday,
+            _ => ""
+        };
+    }
+
+    protected override void OnInitialized()
+    {
+        today = DateOnly.FromDateTime(DateTime.Today);
+
+        int diffDays = 0;
+        if (today.DayOfWeek == DayOfWeek.Sunday) diffDays = 6;
+        else diffDays = (int)today.DayOfWeek - 1;
+
+        mondayDate = DateOnly.FromDayNumber(today.DayNumber - diffDays);
+        dailies = DailyService.GetDailies(DailyState.Enabled);
+
+        UpdatePage();
+    }
+
+    private void WeekChange(int change)
+    {
+        if (change > 0) mondayDate = mondayDate.AddDays(7);
+        else mondayDate = mondayDate.AddDays(-7);
+
+        UpdatePage();
+    }
+
+    private void UpdatePage()
+    {
+        UpdateWeekDays();
+        UpdateData();
+
+        StateHasChanged();
+    }
+    private void UpdateWeekDays()
+    {
+        for (int i = 0; i < 7; i++)
+        {
+            weekDays[i] = mondayDate.AddDays(i);
+        }
+        weekText = $"{weekDays[0].Month}/{weekDays[0].Day} - {weekDays[6].Month}/{weekDays[6].Day}";
+    }
+    private void UpdateData()
+    {
+        IList<int> dailyIds = dailies.Select(d => d.Id).ToList();
+        IList<Data.DailyWeek> dailyWeeks = DailyService.GetDailyWeeks(mondayDate, dailyIds);
+
+        foreach (var d in dailies)
+        {
+            var dw = dailyWeeks.FirstOrDefault(dw => dw.DailyId == d.Id);
+            if (dw is null)
+            {
+                dw = new Data.DailyWeek();
+                dw.Init(d.Id, mondayDate);
+            }
+
+            datas[d] = dw;
+        }
+    }
+
+    private void AfterDayStateChanged(Data.DailyWeek dw)
+    {
+        DailyService.WriteDailyWeek(dw);
+    }
+}
