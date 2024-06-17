@@ -4,10 +4,11 @@
 <MudDialog>
     <DialogContent>
         <MudForm @ref="form" @bind-IsValid="@success">
-            <MudTextField @bind-Value="NameText" Label="@LD.Name"
+            <MudTextField @bind-Value="kind.Name" Label="@LD.Name"
                           Immediate="true"
                           Variant="Variant.Text" MaxLength="10" Counter="10"
                           Required="true" RequiredError="@LD.RequiredError"></MudTextField>
+            <MudNumericField @bind-Value="kind.OrderNo" Label="@LD.OrderBy" Variant="Variant.Text" Min="0" Max="1000" />
         </MudForm>
     </DialogContent>
     <DialogActions>
@@ -19,8 +20,12 @@
 
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public bool IsEdit { get; set; }
+    [Parameter] public int KindId { get; set; }
+
     private MudForm form;
     private bool success = false;
+    private Kind kind;
 
     void Submit()
     {
@@ -29,12 +34,23 @@
             return;
         }
 
-        Kind item = new() { Name = NameText };
-        KindService.InsertKind(item);
+        if (IsEdit) KindService.UpdateKind(kind);
+        else KindService.InsertKind(kind);
 
         MudDialog.Close(DialogResult.Ok(true));
     }
     void Cancel() => MudDialog.Cancel();
 
-    string NameText = "";
+    protected override void OnInitialized()
+    {
+        if (IsEdit)
+        {
+            kind = KindService.GetKind(KindId);
+            success = true;
+        }
+        else
+        {
+            kind = new() { Name = "" };
+        }
+    }
 }

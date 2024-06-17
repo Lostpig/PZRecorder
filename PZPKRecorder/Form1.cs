@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components.WebView.WindowsForms;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
 using PZPKRecorder.Services;
+using System.Reflection;
 
 namespace PZPKRecorder;
 
@@ -53,6 +54,8 @@ public partial class Form1 : Form
 
             Location = new Point(x, y);
         }
+
+        Text = "PZ Recorder V" + Assembly.GetExecutingAssembly().GetName().Version?.ToString();
     }
 
     protected override void OnResizeEnd(EventArgs e)

@@ -6,7 +6,12 @@ internal class KindService
 {
     public static IList<Kind> GetKinds()
     {
-        return SqlLiteHandler.Instance.DB.Table<Kind>().ToList();
+        return SqlLiteHandler.Instance.DB.Table<Kind>().OrderBy(k => k.OrderNo).ToList();
+    }
+
+    public static Kind GetKind(int id)
+    {
+        return SqlLiteHandler.Instance.DB.Get<Kind>(id);
     }
 
     public static int InsertKind(Kind kind)

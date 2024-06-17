@@ -42,6 +42,7 @@
 </MudLayout>
 
 @code {
+    [Inject] private IDialogService DialogService { get; set; }
     private MudTheme _theme = new();
     bool DrawOpen = true;
 
@@ -57,6 +58,11 @@
         Translate.LanguageChanged += (sender, e) =>
         {
             StateHasChanged();
+        };
+
+        ExceptionProxy.ExceptionFired += (sender, msg) =>
+        {
+            DialogService.ShowError(msg);
         };
     }
 }

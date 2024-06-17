@@ -10,10 +10,14 @@ internal class RecordService
             + $" {(state is not null ? "AND state = " + (int)state : "")}"
             + $" {(year is not null ? "AND publish_year = " + year : "")}"
             + $" {(month is not null ? "AND publish_month = " + month : "")}"
-            + $" AND name like '%{searchText}%'"
-            + $" ORDER BY modify_date DESC LIMIT {limit} OFFSET {offset}";
+            + $" AND (name like '%{searchText}%' OR alias like '%{searchText}%')"
+            + $" ORDER BY publish_year DESC, publish_month DESC LIMIT {limit} OFFSET {offset}";
 
         return SqlLiteHandler.Instance.DB.Query<Record>(query);
+    }
+    public static IList<Record> GetAllRecords()
+    {
+        return SqlLiteHandler.Instance.DB.Table<Record>().ToList();
     }
 
     public static Record GetRecord(int id)
@@ -27,7 +31,7 @@ internal class RecordService
             + $" {(state is not null ? "AND state = " + (int)state : "")}"
             + $" {(year is not null ? "AND publish_year = " + year : "")}"
             + $" {(month is not null ? "AND publish_month = " + month : "")}"
-            + $" AND name like '%{searchText}%'";
+            + $" AND (name like '%{searchText}%' OR alias like '%{searchText}%')";
 
         var result = SqlLiteHandler.Instance.DB.Query<SQLCounter>(query);
         if (result != null && result.Count > 0)
@@ -40,9 +44,12 @@ internal class RecordService
         }
     }
 
-    public static IList<int> GetYears()
+    public static IList<int> GetYears(int kindId)
     {
-        return SqlLiteHandler.Instance.DB.Table<Record>().Select(r => r.PublishYear).Distinct().OrderDescending().ToList();
+        return SqlLiteHandler.Instance.DB.Table<Record>()
+            .Where(r => r.Kind == kindId)
+            .Select(r => r.PublishYear)
+            .Distinct().OrderDescending().ToList();
     }
 
     public static int UpdateRecord(Record record)

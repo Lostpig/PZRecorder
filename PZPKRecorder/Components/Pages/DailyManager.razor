@@ -17,8 +17,9 @@
             <tr>
                 <th style="width: 90px;">ID</th>
                 <th>@LD.Name</th>
+                <th style="width: 90px;">@LD.OrderBy</th>
                 <th style="width: 120px;">@LD.State</th>
-                <th style="width: 200px;">@LD.Action</th>
+                <th style="width: 320px;">@LD.Action</th>
             </tr>
         </thead>
         <tbody>
@@ -31,11 +32,13 @@
                         <MudText Typo="Typo.body1" Inline="true">@row.Name</MudText>
                         <MudText Typo="Typo.body2" Inline="true" Style="color: var(--mud-palette-text-secondary);">@row.Alias</MudText>
                     </td>
+                    <td>@row.OrderNo</td>
                     <td>
                         <MudButton Variant="Variant.Text" Color="stateColor" OnClick="() => OnChangeState(row)">@row.StateText</MudButton>
                     </td>
                     <td class="ta-r">
-                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => OnStatisticClick(row.Id)">@LD.Statistic</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Warning" OnClick="() => OnStatisticClick(row.Id)">@LD.Statistic</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => ShowDialog(row.Id)">@LD.Edit</MudButton>
                         <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="() => OnDeleteClick(row.Id)">@LD.Delete</MudButton>
                     </td>
                 </tr>
@@ -62,11 +65,8 @@
     }
     private async void OnDeleteClick(int id)
     {
-        bool? result = await DialogService.ShowMessageBox(
-            LD.Warning,
-            LD.SureToDelete,
-            yesText: LD.Delete, cancelText: LD.Cancel);
-        if (result != null && result == true)
+        bool result = await DialogService.ShowConfirm(LD.SureToDelete);
+        if (result == true)
         {
             try
             {
@@ -75,19 +75,13 @@
             }
             catch (Exception ex)
             {
-                await DialogService.ShowMessageBox(LD.Error, ex.Message);
+                await DialogService.ShowError(ex.Message);
             }
         }
     }
-    private async void OnAddClick()
+    private void OnAddClick()
     {
-        var dialog = await DialogService.ShowAsync<Dialogs.DailyDialog>(LD.Add);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            UpdateList();
-        }
+        ShowDialog(null);
     }
     private void OnStatisticClick(int id)
     {
@@ -102,5 +96,21 @@
         item.State = item.State == DailyState.Enabled ? DailyState.Disabled : DailyState.Enabled;
         DailyService.UpdateDaily(item);
         StateHasChanged();
+    }
+
+    private async void ShowDialog(int? id)
+    {
+        DialogParameters<Dialogs.DailyDialog> paramters = new();
+        paramters.Add(d => d.IsEdit, id is not null);
+        paramters.Add(d => d.DailyId, id ?? -1);
+        string title = id is not null ? LD.Edit : LD.Add;
+
+        var dialog = await DialogService.ShowAsync<Dialogs.DailyDialog>(title, paramters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            UpdateList();
+        }
     }
 }

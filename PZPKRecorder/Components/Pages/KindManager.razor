@@ -10,14 +10,15 @@
                    Color="Color.Primary"
                    Style="text-transform:none"
                    Class="mt-4"
-                   OnClick="OnAddClick">@LD.Add</MudButton>
+                   OnClick="() => ShowDialog(null)">@LD.Add</MudButton>
     </MudToolBar>
     <MudSimpleTable Hover="true" FixedHeader="true" Elevation="0" Style="height: calc(100% - 65px);">
         <thead>
             <tr>
                 <th style="width: 90px;">ID</th>
                 <th>@LD.Name</th>
-                <th style="width: 150px;">@LD.Action</th>
+                <th style="width: 90px;">@LD.OrderBy</th>
+                <th style="width: 210px;">@LD.Action</th>
             </tr>
         </thead>
         <tbody>
@@ -26,7 +27,9 @@
                 <tr>
                     <td>@row.Id</td>
                     <td>@row.Name</td>
+                    <td>@row.OrderNo</td>
                     <td class="ta-r">
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => ShowDialog(row.Id)">@LD.Edit</MudButton>
                         <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="() => OnDeleteClick(row.Id)">@LD.Delete</MudButton>
                     </td>
                 </tr>
@@ -70,9 +73,14 @@
             }
         }
     }
-    private async void OnAddClick()
+    private async void ShowDialog(int? id)
     {
-        var dialog = await DialogService.ShowAsync<PZPKRecorder.Components.Dialogs.KindDialog>(LD.AddKind);
+        DialogParameters<Dialogs.KindDialog> paramters = new();
+        paramters.Add(d => d.IsEdit, id is not null);
+        paramters.Add(d => d.KindId, id ?? -1);
+        string title = id is not null ? LD.Edit : LD.Add;
+
+        var dialog = await DialogService.ShowAsync<Dialogs.KindDialog>(title, paramters);
         var result = await dialog.Result;
 
         if (!result.Canceled)

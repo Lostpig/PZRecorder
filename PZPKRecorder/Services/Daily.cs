@@ -9,7 +9,8 @@ internal class DailyService
     public static IList<Daily> GetDailies (DailyState? state)
     {
         string query = $"SELECT * FROM t_daily WHERE 1 = 1 "
-                + $" {(state is not null ? "AND state = " + (int)state : "")}";
+                + $" {(state is not null ? "AND state = " + (int)state : "")}"
+                + $" ORDER BY state DESC, order_no ASC";
         return SqlLiteHandler.Instance.DB.Query<Daily>(query);
     }
 
@@ -43,10 +44,17 @@ internal class DailyService
     {
         return SqlLiteHandler.Instance.DB.InsertOrReplace(dw);
     }
-    public static IList<DailyWeek> GetDailyDatas(int dailyId)
+    public static IList<DailyWeek> GetDailyDatas(int? dailyId)
     {
-        return SqlLiteHandler.Instance.DB.Table<DailyWeek>()
-               .Where(dw => dw.DailyId == dailyId).ToList();
+        var data = SqlLiteHandler.Instance.DB.Table<DailyWeek>();
+        if (dailyId != null)
+        {
+            return data.Where(dw => dw.DailyId == dailyId).ToList();
+        }
+        else
+        {
+            return data.ToList();
+        }
     }
     public static IList<DailyWeek> GetDailyWeeks(DateOnly mondayDate, IList<int> dailyIds)
     {

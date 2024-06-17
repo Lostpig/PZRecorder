@@ -11,7 +11,7 @@
     }
     else
     {
-        <MudTabs Elevation="2" Rounded="true" @bind-ActivePanelIndex="kindIndex" @bind-ActivePanelIndex:after="OnFilterChanged">
+        <MudTabs Elevation="2" Rounded="true" @bind-ActivePanelIndex="kindIndex" @bind-ActivePanelIndex:after="OnKindChange">
             @foreach (var kind in kinds)
             {
                 <MudTabPanel Text="@kind.Name" ID="@kind.Id" />
@@ -24,29 +24,31 @@
                     <MudTextField T="string" @bind-Value="searchString" @bind-Value:after="OnFilterChanged" Placeholder="@LD.Search" Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                     <MudText Typo="Typo.h6" Class="mt-4">@LD.State</MudText>
-                    <MudChipSet Mandatory="false" @bind-SelectedChip="selectedStateChip" @bind-SelectedChip:after="OnFilterChanged">
-                        <MudChip Value="0" Variant="Variant.Text" Color="Color.Default" SelectedColor="Color.Primary" Size="Size.Medium">@LD.Wish</MudChip>
-                        <MudChip Value="1" Variant="Variant.Text" Color="Color.Default" SelectedColor="Color.Primary" Size="Size.Medium">@LD.Doing</MudChip>
-                        <MudChip Value="2" Variant="Variant.Text" Color="Color.Default" SelectedColor="Color.Primary" Size="Size.Medium">@LD.Complete</MudChip>
-                        <MudChip Value="3" Variant="Variant.Text" Color="Color.Default" SelectedColor="Color.Primary" Size="Size.Medium">@LD.Giveup</MudChip>
-                    </MudChipSet>
+                    <div>
+                        <MudChip Variant="Variant.Filled" OnClick="() => OnStateChange(RecordState.Wish)" Color="@(state == RecordState.Wish ? Color.Primary : Color.Default)" Size="Size.Medium">@LD.Wish</MudChip>
+                        <MudChip Variant="Variant.Filled" OnClick="() => OnStateChange(RecordState.Doing)" Color="@(state == RecordState.Doing ? Color.Primary : Color.Default)" Size="Size.Medium">@LD.Doing</MudChip>
+                        <MudChip Variant="Variant.Filled" OnClick="() => OnStateChange(RecordState.Complete)" Color="@(state == RecordState.Complete ? Color.Primary : Color.Default)" Size="Size.Medium">@LD.Complete</MudChip>
+                        <MudChip Variant="Variant.Filled" OnClick="() => OnStateChange(RecordState.Giveup)" Color="@(state == RecordState.Giveup ? Color.Primary : Color.Default)" Size="Size.Medium">@LD.Giveup</MudChip>
+                    </div>
                     <MudDivider Class="my-2" />
                     <MudText Typo="Typo.h6">@LD.PublishYear</MudText>
-                    <MudChipSet Mandatory="false" @bind-SelectedChip="selectedYearChip" @bind-SelectedChip:after="OnFilterChanged">
-                        @foreach(var year in years)
+                    <div>
+                        @foreach(var y in years)
                         {
-                            <MudChip Value="year" Variant="Variant.Text" Color="Color.Default" SelectedColor="Color.Primary" Size="Size.Medium">@year</MudChip>
+                            Color color = y == year ? Color.Primary : Color.Default;
+                            <MudChip Variant="Variant.Filled" Color="color" Size="Size.Medium" OnClick="() => OnYearChange(y)">@y</MudChip>
                         }
-                    </MudChipSet>
+                    </div>
                     <MudDivider Class="my-2" />
                     <MudText Typo="Typo.h6">@LD.PublishMonth</MudText>
-                    <MudChipSet Mandatory="false" @bind-SelectedChip="selectedMonthChip" @bind-SelectedChip:after="OnFilterChanged">
+                    <div>
                         @for (int i = 1; i <= 12; i++)
                         {
-                            var month = i;
-                            <MudChip Class="month-chip" Value="month" Variant="Variant.Text" Color="Color.Default" SelectedColor="Color.Primary" Size="Size.Medium">@month</MudChip>
+                            var m = i;
+                            Color color = m == month ? Color.Primary : Color.Default;
+                            <MudChip Class="month-chip" Variant="Variant.Filled" Color="color" Size="Size.Medium" OnClick="() => OnMonthChange(m)">@m</MudChip>
                         }
-                    </MudChipSet>
+                    </div>
                 </MudPaper>
                 <MudButton Variant="Variant.Outlined"
                            StartIcon="@Icons.Material.Filled.Add"
@@ -119,14 +121,41 @@
     private int pageCount = 0;
     private int pageSize = 10;
 
-    private MudChip? selectedStateChip;
-    private MudChip? selectedYearChip;
-    private MudChip? selectedMonthChip;
+    private RecordState? state;
+    private int? year;
+    private int? month;
 
     private int totalCount = 0;
     private int startCount = 0;
     private int endCount = 0;
 
+    private void OnStateChange(RecordState r)
+    {
+        if (state == r) state = null;
+        else state = r;
+        OnFilterChanged();
+    }
+    private void OnYearChange(int y)
+    {
+        if (year == y) year = null;
+        else year = y;
+        OnFilterChanged();
+    }
+    private void OnMonthChange(int m)
+    {
+        if (month == m) month = null;
+        else month = m;
+        OnFilterChanged();
+    }
+
+    private void OnKindChange()
+    {
+        year = null;
+        month = null;
+
+        LoadYears();
+        OnFilterChanged();
+    }
     private void OnFilterChanged()
     {
         page = 1;
@@ -145,11 +174,8 @@
     private void LoadPageCount()
     {
         int kindId = kinds[kindIndex].Id;
-        RecordState? recordState = selectedStateChip?.Value is not null ? (RecordState)selectedStateChip.Value : null;
-        int? year = selectedYearChip?.Value is not null ? (int)selectedYearChip.Value : null;
-        int? month = selectedMonthChip?.Value is not null ? (int)selectedMonthChip.Value : null;
 
-        totalCount = RecordService.GetCount(kindId, searchString.Trim(), year, month, recordState);
+        totalCount = RecordService.GetCount(kindId, searchString.Trim(), year, month, state);
         int n = totalCount % pageSize;
         pageCount = (totalCount - n) / pageSize + (n > 0 ? 1 : 0);
     }
@@ -158,17 +184,15 @@
         int kindId = kinds[kindIndex].Id;
         int offset = (page - 1) * pageSize;
         int limit = pageSize;
-        RecordState? recordState = selectedStateChip?.Value is not null ? (RecordState)selectedStateChip.Value : null;
-        int? year = selectedYearChip?.Value is not null ? (int)selectedYearChip.Value : null;
-        int? month = selectedMonthChip?.Value is not null ? (int)selectedMonthChip.Value : null;
 
-        records = RecordService.GetRecords(kindId, searchString, year, month, recordState, limit, offset);
+        records = RecordService.GetRecords(kindId, searchString, year, month, state, limit, offset);
         startCount = offset + 1;
         endCount = offset + records.Count;
     }
     private void LoadYears()
     {
-        years = RecordService.GetYears();
+        int kindId = kinds[kindIndex].Id;
+        years = RecordService.GetYears(kindId);
     }
 
     private async void OnAddClick()
@@ -206,6 +230,8 @@
         if (!result.Canceled)
         {
             LoadRecords();
+            LoadPageCount();
+            LoadYears();
             StateHasChanged();
         }
     }
@@ -222,12 +248,10 @@
                 RecordService.DeleteRecord(id);
                 if (records.Count == 1 && page > 1) page = page - 1;
 
-                int year = selectedYearChip?.Value is not null ? (int)selectedYearChip.Value : 0;
-
                 LoadRecords();
                 LoadPageCount();
                 LoadYears();
-                if (!years.Contains(year)) selectedYearChip = null;
+                if (year != null && !years.Contains(year.Value)) year = null;
 
                 StateHasChanged();
             }

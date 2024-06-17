@@ -14,6 +14,7 @@ namespace PZPKRecorder.Localization
             [TranslateBind("Delete")] public static string Delete { get; set; }
             [TranslateBind("Cancel")] public static string Cancel { get; set; }
             [TranslateBind("OK")] public static string OK { get; set; }
+            [TranslateBind("Close")] public static string Close { get; set; }
             [TranslateBind("Action")] public static string Action { get; set; }
             [TranslateBind("AddKind")] public static string AddKind { get; set; }
             [TranslateBind("AddRecord")] public static string AddRecord { get; set; }
@@ -47,6 +48,7 @@ namespace PZPKRecorder.Localization
             [TranslateBind("Alert")] public static string Alert { get; set; }
             [TranslateBind("Error")] public static string Error { get; set; }
             [TranslateBind("Message")] public static string Message { get; set; }
+            [TranslateBind("Info")] public static string Info { get; set; }
             [TranslateBind("SureToDelete")] public static string SureToDelete { get; set; }
             [TranslateBind("Monday")] public static string Monday { get; set; }
             [TranslateBind("Tuesday")] public static string Tuesday { get; set; }
@@ -67,9 +69,12 @@ namespace PZPKRecorder.Localization
             [TranslateBind("Doing")] public static string Doing { get; set; }
             [TranslateBind("Complete")] public static string Complete { get; set; }
             [TranslateBind("Giveup")] public static string Giveup { get; set; }
+            [TranslateBind("OrderBy")] public static string OrderBy { get; set; }
             [TranslateBind("MaxCharacters")] public static string MaxCharacters { get; set; }
             [TranslateBind("NoKindsError")] public static string NoKindsError { get; set; }
             [TranslateBind("NoData")] public static string NoData { get; set; }
+            [TranslateBind("ExportSuccess")] public static string ExportSuccess { get; set; }
+            [TranslateBind("OpenFolder")] public static string OpenFolder { get; set; }
         #pragma warning restore CS8618
     }
 }

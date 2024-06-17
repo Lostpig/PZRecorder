@@ -9,6 +9,7 @@
   "Delete": "删除",
   "Cancel": "取消",
   "OK": "确定",
+  "Close": "关闭",
   "Action": "操作",
   "AddKind": "添加分类",
   "AddRecord": "添加记录",
@@ -36,13 +37,14 @@
   "Statistic": "统计",
   "CheckinStatistic": "打卡统计",
   "StatisticTextDate": "{0} 首次记录，{1} 最后一次记录",
-  "StatisticTextCount": "{0}天之间共完成打卡{1}次，打卡完成率{2}%（{1}/{0}）",
+  "StatisticTextCount": "{0} 天之间共完成打卡 {1} 次，打卡完成率 {2}%（{1} / {0}）",
   "NoStatisticData": "没有打卡数据",
 
   "Warning": "警告",
   "Alert": "提醒",
   "Error": "错误",
   "Message": "消息",
+  "Info": "信息",
   "SureToDelete": "确定要删除吗？",
 
   "Monday": "星期一",
@@ -66,7 +68,11 @@
   "Complete": "完成",
   "Giveup": "搁置",
 
+  "OrderBy": "排序",
+
   "MaxCharacters": "最多{0}个字符",
   "NoKindsError": "没有设置分类，请先在分类管理中添加分类！",
-  "NoData": "暂无数据！"
+  "NoData": "暂无数据！",
+  "ExportSuccess": "导出成功！",
+  "OpenFolder": "打开文件夹"
 }

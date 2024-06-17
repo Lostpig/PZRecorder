@@ -3,6 +3,7 @@
 @using Services;
 
 <MudPaper Width="100%" Height="100%" class="pa-4">
+    <MudTextField ReadOnly="true" Value="@DBVersion" Label="DB Version" Variant="Variant.Text" />
     <MudSelect T="string" @bind-Value="language" @bind-Value:after="OnLanguageChanged" Label="@LD.Language" Class="mb-4">
         @foreach(var l in languages)
         {
@@ -11,10 +12,12 @@
     </MudSelect>
     <MudDivider Class="my-2" />
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ImportExport" Color="Color.Tertiary">@LD.Import</MudButton>
-    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ImportExport" Color="Color.Primary">@LD.Export</MudButton>
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ImportExport" Color="Color.Primary" OnClick="OnExportClick">@LD.Export</MudButton>
 </MudPaper>
 
 @code {
+    [Inject] private IDialogService DialogService { get; set; }
+    private int DBVersion = 0;
     private string language;
     private IList<string> languages;
 
@@ -24,11 +27,34 @@
         StateHasChanged();
     }
 
+    private async void OnExportClick()
+    {
+        try
+        {
+            string? filepath = ExportService.Export(false);
+            if (filepath != null)
+            {
+                bool ok = await DialogService.ShowConfirm(LD.ExportSuccess, LD.OpenFolder, LD.Close);
+                if (ok)
+                {
+                    Helper.OpenFolder(filepath);
+                }
+            }
+        }
+        catch(Exception ex)
+        {
+            ExceptionProxy.PublishException(ex);
+        }
+    }
+
     protected override void OnInitialized()
     {
         base.OnInitialized();
 
         language = Translate.Current;
         languages = Translate.Languages;
+
+        string? dbver = VariantService.GetVariant(SqlLiteHandler.dbVersionKey);
+        DBVersion = int.Parse(dbver ?? "0");
     }
 }

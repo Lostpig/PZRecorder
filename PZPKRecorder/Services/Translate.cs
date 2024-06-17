@@ -28,19 +28,32 @@ internal static class Translate
         _languages.Clear();
         _languages.AddRange(langFiles);
 
-        string userSetLang = ReadLanguageSet();
-        LoadLanguage(userSetLang);
-        Current = userSetLang;
+        try
+        {
+            string userSetLang = ReadLanguageSet();
+            LoadLanguage(userSetLang);
+            Current = userSetLang;
+        }
+        catch (Exception ex)
+        {
+            ExceptionProxy.PublishException(ex);
+        }
     }
 
     public static void ChangeLanguage(string language)
     {
-        Current = language;
-        SaveLanguageSet(language);
+        try
+        {
+            LoadLanguage(language);
+            Current = language;
+            SaveLanguageSet(language);
 
-        LoadLanguage(language);
-
-        LanguageChanged?.Invoke(null, language);
+            LanguageChanged?.Invoke(null, language);
+        }
+        catch (Exception ex)
+        {
+            ExceptionProxy.PublishException(ex);
+        }
     }
 
     private static string ReadLanguageSet()
@@ -62,19 +75,11 @@ internal static class Translate
     {
         string rootPath = System.AppDomain.CurrentDomain.BaseDirectory;
         string langPath = Path.Join(rootPath, "Localization", $"{lang}.json");
-        Dictionary<string, string>? map;
-        if (File.Exists(langPath))
-        {
-            string langJson = File.ReadAllText(langPath, Encoding.UTF8);
-            map = JsonConvert.DeserializeObject<Dictionary<string, string>>(langJson);
-        }
-        else
-        {
-            map = null;
-            Debug.Assert(false, $"language file {lang}.json not found");
-        }
 
-        UpdateLanguage(map);
+        string langJson = File.ReadAllText(langPath, Encoding.UTF8);
+        Dictionary<string, string>? map = JsonConvert.DeserializeObject<Dictionary<string, string>>(langJson);
+        if (map != null) UpdateLanguage(map);
+        else throw new Exception("Language file load error: language map is null");
     }
     private static void UpdateLanguage(Dictionary<string, string>? languageMap)
     {

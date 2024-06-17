@@ -3,10 +3,11 @@
 
 <MudDialog>
     <DialogContent>
-        <MudText Typo="Typo.h6">@daily.Name</MudText>
+        <MudText Typo="Typo.h5">@daily.Name</MudText>
+        <MudText Typo="Typo.h6" Style="color: var(--mud-palette-text-secondary);">@daily.Alias</MudText>
         <MudDivider/>
-        <MudText>@dateText</MudText>
-        <MudText>@checkinText</MudText>
+        <MudText>@((MarkupString)dateText)</MudText>
+        <MudText>@((MarkupString)checkinText)</MudText>
         <div class="mt-6">
             <MudToolBar Class="mud-elevation-2">
                 <MudIconButton Icon="@Icons.Material.Filled.ArrowLeft" OnClick="() => OnYearChanged(-1)"></MudIconButton>
@@ -88,8 +89,16 @@
             int totalDays = lastDayNum - firstDayNum + 1;
             double checkinPrec = (double)checkinCount / totalDays * 100.0;
 
-            dateText = String.Format(LD.StatisticTextDate, firstDay.ToString("yyyy-MM-dd"), lastDay.ToString("yyyy-MM-dd"));
-            checkinText = string.Format(LD.StatisticTextCount, totalDays, checkinCount, checkinPrec.ToString("F2"));
+            dateText = String.Format(
+                LD.StatisticTextDate, 
+                $"<span style=\"color: var(--mud-palette-info);\">{firstDay.ToString("yyyy-MM-dd")}</span>",
+                $"<span style=\"color: var(--mud-palette-info);\">{lastDay.ToString("yyyy-MM-dd")}</span>"
+            );
+            checkinText = string.Format(LD.StatisticTextCount, 
+                $"<span style=\"color: var(--mud-palette-info);\">{totalDays}</span>",
+                $"<span style=\"color: var(--mud-palette-info);\">{checkinCount}</span>",
+                $"<span style=\"color: var(--mud-palette-info);\">{checkinPrec.ToString("F2")}</span>"
+            );
         } 
         else
         {

@@ -11,6 +11,10 @@
             <MudTextField @bind-Value="daily.Alias" Label="@LD.Alias"
                           Immediate="true"
                           Variant="Variant.Text" MaxLength="30" Counter="30"></MudTextField>
+            <MudTextField @bind-Value="daily.Remark" Label="@LD.Remark"
+                          Immediate="true"
+                          Variant="Variant.Text" MaxLength="100" Counter="100"></MudTextField>
+            <MudNumericField @bind-Value="daily.OrderNo" Label="@LD.OrderBy" Variant="Variant.Text" Min="0" Max="1000" />
             <MudDivider Class="my-2" />
             <MudToggleGroup T="DailyState" Outline="true" Delimiters="true" @bind-Value="daily.State">
                 <MudToggleItem Value="DailyState.Enabled" Text="@LD.Enabled" />
@@ -27,19 +31,29 @@
 
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public bool IsEdit { get; set; }
+    [Parameter] public int DailyId { get; set; }
+
     private MudForm form;
     private bool success = false;
     private Daily daily;
 
     protected override void OnInitialized()
     {
-        daily = new Daily()
-            {
-                Name = "",
-                Alias = "",
-                State = DailyState.Enabled,
-                Remark = ""
-            };
+        if (IsEdit)
+        {
+            daily = DailyService.GetDaily(DailyId);
+        }
+        else
+        {
+            daily = new Daily()
+                {
+                    Name = "",
+                    Alias = "",
+                    State = DailyState.Enabled,
+                    Remark = ""
+                };
+        }
     }
 
     void Submit()
@@ -50,7 +64,9 @@
         }
 
         daily.ModifyDate = DateTime.Now;
-        DailyService.InsertDaily(daily);
+
+        if (IsEdit) DailyService.UpdateDaily(daily);
+        else DailyService.InsertDaily(daily);
 
         MudDialog.Close(DialogResult.Ok(true));
     }

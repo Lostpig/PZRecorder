@@ -27,6 +27,9 @@ internal class Daily
     [Column("state")]
     public DailyState State { get; set; }
 
+    [Column("order_no")]
+    public int OrderNo { get; set; }
+
     [Ignore]
     public string StateText => State switch
     {
@@ -122,4 +125,28 @@ internal class DailyWeek
             }
         }
     }
+}
+
+// Old version
+[Table("t_daily")]
+internal class DailyVersion0
+{
+    [PrimaryKey, AutoIncrement]
+    [Column("id")]
+    public int Id { get; set; }
+
+    [Column("name"), Indexed]
+    public string Name { get; set; } = string.Empty;
+
+    [Column("alias")]
+    public string Alias { get; set; } = string.Empty;
+
+    [Column("remark")]
+    public string Remark { get; set; } = string.Empty;
+
+    [Column("state")]
+    public DailyState State { get; set; }
+
+    [Column("modify_date")]
+    public DateTime ModifyDate { get; set; }
 }
