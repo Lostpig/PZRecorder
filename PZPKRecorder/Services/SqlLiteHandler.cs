@@ -124,6 +124,8 @@ internal class SqlLiteHandler
         {
             case 0:
                 UpdateFromVersion0(oldDbPath); break;
+            case 10001:
+                UpdateFromVersion10001(oldDbPath); break;
             default:
                 throw new NotSupportedException($"Not supported DB version: {version}");
         }
@@ -142,7 +144,7 @@ internal class SqlLiteHandler
             Name = d.Name,
             OrderNo = 0
         }).ToList();
-        DB.InsertAll(kinds);
+        DB.InsertAll(newKinds);
         DB.InsertAll(records);
 
         // daily and dailyweek
@@ -158,11 +160,42 @@ internal class SqlLiteHandler
             Alias = d.Alias,
             OrderNo = 0
         }).ToList();
+        // re create id
+        foreach (DailyWeek dw in dailyweeks)
+        {
+            dw.Id = DailyWeek.GenerateId(dw.DailyId, dw.MondayDate);
+        }
+
         DB.InsertAll(newDailies);
         DB.InsertAll(dailyweeks);
 
         // variant
         IList<VariantTable> vars = oldDB.Table<VariantTable>().Where(v => v.Key != dbVersionKey).ToList();
         DB.InsertAll(vars);
+    }
+
+    private void UpdateFromVersion10001(string oldDbPath)
+    {
+        SQLiteConnection oldDB = new SQLiteConnection(oldDbPath, SQLiteOpenFlags.ReadOnly);
+
+        IList<Kind> kinds = oldDB.Table<Kind>().ToList();
+        IList<Record> records = oldDB.Table<Record>().ToList();
+        IList<Daily> dailies = oldDB.Table<Daily>().ToList();
+        IList<DailyWeek> dailyweeks = oldDB.Table<DailyWeek>().ToList();
+        IList<VariantTable> vars = oldDB.Table<VariantTable>().Where(v => v.Key != dbVersionKey).ToList();
+        // re create id
+        foreach (DailyWeek dw in dailyweeks)
+        {
+            dw.Id = DailyWeek.GenerateId(dw.DailyId, dw.MondayDate);
+        }
+
+        DB.RunInTransaction(() =>
+        {
+            DB.InsertAll(kinds);
+            DB.InsertAll(records);
+            DB.InsertAll(dailies);
+            DB.InsertAll(dailyweeks);
+            DB.InsertAll(vars);
+        });
     }
 }

@@ -41,6 +41,10 @@ internal class ExportService
     {
         JObject jobj = new JObject();
         
+        // db version
+        var dbVersion = VariantService.GetVariant(SqlLiteHandler.dbVersionKey);
+        int dbv = int.Parse(dbVersion ?? "0");
+        jobj.Add(new JProperty("dbversion", dbv));
         // kinds
         var kinds = KindService.GetKinds();
         jobj.Add(new JProperty("kinds", CreateExportJsonArray(kinds)));

@@ -64,7 +64,8 @@ internal class DailyWeek
         var startDate = new DateOnly(2000, 1, 1);
         int daysFromStart = date.DayNumber - startDate.DayNumber;
 
-        int id = dailyId * 10000 + daysFromStart;
+        // Max to year 2273
+        int id = dailyId * 100000 + daysFromStart;
         return id;
     }
     public int Init(int dailyId, DateOnly date)
