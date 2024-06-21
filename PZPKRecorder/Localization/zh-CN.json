@@ -74,5 +74,7 @@
   "NoKindsError": "没有设置分类，请先在分类管理中添加分类！",
   "NoData": "暂无数据！",
   "ExportSuccess": "导出成功！",
-  "OpenFolder": "打开文件夹"
+  "ImportSuccess": "导入成功！",
+  "OpenFolder": "打开文件夹",
+  "ImportConfirmMessage": "导入数据会覆盖当前数据库，确认要导入吗？"
 }

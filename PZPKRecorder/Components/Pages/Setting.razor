@@ -11,7 +11,7 @@
         }
     </MudSelect>
     <MudDivider Class="my-2" />
-    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ImportExport" Color="Color.Tertiary">@LD.Import</MudButton>
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ImportExport" Color="Color.Tertiary" OnClick="OnImportClick">@LD.Import</MudButton>
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ImportExport" Color="Color.Primary" OnClick="OnExportClick">@LD.Export</MudButton>
 </MudPaper>
 
@@ -42,6 +42,22 @@
             }
         }
         catch(Exception ex)
+        {
+            ExceptionProxy.PublishException(ex);
+        }
+    }
+
+    private async void OnImportClick()
+    {
+        bool ok = await DialogService.ShowConfirm(LD.ImportConfirmMessage);
+        if (ok != true) return;
+
+        try
+        {
+            ImportService.Import();
+            await DialogService.ShowAlert(LD.ImportSuccess);
+        }
+        catch (Exception ex)
         {
             ExceptionProxy.PublishException(ex);
         }

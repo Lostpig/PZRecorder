@@ -74,7 +74,9 @@ namespace PZPKRecorder.Localization
             [TranslateBind("NoKindsError")] public static string NoKindsError { get; set; }
             [TranslateBind("NoData")] public static string NoData { get; set; }
             [TranslateBind("ExportSuccess")] public static string ExportSuccess { get; set; }
+            [TranslateBind("ImportSuccess")] public static string ImportSuccess { get; set; }
             [TranslateBind("OpenFolder")] public static string OpenFolder { get; set; }
+            [TranslateBind("ImportConfirmMessage")] public static string ImportConfirmMessage { get; set; }
         #pragma warning restore CS8618
     }
 }

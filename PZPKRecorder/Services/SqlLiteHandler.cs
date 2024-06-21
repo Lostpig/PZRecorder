@@ -98,7 +98,7 @@ internal class SqlLiteHandler
             throw;
         }
     }
-    private string BackupDB(string path) 
+    public string BackupDB(string path) 
     {
         string rootPath = System.AppDomain.CurrentDomain.BaseDirectory;
         string backupPath = Path.Join(rootPath, "backup", $"records.{DateTime.Now.ToString("yyyy-MM-dd-HHmmss")}.db");
@@ -113,6 +113,18 @@ internal class SqlLiteHandler
         return backupPath;
     }
 
+    /** 
+     * Delete all data
+     */
+    public void ResetDB()
+    {
+        DB.DeleteAll<Kind>();
+        DB.DeleteAll<Record>();
+        DB.DeleteAll<Daily>();
+        DB.DeleteAll<DailyWeek>();
+
+        DB.Execute("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME IN ('t_kind', 't_record', 't_daily')");
+    }
     public void Dispose()
     {
         _db.Close();
@@ -144,8 +156,6 @@ internal class SqlLiteHandler
             Name = d.Name,
             OrderNo = 0
         }).ToList();
-        DB.InsertAll(newKinds);
-        DB.InsertAll(records);
 
         // daily and dailyweek
         IList<DailyVersion0> dailies = oldDB.Table<DailyVersion0>().ToList();
@@ -160,18 +170,11 @@ internal class SqlLiteHandler
             Alias = d.Alias,
             OrderNo = 0
         }).ToList();
-        // re create id
-        foreach (DailyWeek dw in dailyweeks)
-        {
-            dw.Id = DailyWeek.GenerateId(dw.DailyId, dw.MondayDate);
-        }
-
-        DB.InsertAll(newDailies);
-        DB.InsertAll(dailyweeks);
 
         // variant
         IList<VariantTable> vars = oldDB.Table<VariantTable>().Where(v => v.Key != dbVersionKey).ToList();
-        DB.InsertAll(vars);
+
+        ExcuteBatchInsert(newKinds, records, newDailies, dailyweeks, vars);
     }
 
     private void UpdateFromVersion10001(string oldDbPath)
@@ -183,18 +186,68 @@ internal class SqlLiteHandler
         IList<Daily> dailies = oldDB.Table<Daily>().ToList();
         IList<DailyWeek> dailyweeks = oldDB.Table<DailyWeek>().ToList();
         IList<VariantTable> vars = oldDB.Table<VariantTable>().Where(v => v.Key != dbVersionKey).ToList();
-        // re create id
-        foreach (DailyWeek dw in dailyweeks)
-        {
-            dw.Id = DailyWeek.GenerateId(dw.DailyId, dw.MondayDate);
-        }
 
+        ExcuteBatchInsert(kinds, records, dailies, dailyweeks, vars);
+    }
+
+    public void ExcuteBatchInsert(IList<Kind> kinds, IList<Record> records, IList<Daily> dailies, IList<DailyWeek> dailyweeks, IList<VariantTable> vars)
+    {
         DB.RunInTransaction(() =>
         {
-            DB.InsertAll(kinds);
-            DB.InsertAll(records);
-            DB.InsertAll(dailies);
-            DB.InsertAll(dailyweeks);
+            foreach (var kind in kinds)
+            {
+                var recordsInKind = records.Where(r => r.Kind == kind.Id).ToList();
+
+                kind.Id = 0;
+                DB.Insert(kind);
+                int newId = kind.Id;
+
+                foreach (var record in recordsInKind)
+                {
+                    DB.Insert(new Record()
+                    {
+                        Kind = newId,
+                        Name = record.Name,
+                        Alias = record.Alias,
+                        Remark = record.Remark,
+                        PublishMonth = record.PublishMonth,
+                        PublishYear = record.PublishYear,
+                        State = record.State,
+                        Episode = record.Episode,
+                        EpisodeCount = record.EpisodeCount,
+                        ModifyDate = record.ModifyDate,
+                    });
+                }
+            }
+
+            foreach (var daily in dailies)
+            {
+                var weeksForDaily = dailyweeks.Where(dw => dw.DailyId == daily.Id).ToList(); ;
+
+                daily.Id = 0;
+                DB.Insert(daily);
+                int newId = daily.Id;
+
+                foreach (var dw in weeksForDaily)
+                {
+                    var ndw = new DailyWeek()
+                    {
+                        DailyId = newId,
+                        MondayDay = dw.MondayDay,
+                        Day1 = dw.Day1,
+                        Day2 = dw.Day2,
+                        Day3 = dw.Day3,
+                        Day4 = dw.Day4,
+                        Day5 = dw.Day5,
+                        Day6 = dw.Day6,
+                        Day7 = dw.Day7,
+                    };
+                    ndw.Id = DailyWeek.GenerateId(newId, dw.MondayDate);
+
+                    DB.Insert(ndw);
+                }
+            }
+
             DB.InsertAll(vars);
         });
     }
