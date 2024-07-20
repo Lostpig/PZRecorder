@@ -22,7 +22,7 @@ internal class SqlLiteHandler
             if (_db == null)
             {
                 var ex = new Exception("Sqlite not connected!");
-                ExceptionProxy.PublishException(ex);
+                ExceptionProxy.CatchException(ex);
                 throw ex;
             }
             return _db;
@@ -73,7 +73,7 @@ internal class SqlLiteHandler
         }
         catch (Exception ex)
         {
-            ExceptionProxy.PublishException(ex);
+            ExceptionProxy.CatchException(ex);
             throw;
         }
     }
@@ -94,7 +94,7 @@ internal class SqlLiteHandler
         }
         catch (Exception ex)
         {
-            ExceptionProxy.PublishException(ex);
+            ExceptionProxy.CatchException(ex);
             throw;
         }
     }

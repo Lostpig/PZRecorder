@@ -69,7 +69,7 @@
             }
             catch(Exception ex)
             {
-                await DialogService.ShowMessageBox(LD.Error, ex.Message);
+                await DialogService.ShowError(ex.Message);
             }
         }
     }

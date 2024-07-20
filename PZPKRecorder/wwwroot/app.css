@@ -73,23 +73,34 @@ th.dailyweek-cell {
     background-color: var(--mud-palette-background-grey) !important;
 }
 
+.daily-statistic-container {
+    margin-top: 16px;
+}
 .daily-statistic {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
-    margin-top: 16px;
+    margin-top: 5px;
+}
+.daily-statistic .month-text {
+    width: 25px;
+    line-height: 14px;
 }
 .daily-statistic .item {
     width: 12px;
     height: 12px;
-    margin: 4px;
+    margin-right: 5px;
+    border-radius: 2px;
+
 }
 .daily-statistic .checkin {
     background-color: var(--mud-palette-success) !important;
+    opacity: 0.8;
 }
 .daily-statistic .notcheck {
     background-color: var(--mud-palette-error) !important;
+    opacity: 0.8;
 }
 .daily-statistic .unknown {
     background-color: var(--mud-palette-action-default) !important;
+    opacity: 0.125;
 }

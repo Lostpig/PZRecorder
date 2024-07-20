@@ -4,11 +4,9 @@ namespace PZPKRecorder.Services;
 
 internal class ExceptionProxy
 {
-    public static event EventHandler<string>? ExceptionFired;
-
-    public static void PublishException(Exception ex)
+    public static void CatchException(Exception ex)
     {
-        ExceptionFired?.Invoke(null, string.IsNullOrWhiteSpace(ex.Message) ? "Unknown exception" : ex.Message);
+        BroadcastService.Broadcast(BroadcastEventName.ExceptionCatch, string.IsNullOrWhiteSpace(ex.Message) ? "Unknown exception" : ex.Message);
 
         try
         {

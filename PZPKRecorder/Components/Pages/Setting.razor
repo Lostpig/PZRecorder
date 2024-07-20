@@ -3,12 +3,17 @@
 @using Services;
 
 <MudPaper Width="100%" Height="100%" class="pa-4">
-    <MudTextField ReadOnly="true" Value="@DBVersion" Label="DB Version" Variant="Variant.Text" />
+    <MudTextField ReadOnly="true" Value="@DBVersion" Label="DB Version" Variant="Variant.Text" Class="mb-4" />
     <MudSelect T="string" @bind-Value="language" @bind-Value:after="OnLanguageChanged" Label="@LD.Language" Class="mb-4">
         @foreach(var l in languages)
         {
             <MudSelectItem Value="l">@l</MudSelectItem>
         }
+    </MudSelect>
+    <MudSelect T="string" @bind-Value="theme" @bind-Value:after="OnThemeChanged" Label="@LD.Theme" Class="mb-4">
+        <MudSelectItem Value="@("dark")">@LD.Dark</MudSelectItem>
+        <MudSelectItem Value="@("light")">@LD.Light</MudSelectItem>
+        <MudSelectItem Value="@("system")">@LD.System</MudSelectItem>
     </MudSelect>
     <MudDivider Class="my-2" />
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ImportExport" Color="Color.Tertiary" OnClick="OnImportClick">@LD.Import</MudButton>
@@ -20,11 +25,17 @@
     private int DBVersion = 0;
     private string language;
     private IList<string> languages;
+    private string theme = "dark";
 
     private void OnLanguageChanged()
     {
         Translate.ChangeLanguage(language);
         StateHasChanged();
+    }
+    private void OnThemeChanged()
+    {
+        VariantService.SetVariant("theme", theme);
+        BroadcastService.Broadcast(BroadcastEventName.ThemeChanged, theme);
     }
 
     private async void OnExportClick()
@@ -43,7 +54,7 @@
         }
         catch(Exception ex)
         {
-            ExceptionProxy.PublishException(ex);
+            ExceptionProxy.CatchException(ex);
         }
     }
 
@@ -59,7 +70,7 @@
         }
         catch (Exception ex)
         {
-            ExceptionProxy.PublishException(ex);
+            ExceptionProxy.CatchException(ex);
         }
     }
 
@@ -72,5 +83,7 @@
 
         string? dbver = VariantService.GetVariant(SqlLiteHandler.dbVersionKey);
         DBVersion = int.Parse(dbver ?? "0");
+
+        theme = VariantService.GetVariant("theme") ?? "dark";
     }
 }

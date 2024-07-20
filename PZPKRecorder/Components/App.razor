@@ -1,6 +1,6 @@
 ﻿@using Services;
 
-<MudThemeProvider Theme="_theme" IsDarkMode="true" />
+<MudThemeProvider @ref="@_mudThemeProvider" Theme="_theme" IsDarkMode="darkMode" />
 <MudDialogProvider FullWidth="true"
                    MaxWidth="MaxWidth.Small"
                    CloseButton="false"
@@ -43,26 +43,58 @@
 
 @code {
     [Inject] private IDialogService DialogService { get; set; }
+    private MudThemeProvider _mudThemeProvider;
     private MudTheme _theme = new();
     bool DrawOpen = true;
+    bool darkMode = true;
 
     private void OnExitClick()
     {
         Application.Exit();
     }
 
+    private async Task SetTheme(string theme)
+    {
+        if (theme == "system")
+        {
+            darkMode = await _mudThemeProvider.GetSystemPreference();
+        }
+        else
+        {
+            darkMode = theme == "dark";
+        }
+
+        StateHasChanged();
+    }
+
     protected override void OnInitialized()
     {
         base.OnInitialized();
 
-        Translate.LanguageChanged += (sender, e) =>
+        BroadcastService.BindingReceiver((name, arg) =>
         {
-            StateHasChanged();
-        };
-
-        ExceptionProxy.ExceptionFired += (sender, msg) =>
-        {
-            DialogService.ShowError(msg);
-        };
+            switch(name)
+            {
+                case BroadcastEventName.ExceptionCatch:
+                    DialogService.ShowError(arg);
+                    break;
+                case BroadcastEventName.LanguageChanged:
+                    StateHasChanged();
+                    break;
+                case BroadcastEventName.ThemeChanged:
+                    SetTheme(arg);
+                    break;
+                default: break;
+            }
+        });
     }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            string theme = VariantService.GetVariant("theme") ?? "dark";
+            SetTheme(theme);
+        }
+    }
+
 }

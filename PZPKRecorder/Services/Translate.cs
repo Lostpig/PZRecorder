@@ -12,7 +12,6 @@ internal static class Translate
     public static string Current { get; private set; } = DefaultLanguage;
     private static readonly List<string> _languages = new();
     public static IList<string> Languages => _languages;
-    public static event EventHandler<string>? LanguageChanged;
 
     public static void Init()
     {
@@ -36,7 +35,7 @@ internal static class Translate
         }
         catch (Exception ex)
         {
-            ExceptionProxy.PublishException(ex);
+            ExceptionProxy.CatchException(ex);
         }
     }
 
@@ -48,11 +47,11 @@ internal static class Translate
             Current = language;
             SaveLanguageSet(language);
 
-            LanguageChanged?.Invoke(null, language);
+            BroadcastService.Broadcast(BroadcastEventName.LanguageChanged, language);
         }
         catch (Exception ex)
         {
-            ExceptionProxy.PublishException(ex);
+            ExceptionProxy.CatchException(ex);
         }
     }
 

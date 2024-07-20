@@ -16,14 +16,24 @@
                 <MudSpacer />
                 <MudIconButton Icon="@Icons.Material.Filled.ArrowRight" OnClick="() => OnYearChanged(1)"></MudIconButton>
             </MudToolBar>
-            <div class="daily-statistic">
-                @for (int i = 0; i < dailyDatas.Length; i++)
+            <div class="daily-statistic-container">
+                @{ var d = yearFirstDay; }
+                @while(d.Year == year)
                 {
-                    string date = yearFirstDay.AddDays(i).ToString("yyyy-MM-dd");
-                    string cls = dailyDatas[i] == 1 ? "checkin" : dailyDatas[i] == 2 ? "notcheck" : "unknown";
-                    <MudTooltip Text="@date">
-                        <div class="@("item " + cls)"></div>
-                    </MudTooltip>
+                    int month = d.Month;
+                    <div class="daily-statistic">
+                        <div class="month-text">@d.ToString("MM")</div>
+                        @while (d.Month == month)
+                        {
+                            string date = d.ToString("yyyy-MM-dd") + " " + Helper.WeekdayName(d.DayOfWeek, false);
+                            string cls = dailyDatas[d.DayOfYear - 1] == 1 ? "checkin" : dailyDatas[d.DayOfYear - 1] == 2 ? "notcheck" : "unknown";
+                            <MudTooltip Text="@date">
+                                <div class="@("item " + cls)"></div>
+                            </MudTooltip>
+
+                            d = d.AddDays(1);
+                        }
+                    </div>
                 }
             </div>
         </div>

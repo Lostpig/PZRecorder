@@ -101,6 +101,7 @@
     private async void ShowDialog(int? id)
     {
         DialogParameters<Dialogs.DailyDialog> paramters = new();
+
         paramters.Add(d => d.IsEdit, id is not null);
         paramters.Add(d => d.DailyId, id ?? -1);
         string title = id is not null ? LD.Edit : LD.Add;

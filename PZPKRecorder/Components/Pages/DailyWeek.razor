@@ -20,7 +20,7 @@
                 {
                     string todayCls = d == today ? "today-cell" : "";
                     <th class="@todayCls dailyweek-cell ta-c">
-                        <MudText>@(WeekdayName(d.DayOfWeek, true))</MudText>
+                        <MudText>@(Helper.WeekdayName(d.DayOfWeek, true))</MudText>
                         <MudText Typo="Typo.caption" Style="color: var(--mud-palette-text-secondary);">@(formatDay(d))</MudText>
                     </th>
                 }
@@ -30,7 +30,10 @@
             @foreach (var (d, dw) in datas)
             {
                 <tr>
-                    <td>@d.Name</td>
+                    <td>
+                        <MudText Typo="Typo.body1" Inline="true">@d.Name</MudText>
+                        <MudText Typo="Typo.body2" Inline="true" Style="color: var(--mud-palette-text-secondary);">@d.Alias</MudText>
+                    </td>
                     @foreach (var day in weekDays)
                     {
                         string todayCls = day == today ? "today-cell" : "";
@@ -55,20 +58,6 @@
     private string formatDay(DateOnly date)
     {
         return $"{date.Month}/{date.Day}";
-    }
-    private string WeekdayName(DayOfWeek d, bool isShort)
-    {
-        return d switch
-        {
-            DayOfWeek.Sunday => isShort ? LD.Sun : LD.Sunday,
-            DayOfWeek.Monday => isShort ? LD.Mon : LD.Monday,
-            DayOfWeek.Tuesday => isShort ? LD.Tue : LD.Tuesday,
-            DayOfWeek.Wednesday => isShort ? LD.Wed : LD.Wednesday,
-            DayOfWeek.Thursday => isShort ? LD.Thu : LD.Thursday,
-            DayOfWeek.Friday => isShort ? LD.Fri : LD.Friday,
-            DayOfWeek.Saturday => isShort ? LD.Sat : LD.Saturday,
-            _ => ""
-        };
     }
 
     protected override void OnInitialized()

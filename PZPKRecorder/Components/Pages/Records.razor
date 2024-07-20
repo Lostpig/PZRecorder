@@ -237,11 +237,8 @@
     }
     private async void OnDeleteClick(int id)
     {
-        bool? result = await DialogService.ShowMessageBox(
-            LD.Warning,
-            LD.SureToDelete,
-            yesText: LD.Delete, cancelText: LD.Cancel);
-        if (result != null && result == true)
+        bool result = await DialogService.ShowConfirm(LD.SureToDelete, LD.Delete, LD.Cancel);
+        if (result == true)
         {
             try
             {
@@ -257,7 +254,7 @@
             }
             catch (Exception ex)
             {
-                await DialogService.ShowMessageBox(LD.Error, ex.Message);
+                await DialogService.ShowError(ex.Message);
             }
         }
     }
