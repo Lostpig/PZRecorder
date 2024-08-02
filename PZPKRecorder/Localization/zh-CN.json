@@ -14,6 +14,8 @@
   "AddKind": "添加分类",
   "AddRecord": "添加记录",
   "Edit": "修改",
+  "EditKind": "编辑分类",
+  "EditRecord": "编辑记录",
   "State": "状态",
   "Search": "搜索",
   "Progress": "进度",
@@ -71,6 +73,7 @@
   "Doing": "进行",
   "Complete": "完成",
   "Giveup": "搁置",
+  "CustomStateName": "自定义状态文本",
 
   "OrderBy": "排序",
 

@@ -56,3 +56,14 @@
 ## version 10002
 + t_dailyweek
   > id generate change to daily_id * 100000 + monday_day.from(2000,1,1).days()
+
+## version 10003
++ t_kind
+  > add custom state name columns
+  + id: int
+  + name: string
+  + order_no: int
+  + state_wish: string
+  + state_doing: string
+  + state_complete: string
+  + state_giveup: string

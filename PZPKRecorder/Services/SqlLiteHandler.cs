@@ -138,6 +138,8 @@ internal class SqlLiteHandler
                 UpdateFromVersion0(oldDbPath); break;
             case 10001:
                 UpdateFromVersion10001(oldDbPath); break;
+            case 10002:
+                UpdateFromVersion10002(oldDbPath); break;
             default:
                 throw new NotSupportedException($"Not supported DB version: {version}");
         }
@@ -189,6 +191,31 @@ internal class SqlLiteHandler
 
         ExcuteBatchInsert(kinds, records, dailies, dailyweeks, vars);
     }
+
+    private void UpdateFromVersion10002(string oldDbPath)
+    {
+        SQLiteConnection oldDB = new SQLiteConnection(oldDbPath, SQLiteOpenFlags.ReadOnly);
+
+        IList<KindVersion10002> kinds = oldDB.Table<KindVersion10002>().ToList();
+        List<Kind> newKinds = kinds.Select(d => new Kind()
+        {
+            Id = d.Id,
+            Name = d.Name,
+            OrderNo = d.OrderNo,
+            StateWishName = "",
+            StateDoingName = "",
+            StateCompleteName = "",
+            StateGiveupName = ""
+        }).ToList();
+
+        IList<Record> records = oldDB.Table<Record>().ToList();
+        IList<Daily> dailies = oldDB.Table<Daily>().ToList();
+        IList<DailyWeek> dailyweeks = oldDB.Table<DailyWeek>().ToList();
+        IList<VariantTable> vars = oldDB.Table<VariantTable>().Where(v => v.Key != dbVersionKey).ToList();
+
+        ExcuteBatchInsert(newKinds, records, dailies, dailyweeks, vars);
+    }
+
 
     public void ExcuteBatchInsert(IList<Kind> kinds, IList<Record> records, IList<Daily> dailies, IList<DailyWeek> dailyweeks, IList<VariantTable> vars)
     {

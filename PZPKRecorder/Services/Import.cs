@@ -41,9 +41,11 @@ internal class ImportService
 
         switch (version)
         {
-            case 0: break;
-            case 10001: break;
-            case 10002: break;
+            case 0: 
+            case 10001: 
+            case 10002:
+            case Helper.DataVersion:
+                break;
             default: throw new NotSupportedException("Not support json file to import");
         }
 

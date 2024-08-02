@@ -19,6 +19,8 @@ namespace PZPKRecorder.Localization
             [TranslateBind("AddKind")] public static string AddKind { get; set; }
             [TranslateBind("AddRecord")] public static string AddRecord { get; set; }
             [TranslateBind("Edit")] public static string Edit { get; set; }
+            [TranslateBind("EditKind")] public static string EditKind { get; set; }
+            [TranslateBind("EditRecord")] public static string EditRecord { get; set; }
             [TranslateBind("State")] public static string State { get; set; }
             [TranslateBind("Search")] public static string Search { get; set; }
             [TranslateBind("Progress")] public static string Progress { get; set; }
@@ -73,6 +75,7 @@ namespace PZPKRecorder.Localization
             [TranslateBind("Doing")] public static string Doing { get; set; }
             [TranslateBind("Complete")] public static string Complete { get; set; }
             [TranslateBind("Giveup")] public static string Giveup { get; set; }
+            [TranslateBind("CustomStateName")] public static string CustomStateName { get; set; }
             [TranslateBind("OrderBy")] public static string OrderBy { get; set; }
             [TranslateBind("MaxCharacters")] public static string MaxCharacters { get; set; }
             [TranslateBind("NoKindsError")] public static string NoKindsError { get; set; }

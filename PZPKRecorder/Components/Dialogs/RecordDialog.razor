@@ -11,10 +11,10 @@
             <MudTextField @bind-Value="record.Remark" Label="@LD.Remark" Variant="Variant.Text" MaxLength="100" Counter="100" Immediate="true"></MudTextField>
             <MudDivider Class="my-2" />
             <MudToggleGroup T="int" Outline="true" Delimiters="true" @bind-Value="stateInt">
-                <MudToggleItem Value="0" Text="@LD.Wish" />
-                <MudToggleItem Value="1" Text="@LD.Doing" />
-                <MudToggleItem Value="2" Text="@LD.Complete" />
-                <MudToggleItem Value="3" Text="@LD.Giveup" />
+                <MudToggleItem Value="0" Text="@kind.GetStateName(RecordState.Wish)" />
+                <MudToggleItem Value="1" Text="@kind.GetStateName(RecordState.Doing)" />
+                <MudToggleItem Value="2" Text="@kind.GetStateName(RecordState.Complete)" />
+                <MudToggleItem Value="3" Text="@kind.GetStateName(RecordState.Giveup)" />
             </MudToggleGroup>
             <MudDivider Class="my-2" />
             <MudStack Row="true">
@@ -43,6 +43,7 @@
 
     private MudForm form;
     private bool success = false;
+    private Kind kind;
 
     private Record record;
     private int stateInt = 0;
@@ -88,6 +89,8 @@
             stateInt = (int)record.State;
             publishDate = new DateTime(record.PublishYear, record.PublishMonth, 1);
             success = true;
+
+            kind = KindService.GetKind(record.Kind);
         }
         else 
         {
@@ -103,8 +106,7 @@
                     PublishYear = DateTime.Today.Year,
                     PublishMonth = DateTime.Today.Month
                 };
+            kind = KindService.GetKind(record.Kind);
         }
     }
-
-
 }

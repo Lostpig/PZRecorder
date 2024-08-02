@@ -5,7 +5,7 @@ namespace PZPKRecorder.Services;
 
 internal static class Helper
 {
-    public const int DataVersion = 10002;
+    public const int DataVersion = 10003;
     public static void OpenFolder(string path)
     {
         if (File.Exists(path))

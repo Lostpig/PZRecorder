@@ -9,6 +9,20 @@
                           Variant="Variant.Text" MaxLength="10" Counter="10"
                           Required="true" RequiredError="@LD.RequiredError"></MudTextField>
             <MudNumericField @bind-Value="kind.OrderNo" Label="@LD.OrderBy" Variant="Variant.Text" Min="0" Max="1000" />
+            <MudDivider Class="my-2" />
+            <MudText>@LD.CustomStateName</MudText>
+            <MudTextField @bind-Value="kind.StateWishName" Label="@LD.Wish"
+                          Immediate="true"
+                          Variant="Variant.Text" MaxLength="8" Counter="8"></MudTextField>
+            <MudTextField @bind-Value="kind.StateDoingName" Label="@LD.Doing"
+                          Immediate="true"
+                          Variant="Variant.Text" MaxLength="8" Counter="8"></MudTextField>
+            <MudTextField @bind-Value="kind.StateCompleteName" Label="@LD.Complete"
+                          Immediate="true"
+                          Variant="Variant.Text" MaxLength="8" Counter="8"></MudTextField>
+            <MudTextField @bind-Value="kind.StateGiveupName" Label="@LD.Giveup"
+                          Immediate="true"
+                          Variant="Variant.Text" MaxLength="8" Counter="8"></MudTextField>
         </MudForm>
     </DialogContent>
     <DialogActions>
