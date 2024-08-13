@@ -8,7 +8,7 @@
                           Immediate="true" Required="true" RequiredError="@LD.RequiredError"></MudTextField>
             <MudTextField @bind-Value="record.Alias" Label="@LD.Alias" Variant="Variant.Text" MaxLength="50" Counter="50"
                           Immediate="true"></MudTextField>
-            <MudTextField @bind-Value="record.Remark" Label="@LD.Remark" Variant="Variant.Text" MaxLength="100" Counter="100" Immediate="true"></MudTextField>
+            <MudTextField @bind-Value="record.Remark" Label="@LD.Remark" Variant="Variant.Text" MaxLength="500" Counter="500" Immediate="true" Lines="5"></MudTextField>
             <MudDivider Class="my-2" />
             <MudToggleGroup T="int" Outline="true" Delimiters="true" @bind-Value="stateInt">
                 <MudToggleItem Value="0" Text="@kind.GetStateName(RecordState.Wish)" />
@@ -77,9 +77,9 @@
         if (IsEdit) RecordService.UpdateRecord(record);
         else RecordService.InsertRecord(record);
 
-        MudDialog.Close(DialogResult.Ok(true));
+        MudDialog.Close(DialogResult.Ok(record));
     }
-    void Cancel() => MudDialog.Cancel();
+    void Cancel() => MudDialog.Close(DialogResult.Cancel());
 
     protected override void OnInitialized() 
     {

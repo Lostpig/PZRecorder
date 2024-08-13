@@ -45,7 +45,7 @@ internal class Record
         _ => "",
     };
 
-    [Column("remark")]
+    [Column("remark"), MaxLength(1000)]
     public string Remark { get; set; } = string.Empty;
 
     [Column("publish_year")]

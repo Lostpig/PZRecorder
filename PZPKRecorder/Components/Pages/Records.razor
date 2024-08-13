@@ -21,38 +21,34 @@
         <div class="records-container">
             <div class="records-tool-panel pa-3">
                 <MudPaper Elevation="2" Class="pa-2" >
-                    <MudTextField T="string" @bind-Value="searchString" @bind-Value:after="OnFilterChanged" Placeholder="@LD.Search" Adornment="Adornment.Start"
+                    <MudTextField T="string" @bind-Value="records.SearchText" @bind-Value:after="OnFilterChanged" Placeholder="@LD.Search" Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                     <MudText Typo="Typo.h6" Class="mt-4">@LD.State</MudText>
                     <div>
                         <MudChip Variant="Variant.Filled" OnClick="() => OnStateChange(RecordState.Wish)" Size="Size.Medium"
-                            Color="@(state == RecordState.Wish ? Color.Primary : Color.Default)" >@kind.GetStateName(RecordState.Wish)</MudChip>
+                                 Color="@(records.State == RecordState.Wish ? Color.Primary : Color.Default)">@kind.GetStateName(RecordState.Wish)</MudChip>
                         <MudChip Variant="Variant.Filled" OnClick="() => OnStateChange(RecordState.Doing)" Size="Size.Medium"
-                            Color="@(state == RecordState.Doing ? Color.Primary : Color.Default)">@kind.GetStateName(RecordState.Doing)</MudChip>
+                                 Color="@(records.State == RecordState.Doing ? Color.Primary : Color.Default)">@kind.GetStateName(RecordState.Doing)</MudChip>
                         <MudChip Variant="Variant.Filled" OnClick="() => OnStateChange(RecordState.Complete)" Size="Size.Medium"
-                            Color="@(state == RecordState.Complete ? Color.Primary : Color.Default)">@kind.GetStateName(RecordState.Complete)</MudChip>
+                                 Color="@(records.State == RecordState.Complete ? Color.Primary : Color.Default)">@kind.GetStateName(RecordState.Complete)</MudChip>
                         <MudChip Variant="Variant.Filled" OnClick="() => OnStateChange(RecordState.Giveup)" Size="Size.Medium"
-                            Color="@(state == RecordState.Giveup ? Color.Primary : Color.Default)">@kind.GetStateName(RecordState.Giveup)</MudChip>
+                                 Color="@(records.State == RecordState.Giveup ? Color.Primary : Color.Default)">@kind.GetStateName(RecordState.Giveup)</MudChip>
                     </div>
                     <MudDivider Class="my-2" />
-                    <MudText Typo="Typo.h6">@LD.PublishYear</MudText>
-                    <div>
-                        @foreach(var y in years)
+                    <MudSelect T="int" Label="@LD.PublishYear" AnchorOrigin="Origin.BottomCenter" @bind-Value="records.Year" @bind-Value:after="OnFilterChanged">
+                        <MudSelectItem T="int" Value="0">-</MudSelectItem>
+                        @foreach (var y in records.Years)
                         {
-                            Color color = y == year ? Color.Primary : Color.Default;
-                            <MudChip Variant="Variant.Filled" Color="color" Size="Size.Medium" OnClick="() => OnYearChange(y)">@y</MudChip>
+                            <MudSelectItem T="int" Value="@y" />
                         }
-                    </div>
-                    <MudDivider Class="my-2" />
-                    <MudText Typo="Typo.h6">@LD.PublishMonth</MudText>
-                    <div>
-                        @for (int i = 1; i <= 12; i++)
+                    </MudSelect>
+                    <MudSelect T="int" Label="@LD.PublishMonth" Class="mb-4" AnchorOrigin="Origin.BottomCenter" @bind-Value="records.Month" @bind-Value:after="OnFilterChanged">
+                        <MudSelectItem T="int" Value="0">-</MudSelectItem>
+                        @foreach (var m in records.Months)
                         {
-                            var m = i;
-                            Color color = m == month ? Color.Primary : Color.Default;
-                            <MudChip Class="month-chip" Variant="Variant.Filled" Color="color" Size="Size.Medium" OnClick="() => OnMonthChange(m)">@m</MudChip>
+                            <MudSelectItem T="int" Value="@m" />
                         }
-                    </div>
+                    </MudSelect>
                 </MudPaper>
                 <MudButton Variant="Variant.Outlined"
                            StartIcon="@Icons.Material.Filled.Add"
@@ -62,13 +58,13 @@
                            OnClick="OnAddClick">@LD.Add</MudButton>
             </div>
             <div class="records-list pa-3">
-                @if (records.Count == 0)
+                @if (records.Total == 0)
                 {
                     <div class="no-data-container">
                         <MudText Color="Color.Error">@LD.NoData</MudText>
                     </div>
                 }
-                @foreach(var record in records)
+                @foreach(var record in records.Items)
                 {
                     MudBlazor.Color stateColor = record.State switch
                     {
@@ -93,18 +89,18 @@
                         </div>
                         <MudDivider Vertical="true" FlexItem="true" Class="mx-2" />
                         <MudStack Row="false">
-                            <MudText Color="stateColor" Typo="Typo.body1" Style="text-align: center;">@record.StateText</MudText>
+                            <MudText Color="stateColor" Typo="Typo.body1" Style="text-align: center;">@kind.GetStateName(record.State)</MudText>
                             <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="@LD.Edit" OnClick="() => OnEditClick(record.Id)"></MudIconButton>
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" aria-label="@LD.Delete" OnClick="() => OnDeleteClick(record.Id)"></MudIconButton>
                         </MudStack>
                     </MudCard>
                 }
                 <div class="d-flex flex-row align-center">
-                    <MudPagination @bind-Selected="page" @bind-Selected:after="OnPageChanged"
+                    <MudPagination @bind-Selected="records.Page" @bind-Selected:after="OnPageChanged"
                                    ShowFirstButton="true" ShowLastButton="true"
-                                   Count="pageCount"
+                                   Count="records.PageCount"
                                    Class="pa-4 flex-1" />
-                    <MudText>@startCount - @endCount / @totalCount</MudText>
+                    <MudText>@records.From - @records.To / @records.Total</MudText>
                 </div>
             </div>
         </div>
@@ -116,90 +112,50 @@
     private bool disable = false;
 
     private IList<Kind> kinds = new List<Kind>();
-    private IList<Record> records = new List<Record>();
-    private IList<int> years = new List<int>();
-
-    private string searchString = "";
     private int kindIndex = 0;
-    private int page = 1;
-    private int pageCount = 0;
-    private int pageSize = 10;
     private Kind kind => kinds[kindIndex];
-
-    private RecordState? state;
-    private int? year;
-    private int? month;
-
-    private int totalCount = 0;
-    private int startCount = 0;
-    private int endCount = 0;
+    private RecordCollection records;
+    private RecordState? defaultState;
 
     private void OnStateChange(RecordState r)
     {
-        if (state == r) state = null;
-        else state = r;
+        if (records.State == r) records.State = null;
+        else records.State = r;
 
-        VariantService.SetVariant("RecordState", state == null ? "" : ((int)state).ToString());
+        VariantService.SetVariant("RecordState", records.State == null ? "" : ((int)r).ToString());
         OnFilterChanged();
     }
-    private void OnYearChange(int y)
-    {
-        if (year == y) year = null;
-        else year = y;
-        OnFilterChanged();
-    }
-    private void OnMonthChange(int m)
-    {
-        if (month == m) month = null;
-        else month = m;
-        OnFilterChanged();
-    }
-
     private void OnKindChange()
     {
-        year = null;
-        month = null;
-
-        LoadYears();
-        OnFilterChanged();
+        LoadRecords();
     }
     private void OnFilterChanged()
     {
-        page = 1;
-
-        LoadPageCount();
-        LoadRecords();
         StateHasChanged();
     }
 
     private void OnPageChanged()
     {
-        LoadRecords();
         StateHasChanged();
-    }
-
-    private void LoadPageCount()
-    {
-        int kindId = kinds[kindIndex].Id;
-
-        totalCount = RecordService.GetCount(kindId, searchString.Trim(), year, month, state);
-        int n = totalCount % pageSize;
-        pageCount = (totalCount - n) / pageSize + (n > 0 ? 1 : 0);
     }
     private void LoadRecords()
     {
-        int kindId = kinds[kindIndex].Id;
-        int offset = (page - 1) * pageSize;
-        int limit = pageSize;
+        RecordState? setedState = null;
+        string? setedSearchText = null;
+        if (records == null)
+        {
+            setedState = defaultState;
+        }
+        else
+        {
+            setedSearchText = records.SearchText;
+        }
 
-        records = RecordService.GetRecords(kindId, searchString, year, month, state, limit, offset);
-        startCount = offset + 1;
-        endCount = offset + records.Count;
-    }
-    private void LoadYears()
-    {
-        int kindId = kinds[kindIndex].Id;
-        years = RecordService.GetYears(kindId);
+        records = RecordCollection.GetCollection(kinds[kindIndex]);
+        records.SearchText = setedSearchText != null ? setedSearchText : "";
+        records.State = setedState;
+
+        StateHasChanged();
     }
 
     private async void OnAddClick()
@@ -215,10 +171,7 @@
         var result = await dialog.Result;
         if (!result.Canceled)
         {
-            page = 1;
-            LoadRecords();
-            LoadPageCount();
-            LoadYears();
+            records.NewRecord((Record)result.Data);
             StateHasChanged();
         }
     }
@@ -236,9 +189,7 @@
 
         if (!result.Canceled)
         {
-            LoadRecords();
-            LoadPageCount();
-            LoadYears();
+            records.UpdateRecord((Record)result.Data);
             StateHasChanged();
         }
     }
@@ -250,13 +201,7 @@
             try
             {
                 RecordService.DeleteRecord(id);
-                if (records.Count == 1 && page > 1) page = page - 1;
-
-                LoadRecords();
-                LoadPageCount();
-                LoadYears();
-                if (year != null && !years.Contains(year.Value)) year = null;
-
+                records.DeleteRecord(id);
                 StateHasChanged();
             }
             catch (Exception ex)
@@ -278,11 +223,9 @@
         var recordState = VariantService.GetVariant("RecordState");
         if (!string.IsNullOrEmpty(recordState) && int.TryParse(recordState, out int stateCode))
         {
-            state = (RecordState)stateCode;
+            defaultState = (RecordState)stateCode;
         }
 
         LoadRecords();
-        LoadPageCount();
-        LoadYears();
     }
 }

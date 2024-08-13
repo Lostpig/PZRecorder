@@ -12,7 +12,7 @@ internal class ExportService
         SaveFileDialog dlg = new()
         {
             Title = LocalizeDict.Export,
-            FileName = $"export-{DateTime.Now.ToString("yyyyMMddHHmmss")}.json",
+            FileName = $"export-{DateTime.Now:yyyyMMddHHmmss}.json",
             Filter = "JSON Files (*.json)|*.json"
         };
 
@@ -39,7 +39,7 @@ internal class ExportService
 
     private static string CreateExportData(Formatting formatting)
     {
-        JObject jobj = new JObject();
+        JObject jobj = [];
         
         // db version
         var dbVersion = VariantService.GetVariant(SqlLiteHandler.dbVersionKey);
@@ -62,11 +62,11 @@ internal class ExportService
     private static JArray CreateExportJsonArray<T>(IList<T> list)
     {
         Type t = typeof(T);
-        JArray jarr = new JArray();
+        JArray jarr = [];
 
         foreach (T item in list)
         {
-            JObject jitem = new JObject();
+            JObject jitem = [];
 
             foreach (PropertyInfo pi in t.GetProperties())
             {
