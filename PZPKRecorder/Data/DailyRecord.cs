@@ -28,6 +28,7 @@ internal class Daily
     public DailyState State { get; set; }
 
     [Column("order_no")]
+    [DataField(10001, 99999, 0)]
     public int OrderNo { get; set; }
 
     [Ignore]

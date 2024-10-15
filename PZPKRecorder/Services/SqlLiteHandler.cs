@@ -216,7 +216,10 @@ internal class SqlLiteHandler
         ExcuteBatchInsert(newKinds, records, dailies, dailyweeks, vars);
     }
 
-
+    /*
+        批量插入时,AutoIncrement会覆盖原有ID
+        所以关联的表需要在之后插入,并基于原ID关联上新ID
+     */
     public void ExcuteBatchInsert(IList<Kind> kinds, IList<Record> records, IList<Daily> dailies, IList<DailyWeek> dailyweeks, IList<VariantTable> vars)
     {
         DB.RunInTransaction(() =>

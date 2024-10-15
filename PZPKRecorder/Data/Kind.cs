@@ -14,18 +14,23 @@ internal class Kind
     public string Name { get; set; } = string.Empty;
 
     [Column("order_no")]
+    [DataField(10001, 99999, 0)]
     public int OrderNo { get; set; }
 
     [Column("state_wish")]
+    [DataField(10003, 99999, "")]
     public string StateWishName { get; set; } = string.Empty;
 
     [Column("state_doing")]
+    [DataField(10003, 99999, "")]
     public string StateDoingName { get; set; } = string.Empty;
     
     [Column("state_complete")]
+    [DataField(10003, 99999, "")]
     public string StateCompleteName { get; set; } = string.Empty;
     
     [Column("state_giveup")]
+    [DataField(10003, 99999, "")]
     public string StateGiveupName { get; set; } = string.Empty;
 
     public string GetStateName(RecordState state)
