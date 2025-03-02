@@ -21,7 +21,7 @@
         <div class="records-container">
             <div class="records-tool-panel pa-3">
                 <MudPaper Elevation="2" Class="pa-2" >
-                    <MudTextField T="string" @bind-Value="records.SearchText" @bind-Value:after="OnFilterChanged" Placeholder="@LD.Search" Adornment="Adornment.Start"
+                    <MudTextField T="string" @bind-Value="records.SearchText" Placeholder="@LD.Search" Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                     <MudText Typo="Typo.h6" Class="mt-4">@LD.State</MudText>
                     <div>
@@ -35,14 +35,14 @@
                                  Color="@(records.State == RecordState.Giveup ? Color.Primary : Color.Default)">@kind.GetStateName(RecordState.Giveup)</MudChip>
                     </div>
                     <MudDivider Class="my-2" />
-                    <MudSelect T="int" Label="@LD.PublishYear" AnchorOrigin="Origin.BottomCenter" @bind-Value="records.Year" @bind-Value:after="OnFilterChanged">
+                    <MudSelect T="int" Label="@LD.PublishYear" AnchorOrigin="Origin.BottomCenter" @bind-Value="records.Year">
                         <MudSelectItem T="int" Value="0">-</MudSelectItem>
                         @foreach (var y in records.Years)
                         {
                             <MudSelectItem T="int" Value="@y" />
                         }
                     </MudSelect>
-                    <MudSelect T="int" Label="@LD.PublishMonth" Class="mb-4" AnchorOrigin="Origin.BottomCenter" @bind-Value="records.Month" @bind-Value:after="OnFilterChanged">
+                    <MudSelect T="int" Label="@LD.PublishMonth" Class="mb-4" AnchorOrigin="Origin.BottomCenter" @bind-Value="records.Month">
                         <MudSelectItem T="int" Value="0">-</MudSelectItem>
                         @foreach (var m in records.Months)
                         {
@@ -96,7 +96,7 @@
                     </MudCard>
                 }
                 <div class="d-flex flex-row align-center">
-                    <MudPagination @bind-Selected="records.Page" @bind-Selected:after="OnPageChanged"
+                    <MudPagination @bind-Selected="records.Page"
                                    ShowFirstButton="true" ShowLastButton="true"
                                    Count="records.PageCount"
                                    Class="pa-4 flex-1" />
@@ -123,21 +123,12 @@
         else records.State = r;
 
         VariantService.SetVariant("RecordState", records.State == null ? "" : ((int)r).ToString());
-        OnFilterChanged();
     }
     private void OnKindChange()
     {
         LoadRecords();
     }
-    private void OnFilterChanged()
-    {
-        StateHasChanged();
-    }
 
-    private void OnPageChanged()
-    {
-        StateHasChanged();
-    }
     private void LoadRecords()
     {
         RecordState? setedState = null;
@@ -155,8 +146,6 @@
         records = RecordCollection.GetCollection(kinds[kindIndex]);
         records.SearchText = setedSearchText != null ? setedSearchText : "";
         records.State = setedState;
-
-        StateHasChanged();
     }
 
     private async void OnAddClick()

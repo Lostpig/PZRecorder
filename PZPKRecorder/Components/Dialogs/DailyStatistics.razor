@@ -16,6 +16,7 @@
                 <MudSpacer />
                 <MudIconButton Icon="@Icons.Material.Filled.ArrowRight" OnClick="() => OnYearChanged(1)"></MudIconButton>
             </MudToolBar>
+            <MudText>@((MarkupString)yearText)</MudText>
             <div class="daily-statistic-container">
                 @{ var d = yearFirstDay; }
                 @while(d.Year == year)
@@ -39,7 +40,7 @@
         </div>
     </DialogContent>
     <DialogActions>
-        <MudButton Color="Color.Primary" OnClick="Cancel">@LD.OK</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Cancel">@LD.Close</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -53,8 +54,12 @@
     private int[] dailyDatas;
     private DateOnly yearFirstDay;
 
+    private DateOnly firsyCheckDay;
+	private DateOnly lastCheckDay;
+
     private string dateText = "";
     private string checkinText = "";
+    private string yearText = "";
 
     void Cancel() => MudDialog.Cancel();
 
@@ -94,15 +99,15 @@
 
         if (checkinCount > 0)
         {
-            var firstDay = DateOnly.FromDayNumber(firstDayNum);
-            var lastDay = DateOnly.FromDayNumber(lastDayNum);
+            firsyCheckDay = DateOnly.FromDayNumber(firstDayNum);
+            lastCheckDay = DateOnly.FromDayNumber(lastDayNum);
             int totalDays = lastDayNum - firstDayNum + 1;
             double checkinPrec = (double)checkinCount / totalDays * 100.0;
 
             dateText = String.Format(
                 LD.StatisticTextDate, 
-                $"<span style=\"color: var(--mud-palette-info);\">{firstDay.ToString("yyyy-MM-dd")}</span>",
-                $"<span style=\"color: var(--mud-palette-info);\">{lastDay.ToString("yyyy-MM-dd")}</span>"
+                $"<span style=\"color: var(--mud-palette-info);\">{firsyCheckDay.ToString("yyyy-MM-dd")}</span>",
+                $"<span style=\"color: var(--mud-palette-info);\">{lastCheckDay.ToString("yyyy-MM-dd")}</span>"
             );
             checkinText = string.Format(LD.StatisticTextCount, 
                 $"<span style=\"color: var(--mud-palette-info);\">{totalDays}</span>",
@@ -128,6 +133,7 @@
             dailyDatas[i] = 0;
         }
 
+        int checkinDays = 0;
         foreach (var dw in datas)
         {
             for(int d = 1; d <= 7; d++)
@@ -139,10 +145,22 @@
                 if (diff >= 0 && diff < dailyDatas.Length)
                 {
                     dailyDatas[diff] = dw[dayOfWeek];
+                    if (dailyDatas[diff] == 1) checkinDays++;
                 }
             }
         }
 
-        StateHasChanged();
+		var factFirstDay = yearFirstDay > firsyCheckDay ? yearFirstDay : firsyCheckDay;
+		var factLastDay = yearLastDay < lastCheckDay ? yearLastDay : lastCheckDay;
+
+		int totalDays = factLastDay.DayNumber - factFirstDay.DayNumber + 1;
+        double checkinPrec = (double)checkinDays / totalDays * 100.0;
+        yearText = String.Format(
+            LD.StatisticTextYear,
+            year,
+            $"<span style=\"color: var(--mud-palette-info);\">{checkinDays}</span>",
+            $"<span style=\"color: var(--mud-palette-info);\">{totalDays}</span>",
+            $"<span style=\"color: var(--mud-palette-info);\">{checkinPrec.ToString("F2")}</span>"
+        );
     }
 }

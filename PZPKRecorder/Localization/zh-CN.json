@@ -1,5 +1,5 @@
 {
-  "Title": "PZPack - 中文版",
+  "Title": "PZrecorder",
   "Record": "记录",
   "Daily": "日常",
   "Setting": "设置",
@@ -40,11 +40,14 @@
   "CheckinStatistic": "打卡统计",
   "StatisticTextDate": "{0} 首次记录，{1} 最后一次记录",
   "StatisticTextCount": "{0} 天之间共完成打卡 {1} 次，打卡完成率 {2}%（{1} / {0}）",
+  "StatisticTextYear": "{0} 年共完成打卡 {1} 次，打卡完成率 {3}%（{1} / {2}）",
   "NoStatisticData": "没有打卡数据",
   "Light": "亮",
   "Dark": "暗",
   "System": "系统",
   "Theme": "主题",
+  "JoinDate": "入坑时间",
+  "LeaveDate": "退坑时间",
 
   "Warning": "警告",
   "Alert": "提醒",

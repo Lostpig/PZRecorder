@@ -1,5 +1,8 @@
 ﻿using SQLite;
 using PZPKRecorder.Data;
+using System.Reflection;
+using System;
+using Newtonsoft.Json.Linq;
 
 namespace PZPKRecorder.Services;
 
@@ -135,85 +138,84 @@ internal class SqlLiteHandler
         switch (version)
         {
             case 0:
-                UpdateFromVersion0(oldDbPath); break;
             case 10001:
-                UpdateFromVersion10001(oldDbPath); break;
             case 10002:
-                UpdateFromVersion10002(oldDbPath); break;
+            case 10003:
+                UpdateFromOldVersion(oldDbPath, version); break;
             default:
                 throw new NotSupportedException($"Not supported DB version: {version}");
         }
     }
 
-    private void UpdateFromVersion0(string oldDbPath)
+    private void UpdateFromOldVersion(string oldDbPath, int oldDbVersion)
     {
         SQLiteConnection oldDB = new SQLiteConnection(oldDbPath, SQLiteOpenFlags.ReadOnly);
 
-        // kind and record
-        IList<KindVersion0> kinds = oldDB.Table<KindVersion0>().ToList();
-        IList<Record> records = oldDB.Table<Record>().ToList();
-        List<Kind> newKinds = kinds.Select(d => new Kind()
+        // kind
+        IList<Kind> kinds = oldDbVersion switch
         {
-            Id = d.Id,
-            Name = d.Name,
-            OrderNo = 0
-        }).ToList();
+            0 => UpdateCollectionFromOldVersion<Kind, KindVersion0>(oldDB.Table<KindVersion0>().ToList(), oldDbVersion),
+            10002 => UpdateCollectionFromOldVersion<Kind, KindVersion10002>(oldDB.Table<KindVersion10002>().ToList(), oldDbVersion),
+            _ => oldDB.Table<Kind>().ToList()
+        };
 
-        // daily and dailyweek
-        IList<DailyVersion0> dailies = oldDB.Table<DailyVersion0>().ToList();
-        IList<DailyWeek> dailyweeks = oldDB.Table<DailyWeek>().ToList();
-        List<Daily> newDailies = dailies.Select(d => new Daily()
+        // record
+        IList<Record> records = oldDB.Table<Record>().ToList();
+
+        // daily
+        IList<Daily> dailies = oldDbVersion switch
         {
-            Id = d.Id,
-            Name = d.Name,
-            State = d.State,
-            Remark = d.Remark,
-            ModifyDate = d.ModifyDate,
-            Alias = d.Alias,
-            OrderNo = 0
-        }).ToList();
+            0 => UpdateCollectionFromOldVersion<Daily, DailyVersion0>(oldDB.Table<DailyVersion0>().ToList(), oldDbVersion),
+            10001 => UpdateCollectionFromOldVersion<Daily, DailyVersion10001>(oldDB.Table<DailyVersion10001>().ToList(), oldDbVersion),
+            _ => oldDB.Table<Daily>().ToList()
+        };
+
+        // dailyweek
+        IList<DailyWeek> dailyweeks = oldDB.Table<DailyWeek>().ToList();
 
         // variant
         IList<VariantTable> vars = oldDB.Table<VariantTable>().Where(v => v.Key != dbVersionKey).ToList();
 
-        ExcuteBatchInsert(newKinds, records, newDailies, dailyweeks, vars);
-    }
-
-    private void UpdateFromVersion10001(string oldDbPath)
-    {
-        SQLiteConnection oldDB = new SQLiteConnection(oldDbPath, SQLiteOpenFlags.ReadOnly);
-
-        IList<Kind> kinds = oldDB.Table<Kind>().ToList();
-        IList<Record> records = oldDB.Table<Record>().ToList();
-        IList<Daily> dailies = oldDB.Table<Daily>().ToList();
-        IList<DailyWeek> dailyweeks = oldDB.Table<DailyWeek>().ToList();
-        IList<VariantTable> vars = oldDB.Table<VariantTable>().Where(v => v.Key != dbVersionKey).ToList();
-
         ExcuteBatchInsert(kinds, records, dailies, dailyweeks, vars);
     }
-
-    private void UpdateFromVersion10002(string oldDbPath)
+    private List<T> UpdateCollectionFromOldVersion<T, oldT>(IList<oldT> oldList, int oldDbVersion) where T : new ()
     {
-        SQLiteConnection oldDB = new SQLiteConnection(oldDbPath, SQLiteOpenFlags.ReadOnly);
+        List<T> list = new();
+        Type t = typeof(T);
+        Type ot = typeof(oldT);
 
-        IList<KindVersion10002> kinds = oldDB.Table<KindVersion10002>().ToList();
-        List<Kind> newKinds = kinds.Select(d => new Kind()
+        foreach (var item in oldList)
         {
-            Id = d.Id,
-            Name = d.Name,
-            OrderNo = d.OrderNo,
-            StateWishName = "",
-            StateDoingName = "",
-            StateCompleteName = "",
-            StateGiveupName = ""
-        }).ToList();
+            T instance = new T();
+            foreach (PropertyInfo pi in t.GetProperties())
+            {
+                SQLite.ColumnAttribute? colAttr = pi.GetCustomAttribute<SQLite.ColumnAttribute>();
+                if (colAttr is null) continue;
 
-        IList<Record> records = oldDB.Table<Record>().ToList();
-        IList<Daily> dailies = oldDB.Table<Daily>().ToList();
-        IList<DailyWeek> dailyweeks = oldDB.Table<DailyWeek>().ToList();
-        IList<VariantTable> vars = oldDB.Table<VariantTable>().Where(v => v.Key != dbVersionKey).ToList();
+                var otCol = ot.GetProperty(colAttr.Name);
+                if (otCol is null)
+                {
+                    DataFieldAttribute? dfAttr = pi.GetCustomAttribute<DataFieldAttribute>();
+                    if (dfAttr is not null)
+                    {
+                        if (dfAttr.MaxVersion < oldDbVersion || dfAttr.MinVersion > oldDbVersion)
+                        {
+                            pi.SetValue(instance, dfAttr.DefaultValue);
+                            continue;
+                        }
+                    }
+                } 
+                else
+                {
+                    var oldVal = otCol.GetValue(item);
+                    pi.SetValue(instance, oldVal);
+                }
+            }
 
-        ExcuteBatchInsert(newKinds, records, dailies, dailyweeks, vars);
+            list.Add(instance);
+        }
+
+        return list;
     }
 
     /*

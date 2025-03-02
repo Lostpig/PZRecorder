@@ -67,3 +67,17 @@
   + state_doing: string
   + state_complete: string
   + state_giveup: string
+
+## version 10004
++ t_daily
+  > modify remark length to 1000  
+  > add start_day and end_day columns  
+  + id: int
+  + name: string
+  + alias: string
+  + remark: string
+  + start_day: int
+  + end_day: int
+  + state: enum DailyState
+  + modify_date: DateTime
+  + order_no: int

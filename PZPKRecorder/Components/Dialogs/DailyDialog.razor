@@ -13,13 +13,25 @@
                           Variant="Variant.Text" MaxLength="30" Counter="30"></MudTextField>
             <MudTextField @bind-Value="daily.Remark" Label="@LD.Remark"
                           Immediate="true"
-                          Variant="Variant.Text" MaxLength="100" Counter="100"></MudTextField>
+                          Lines="5"
+                          Variant="Variant.Text" MaxLength="500" Counter="500"></MudTextField>
             <MudNumericField @bind-Value="daily.OrderNo" Label="@LD.OrderBy" Variant="Variant.Text" Min="0" Max="1000" />
             <MudDivider Class="my-2" />
             <MudToggleGroup T="DailyState" Outline="true" Delimiters="true" @bind-Value="daily.State">
                 <MudToggleItem Value="DailyState.Enabled" Text="@LD.Enabled" />
                 <MudToggleItem Value="DailyState.Disabled" Text="@LD.Disabled" />
             </MudToggleGroup>
+            <MudDivider Class="my-2" />
+            <MudDatePicker Label="@LD.JoinDate"
+                           @bind-Date="startDate"
+                           OpenTo="OpenTo.Year"
+                            DisableToolbar="true"
+                           DateFormat="yyyy-MM-dd" />
+            <MudDatePicker Label="@LD.LeaveDate"
+                           @bind-Date="endDate"
+                           OpenTo="OpenTo.Year"
+                           DisableToolbar="true"
+                           DateFormat="yyyy-MM-dd" />
         </MudForm>
     </DialogContent>
     <DialogActions>
@@ -37,12 +49,20 @@
     private MudForm form;
     private bool success = false;
     private Daily daily;
+    private DateTime? startDate = DateTime.MinValue;
+    private DateTime? endDate = DateTime.MinValue;
 
     protected override void OnInitialized()
     {
         if (IsEdit)
         {
             daily = DailyService.GetDaily(DailyId);
+
+            var startDay = DateOnly.FromDayNumber(daily.StartDay);
+            startDate = new DateTime(startDay.Year, startDay.Month, startDay.Day);
+
+            var endDay = DateOnly.FromDayNumber(daily.EndDay);
+            endDate = new DateTime(endDay.Year, endDay.Month, endDay.Day);
         }
         else
         {
@@ -53,6 +73,8 @@
                     State = DailyState.Enabled,
                     Remark = ""
                 };
+            startDate = DateTime.Today;
+            endDate = DateTime.Today.AddYears(100);
         }
     }
 
@@ -64,6 +86,8 @@
         }
 
         daily.ModifyDate = DateTime.Now;
+		daily.StartDay = DateOnly.FromDateTime(startDate.Value).DayNumber;
+		daily.EndDay = DateOnly.FromDateTime(endDate.Value).DayNumber;
 
         if (IsEdit) DailyService.UpdateDaily(daily);
         else DailyService.InsertDaily(daily);

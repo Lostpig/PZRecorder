@@ -95,7 +95,6 @@
     {
         item.State = item.State == DailyState.Enabled ? DailyState.Disabled : DailyState.Enabled;
         DailyService.UpdateDaily(item);
-        StateHasChanged();
     }
 
     private async void ShowDialog(int? id)

@@ -3,6 +3,7 @@
 @using Services;
 @using Data;
 @using PZPKRecorder.Components.Controls;
+@implements IDisposable;
 
 <MudPaper Width="100%" Height="100%" class="d-flex flex-column">
     <MudToolBar Class="mud-elevation-2">
@@ -71,7 +72,21 @@
         mondayDate = DateOnly.FromDayNumber(today.DayNumber - diffDays);
         dailies = DailyService.GetDailies(DailyState.Enabled);
 
+        BroadcastService.RegisterReceiver(OnAvtived);
+
         UpdatePage();
+    }
+    public void Dispose()
+    {
+        BroadcastService.RemoveReceiver(OnAvtived);
+    }
+    private void OnAvtived (string eventName, string arg)
+    {
+        if (eventName == BroadcastEventName.WindowActivated)
+        {
+            today = DateOnly.FromDateTime(DateTime.Today);
+            StateHasChanged();
+        }
     }
 
     private void WeekChange(int change)
@@ -86,8 +101,6 @@
     {
         UpdateWeekDays();
         UpdateData();
-
-        StateHasChanged();
     }
     private void UpdateWeekDays()
     {

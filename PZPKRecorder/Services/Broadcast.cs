@@ -5,21 +5,27 @@ internal static class BroadcastEventName
     public const string ExceptionCatch = "ExceptionCatch";
     public const string LanguageChanged = "LanguageChanged";
     public const string ThemeChanged = "ThemeChanged";
+    public const string WindowActivated = "WindowActivated";
 }
 
 internal class BroadcastService
 {
-    static Action<string, string>? ReceiverAction;
+    static HashSet<Action<string, string>> ReceiverActions = new();
 
-    public static void BindingReceiver(Action<string, string> action)
+    public static void RegisterReceiver(Action<string, string> action)
     {
-        ReceiverAction = action;
+        ReceiverActions.Add(action);
     }
+    public static void RemoveReceiver(Action<string, string> action)
+    {
+        ReceiverActions.Remove(action);
+    }
+
     public static void Broadcast(string eventName, string eventArg)
     {
-        if (ReceiverAction != null)
+        foreach (var action in ReceiverActions)
         {
-            ReceiverAction(eventName, eventArg);
+            action(eventName, eventArg);
         }
     }
 }

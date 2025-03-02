@@ -45,11 +45,14 @@ namespace PZPKRecorder.Localization
             [TranslateBind("CheckinStatistic")] public static string CheckinStatistic { get; set; }
             [TranslateBind("StatisticTextDate")] public static string StatisticTextDate { get; set; }
             [TranslateBind("StatisticTextCount")] public static string StatisticTextCount { get; set; }
+            [TranslateBind("StatisticTextYear")] public static string StatisticTextYear { get; set; }
             [TranslateBind("NoStatisticData")] public static string NoStatisticData { get; set; }
             [TranslateBind("Light")] public static string Light { get; set; }
             [TranslateBind("Dark")] public static string Dark { get; set; }
             [TranslateBind("System")] public static string System { get; set; }
             [TranslateBind("Theme")] public static string Theme { get; set; }
+            [TranslateBind("JoinDate")] public static string JoinDate { get; set; }
+            [TranslateBind("LeaveDate")] public static string LeaveDate { get; set; }
             [TranslateBind("Warning")] public static string Warning { get; set; }
             [TranslateBind("Alert")] public static string Alert { get; set; }
             [TranslateBind("Error")] public static string Error { get; set; }

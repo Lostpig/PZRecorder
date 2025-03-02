@@ -71,7 +71,7 @@
     {
         base.OnInitialized();
 
-        BroadcastService.BindingReceiver((name, arg) =>
+        BroadcastService.RegisterReceiver((name, arg) =>
         {
             switch(name)
             {
@@ -84,7 +84,8 @@
                 case BroadcastEventName.ThemeChanged:
                     SetTheme(arg);
                     break;
-                default: break;
+                default: 
+                    break;
             }
         });
     }
@@ -93,7 +94,7 @@
         if (firstRender)
         {
             string theme = VariantService.GetVariant("theme") ?? "dark";
-            SetTheme(theme);
+            await SetTheme(theme);
         }
     }
 

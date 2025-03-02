@@ -21,7 +21,7 @@ internal class Daily
     [Column("alias")]
     public string Alias { get; set; } = string.Empty;
 
-    [Column("remark")]
+    [Column("remark"), MaxLength(1000)]
     public string Remark { get; set; } = string.Empty;
 
     [Column("state")]
@@ -30,6 +30,13 @@ internal class Daily
     [Column("order_no")]
     [DataField(10001, 99999, 0)]
     public int OrderNo { get; set; }
+
+    [Column("start_day")]
+    [DataField(10004, 99999, 0)]
+    public int StartDay { get; set; }
+    [Column("end_day")]
+    [DataField(10004, 99999, 0)]
+    public int EndDay { get; set; }
 
     [Ignore]
     public string StateText => State switch
@@ -148,6 +155,33 @@ internal class DailyVersion0
 
     [Column("state")]
     public DailyState State { get; set; }
+
+    [Column("modify_date")]
+    public DateTime ModifyDate { get; set; }
+}
+
+[Table("t_daily")]
+internal class DailyVersion10001
+{
+    [PrimaryKey, AutoIncrement]
+    [Column("id")]
+    public int Id { get; set; }
+
+    [Column("name"), Indexed]
+    public string Name { get; set; } = string.Empty;
+
+    [Column("alias")]
+    public string Alias { get; set; } = string.Empty;
+
+    [Column("remark"), MaxLength(1000)]
+    public string Remark { get; set; } = string.Empty;
+
+    [Column("state")]
+    public DailyState State { get; set; }
+
+    [Column("order_no")]
+    [DataField(10001, 99999, 0)]
+    public int OrderNo { get; set; }
 
     [Column("modify_date")]
     public DateTime ModifyDate { get; set; }

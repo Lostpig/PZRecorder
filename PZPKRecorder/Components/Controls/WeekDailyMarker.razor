@@ -1,15 +1,15 @@
 ﻿<div>
     @if (DayState == 1)
     {
-        <MudIconButton Icon="@Icons.Material.Outlined.BookmarkAdded" Color="Color.Success" OnClick="OnChangeClick"></MudIconButton>
+        <MudIconButton Icon="@Icons.Material.Outlined.BookmarkAdded" Color="Color.Success" @onmouseup="OnChangeClick"></MudIconButton>
     }
     else if (DayState == 2)
     {
-        <MudIconButton Icon="@Icons.Material.Outlined.BookmarkRemove" Color="Color.Error" OnClick="OnChangeClick"></MudIconButton>
+        <MudIconButton Icon="@Icons.Material.Outlined.BookmarkRemove" Color="Color.Error" @onmouseup="OnChangeClick"></MudIconButton>
     }
     else
     {
-        <MudIconButton Icon="@Icons.Material.Outlined.BookmarkBorder" Color="Color.Default" OnClick="OnChangeClick"></MudIconButton>
+        <MudIconButton Icon="@Icons.Material.Outlined.BookmarkBorder" Color="Color.Default" @onmouseup="OnChangeClick"></MudIconButton>
     }
 </div>
 
@@ -17,9 +17,17 @@
     [Parameter] public int DayState { get; set; } = 0;
     [Parameter] public EventCallback<int> DayStateChanged { get; set; }
 
-    private void OnChangeClick()
+    private void OnChangeClick(MouseEventArgs e)
     {
-        int nextState = DayState >= 2 ? 0 : DayState + 1;
-        DayStateChanged.InvokeAsync(nextState);
+        if (e.Button == 0)
+        {
+            int nextState = DayState >= 2 ? 0 : DayState + 1;
+            DayStateChanged.InvokeAsync(nextState);
+        } 
+        else if (e.Button == 2)
+        {
+            int nextState = DayState == 2 ? 0 : 2;
+            DayStateChanged.InvokeAsync(nextState);
+        }
     }
 }

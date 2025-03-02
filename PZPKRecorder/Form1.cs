@@ -58,6 +58,12 @@ public partial class Form1 : Form
         Text = "PZ Recorder V" + Assembly.GetExecutingAssembly().GetName().Version?.ToString();
     }
 
+    protected override void OnActivated(EventArgs e)
+    {
+        base.OnActivated(e);
+        BroadcastService.Broadcast(BroadcastEventName.WindowActivated, string.Empty);
+    }
+
     protected override void OnResizeEnd(EventArgs e)
     {
         base.OnResizeEnd(e);
