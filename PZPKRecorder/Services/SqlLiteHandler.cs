@@ -32,7 +32,7 @@ internal class SqlLiteHandler
         }
     }
 
-    public static string dbPath
+    public static string DBPath
     {
         get
         {
@@ -41,17 +41,17 @@ internal class SqlLiteHandler
             return filePath;
         }
     }
-    public const string dbVersionKey = "dbversion";
+    public const string DBVersionKey = "dbversion";
 
     public void Initialize()
     {
-        if (File.Exists(dbPath))
+        if (File.Exists(DBPath))
         {
-            OpenAvailableDB(dbPath);
+            OpenAvailableDB(DBPath);
         }
         else
         {
-            CreateNewDB(dbPath);
+            CreateNewDB(DBPath);
         }
     }
     private void OpenAvailableDB(string path)
@@ -60,7 +60,7 @@ internal class SqlLiteHandler
         {
             _db = new SQLiteConnection(path);
 
-            var vt = _db.Table<VariantTable>().Where(r => r.Key == dbVersionKey).FirstOrDefault();
+            var vt = _db.Table<VariantTable>().Where(r => r.Key == DBVersionKey).FirstOrDefault();
             int version = vt != null ? int.Parse(vt.Value) : 0;
 
             if (version != Helper.DataVersion)
@@ -92,8 +92,10 @@ internal class SqlLiteHandler
             _db.CreateTable<Record>();
             _db.CreateTable<Daily>();
             _db.CreateTable<DailyWeek>();
+            _db.CreateTable<ClockIn>();
+            _db.CreateTable<ClockInRecord>();
 
-            _db.InsertOrReplace(new VariantTable() { Key = dbVersionKey, Value = Helper.DataVersion.ToString() });
+            _db.InsertOrReplace(new VariantTable() { Key = DBVersionKey, Value = Helper.DataVersion.ToString() });
         }
         catch (Exception ex)
         {
@@ -125,12 +127,14 @@ internal class SqlLiteHandler
         DB.DeleteAll<Record>();
         DB.DeleteAll<Daily>();
         DB.DeleteAll<DailyWeek>();
+        DB.DeleteAll<ClockIn>();
+        DB.DeleteAll<ClockInRecord>();
 
-        DB.Execute("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME IN ('t_kind', 't_record', 't_daily')");
+        DB.Execute("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE 1 = 1");
     }
     public void Dispose()
     {
-        _db.Close();
+        _db?.Close();
     }
 
     private void UpdateDB(int version, string oldDbPath)
@@ -141,6 +145,7 @@ internal class SqlLiteHandler
             case 10001:
             case 10002:
             case 10003:
+            case 10004:
                 UpdateFromOldVersion(oldDbPath, version); break;
             default:
                 throw new NotSupportedException($"Not supported DB version: {version}");
@@ -174,9 +179,20 @@ internal class SqlLiteHandler
         IList<DailyWeek> dailyweeks = oldDB.Table<DailyWeek>().ToList();
 
         // variant
-        IList<VariantTable> vars = oldDB.Table<VariantTable>().Where(v => v.Key != dbVersionKey).ToList();
+        IList<VariantTable> vars = oldDB.Table<VariantTable>().Where(v => v.Key != DBVersionKey).ToList();
 
-        ExcuteBatchInsert(kinds, records, dailies, dailyweeks, vars);
+        // clockin & clockinrecord
+        // add after version 10005
+        IList<ClockIn> clockIns = oldDbVersion switch
+        {
+            _ => new List<ClockIn>()
+        };
+        IList<ClockInRecord> clockInRecordss = oldDbVersion switch
+        {
+            _ => new List<ClockInRecord>()
+        };
+
+        ExcuteBatchInsert(kinds, records, dailies, dailyweeks, clockIns, clockInRecordss, vars);
     }
     private List<T> UpdateCollectionFromOldVersion<T, oldT>(IList<oldT> oldList, int oldDbVersion) where T : new ()
     {
@@ -222,7 +238,11 @@ internal class SqlLiteHandler
         批量插入时,AutoIncrement会覆盖原有ID
         所以关联的表需要在之后插入,并基于原ID关联上新ID
      */
-    public void ExcuteBatchInsert(IList<Kind> kinds, IList<Record> records, IList<Daily> dailies, IList<DailyWeek> dailyweeks, IList<VariantTable> vars)
+    public void ExcuteBatchInsert(
+        IList<Kind> kinds, IList<Record> records, 
+        IList<Daily> dailies, IList<DailyWeek> dailyweeks,
+        IList<ClockIn> clockIns, IList<ClockInRecord> clockInRecords,
+        IList<VariantTable> vars)
     {
         DB.RunInTransaction(() =>
         {
@@ -277,6 +297,24 @@ internal class SqlLiteHandler
                     ndw.Id = DailyWeek.GenerateId(newId, dw.MondayDate);
 
                     DB.Insert(ndw);
+                }
+            }
+
+            foreach (var clockin in clockIns)
+            {
+                var currentItems = clockInRecords.Where(r => r.Pid == clockin.Id).ToList();
+
+                clockin.Id = 0;
+                DB.Insert(clockin);
+                int newId = clockin.Id;
+
+                foreach (var item in currentItems)
+                {
+                    DB.Insert(new ClockInRecord()
+                    {
+                        Pid = newId,
+                        Time = item.Time
+                    });
                 }
             }
 

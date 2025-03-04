@@ -53,6 +53,13 @@ namespace PZPKRecorder.Localization
             [TranslateBind("Theme")] public static string Theme { get; set; }
             [TranslateBind("JoinDate")] public static string JoinDate { get; set; }
             [TranslateBind("LeaveDate")] public static string LeaveDate { get; set; }
+            [TranslateBind("ClockIn")] public static string ClockIn { get; set; }
+            [TranslateBind("ClockInDiffText")] public static string ClockInDiffText { get; set; }
+            [TranslateBind("ClockInTodayText")] public static string ClockInTodayText { get; set; }
+            [TranslateBind("ClockInNoRecord")] public static string ClockInNoRecord { get; set; }
+            [TranslateBind("ClockInTime")] public static string ClockInTime { get; set; }
+            [TranslateBind("Count")] public static string Count { get; set; }
+            [TranslateBind("ClockInCounter")] public static string ClockInCounter { get; set; }
             [TranslateBind("Warning")] public static string Warning { get; set; }
             [TranslateBind("Alert")] public static string Alert { get; set; }
             [TranslateBind("Error")] public static string Error { get; set; }

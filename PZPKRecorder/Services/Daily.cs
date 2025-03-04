@@ -1,5 +1,4 @@
 ﻿using PZPKRecorder.Data;
-using SQLite;
 
 namespace PZPKRecorder.Services;
 
@@ -8,13 +7,13 @@ internal class DailyService
 
     public static IList<Daily> GetDailies (DailyState? state)
     {
-        string query = $"SELECT * FROM t_daily WHERE 1 = 1 "
-                + $" {(state is not null ? "AND state = " + (int)state : "")}"
-                + $" ORDER BY state DESC, order_no ASC";
-        return SqlLiteHandler.Instance.DB.Query<Daily>(query);
+        var q = SqlLiteHandler.Instance.DB.Table<Daily>();
+        if (state is not null) q = q.Where(d =>  d.State == state);
+
+        return q.OrderByDescending(d => d.State).ThenBy(d => d.OrderNo).ToList();
     }
 
-    public static Daily GetDaily(int id)
+    public static Daily? GetDaily(int id)
     {
         return SqlLiteHandler.Instance.DB.Find<Daily>(id);
     }
@@ -29,11 +28,10 @@ internal class DailyService
     }
     public static int DeleteDaily(int id)
     {
-        string deleteQuery = $"DELETE FROM t_dailyweek WHERE daily_id = {id}";
         int result = 0;
         SqlLiteHandler.Instance.DB.RunInTransaction(() =>
         {
-            SqlLiteHandler.Instance.DB.Query<DailyWeek>(deleteQuery);
+            SqlLiteHandler.Instance.DB.Table<DailyWeek>().Delete(dw => dw.DailyId == id);
             result = SqlLiteHandler.Instance.DB.Delete<Daily>(id);
         });
 

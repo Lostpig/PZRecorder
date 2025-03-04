@@ -36,7 +36,7 @@
                     <td>
                         <MudButton Variant="Variant.Text" Color="stateColor" OnClick="() => OnChangeState(row)">@row.StateText</MudButton>
                     </td>
-                    <td class="ta-r">
+                    <td>
                         <MudButton Variant="Variant.Text" Color="Color.Warning" OnClick="() => OnStatisticClick(row.Id)">@LD.Statistic</MudButton>
                         <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => ShowDialog(row.Id)">@LD.Edit</MudButton>
                         <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="() => OnDeleteClick(row.Id)">@LD.Delete</MudButton>
@@ -49,7 +49,7 @@
 
 
 @code {
-    [Inject] private IDialogService DialogService { get; set; }
+    [Inject] private IDialogService DialogService { get; set; } = default!;
 
     IList<Daily> dailies = new List<Daily>();
 

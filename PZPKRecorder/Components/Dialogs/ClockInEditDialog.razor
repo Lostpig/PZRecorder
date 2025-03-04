@@ -1,0 +1,64 @@
+﻿@using Data;
+@using Services;
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@success">
+            <MudTextField @bind-Value="clockIn.Name" Label="@LD.Name"
+            Immediate="true"
+            Variant="Variant.Text" MaxLength="10" Counter="10"
+            Required="true" RequiredError="@LD.RequiredError"></MudTextField>
+            <MudTextField @bind-Value="clockIn.Remark" Label="@LD.Remark"
+            Immediate="true"
+            Lines="5"
+            Variant="Variant.Text" MaxLength="500" Counter="500"></MudTextField>
+            <MudNumericField @bind-Value="clockIn.OrderNo" Label="@LD.OrderBy" Variant="Variant.Text" Min="0" Max="1000" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@LD.Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit" Disabled="@(!success)">@LD.OK</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public bool IsEdit { get; set; }
+    [Parameter] public int Id { get; set; }
+
+    private MudForm form = default!;
+    private bool success = false;
+    private ClockIn clockIn = default!;
+
+    protected override void OnInitialized()
+    {
+        if (IsEdit)
+        {
+            clockIn = ClockInService.GetClockIn(Id);
+        }
+        else
+        {
+            clockIn = new ClockIn()
+            {
+                Name = string.Empty,
+                Remark = string.Empty,
+                OrderNo = 0
+            };
+        }
+    }
+
+    void Submit()
+    {
+        if (!success)
+        {
+            return;
+        }
+
+        if (IsEdit) ClockInService.UpdateClockIn(clockIn);
+        else ClockInService.AddClockIn(clockIn);
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+    void Cancel() => MudDialog.Cancel();
+}

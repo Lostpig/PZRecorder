@@ -80,7 +80,7 @@
         language = Translate.Current;
         languages = Translate.Languages;
 
-        string? dbver = VariantService.GetVariant(SqlLiteHandler.dbVersionKey);
+        string? dbver = VariantService.GetVariant(SqlLiteHandler.DBVersionKey);
         DBVersion = int.Parse(dbver ?? "0");
 
         theme = VariantService.GetVariant("theme") ?? "dark";

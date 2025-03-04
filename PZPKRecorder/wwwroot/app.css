@@ -17,19 +17,19 @@ table {
 }
 
 .ta-c {
-    text-align: center;
+    text-align: center !important;
 }
 .ta-l {
-    text-align: left;
+    text-align: left !important;
 }
-.ta-r { 
-    text-align: right; 
+.ta-r {
+    text-align: right !important;
 }
 .fl-l {
-    float: left;
+    float: left !important;
 }
 .fl-r {
-    float: right;
+    float: right !important;
 }
 
 .no-data-container {

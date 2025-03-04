@@ -44,13 +44,15 @@ internal class ImportService
             case 0:
             case 10001:
             case 10002:
+            case 10003:
+            case 10004:
             case Helper.DataVersion:
                 break;
             default: throw new NotSupportedException("Not support json file to import");
         }
 
         // backup before import
-        SqlLiteHandler.Instance.BackupDB(SqlLiteHandler.dbPath);
+        SqlLiteHandler.Instance.BackupDB(SqlLiteHandler.DBPath);
         SqlLiteHandler.Instance.ResetDB();
 
         var kinds = CreateImportList<Kind>(jobj, "kinds", version);
@@ -58,13 +60,16 @@ internal class ImportService
         var dailies = CreateImportList<Daily>(jobj, "dailies", version);
         var dailyweeks = CreateImportList<Data.DailyWeek>(jobj, "dailyweeks", version);
 
-        SqlLiteHandler.Instance.ExcuteBatchInsert(kinds, records, dailies, dailyweeks, new List<VariantTable>());
+        var clockIns = version >= 10005 ? CreateImportList<ClockIn>(jobj, "clockin", version) : [];
+        var clockInRecords = version >= 10005 ? CreateImportList<ClockInRecord>(jobj, "clockinrecords", version) : [];
+
+        SqlLiteHandler.Instance.ExcuteBatchInsert(kinds, records, dailies, dailyweeks, clockIns, clockInRecords, new List<VariantTable>());
     }
 
     private static IList<T> CreateImportList<T>(JObject jobj, string tableName, int dbVersion) where T : new()
     {
         JArray? jTable = jobj.Value<JArray>(tableName);
-        if (jTable is null) throw new InvalidDataException("Import file invalid: kinds field not available");
+        if (jTable is null) throw new InvalidDataException($"Import file invalid: table {tableName} not available");
 
         List<T> list = new();
         Type t = typeof(T);

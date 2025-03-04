@@ -2,11 +2,11 @@
 
 <MudThemeProvider @ref="@_mudThemeProvider" Theme="_theme" IsDarkMode="darkMode" />
 <MudDialogProvider FullWidth="true"
-                   MaxWidth="MaxWidth.Small"
-                   CloseButton="false"
-                   DisableBackdropClick="true"
-                   Position="DialogPosition.TopCenter"
-                   CloseOnEscapeKey="true" />
+    MaxWidth="MaxWidth.Small"
+    CloseButton="false"
+    DisableBackdropClick="true"
+    Position="DialogPosition.TopCenter"
+    CloseOnEscapeKey="true" />
 
 <MudLayout>
     <MudDrawer @bind-Open="@DrawOpen" Elevation="2">
@@ -19,6 +19,8 @@
             <MudDivider Class="my-4" />
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CalendarMonth" Href="/daily-week">@LD.Daily</MudNavLink>
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.EditCalendar" Href="/daily-manager">@LD.DailyManager</MudNavLink>
+            <MudDivider Class="my-4" />
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.History" Href="/clock-in">@LD.ClockIn</MudNavLink>
             <MudDivider Class="my-4" />
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Settings" Href="/setting">@LD.Setting</MudNavLink>
             <MudNavLink Icon="@Icons.Material.Filled.ExitToApp" OnClick="OnExitClick">@LD.Exit</MudNavLink>
@@ -42,8 +44,8 @@
 </MudLayout>
 
 @code {
-    [Inject] private IDialogService DialogService { get; set; }
-    private MudThemeProvider _mudThemeProvider;
+	[Inject] private IDialogService DialogService { get; set; } = default!;
+    private MudThemeProvider _mudThemeProvider = default!;
     private MudTheme _theme = new();
     bool DrawOpen = true;
     bool darkMode = true;
@@ -82,7 +84,7 @@
                     StateHasChanged();
                     break;
                 case BroadcastEventName.ThemeChanged:
-                    SetTheme(arg);
+                    _ = SetTheme(arg);
                     break;
                 default: 
                     break;

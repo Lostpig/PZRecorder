@@ -81,3 +81,16 @@
   + state: enum DailyState
   + modify_date: DateTime
   + order_no: int
+
+## version 10005
+> add t_clockin & t_clockin_record tables_
++ t_clockin
+  + id: int
+  + name: string
+  + remark: string
+  + order_no: int
+
++ t_clockin_record
+  + id: int
+  + pid: int // t_clockin id
+  + time: DateTime

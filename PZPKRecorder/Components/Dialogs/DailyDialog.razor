@@ -42,13 +42,13 @@
 
 
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
     [Parameter] public bool IsEdit { get; set; }
     [Parameter] public int DailyId { get; set; }
 
-    private MudForm form;
+    private MudForm form = default!;
     private bool success = false;
-    private Daily daily;
+    private Daily daily = default!;
     private DateTime? startDate = DateTime.MinValue;
     private DateTime? endDate = DateTime.MinValue;
 
@@ -86,8 +86,8 @@
         }
 
         daily.ModifyDate = DateTime.Now;
-		daily.StartDay = DateOnly.FromDateTime(startDate.Value).DayNumber;
-		daily.EndDay = DateOnly.FromDateTime(endDate.Value).DayNumber;
+		daily.StartDay = DateOnly.FromDateTime(startDate!.Value).DayNumber;
+		daily.EndDay = DateOnly.FromDateTime(endDate!.Value).DayNumber;
 
         if (IsEdit) DailyService.UpdateDaily(daily);
         else DailyService.InsertDaily(daily);

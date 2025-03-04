@@ -228,6 +228,7 @@ internal class RecordService
         return SqlLiteHandler.Instance.DB.Delete<Record>(id);
     }
 
+#if DEBUG
     public static void AddTestRecords()
     {
         SqlLiteHandler.Instance.DB.RunInTransaction(() =>
@@ -250,5 +251,6 @@ internal class RecordService
             }
         });
     }
+#endif
 }
 

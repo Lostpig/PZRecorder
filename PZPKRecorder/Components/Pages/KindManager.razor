@@ -28,7 +28,7 @@
                     <td>@row.Id</td>
                     <td>@row.Name</td>
                     <td>@row.OrderNo</td>
-                    <td class="ta-r">
+                    <td>
                         <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => ShowDialog(row.Id)">@LD.Edit</MudButton>
                         <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="() => OnDeleteClick(row.Id)">@LD.Delete</MudButton>
                     </td>

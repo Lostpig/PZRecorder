@@ -1,0 +1,49 @@
+﻿@using Services;
+
+<MudDialog>
+    <DialogContent>
+        <MudText>
+            <span class="mud-typography-h5">@model.ClockIn.Name</span>
+            <span style="color: var(--mud-palette-text-secondary);">@counterText</span>
+        </MudText>
+        <MudSimpleTable Hover="true" FixedHeader="true" Elevation="0" Style="height: 400px;" Class="mt-6">
+            <thead>
+                <tr>
+                    <th style="width: 90px;">@LD.Count</th>
+                    <th class="ta-r">@LD.ClockInTime</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = model.Records.Count; i > 0; i--)
+                {
+                    var row = model.Records[i - 1];
+                    <tr>
+                        <td>@i</td>
+                        <td class="ta-r">@row.Time.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    </tr>
+                }
+            </tbody>
+        </MudSimpleTable>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@LD.Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public int Id { get; set; }
+
+    private ClockInModel? model;
+    private string counterText = "";
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        model = ClockInService.GetClockInModel(Id);
+
+        counterText = string.Format(LD.ClockInCounter, model.Records.Count);
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}

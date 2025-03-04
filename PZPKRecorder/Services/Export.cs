@@ -42,7 +42,7 @@ internal class ExportService
         JObject jobj = [];
         
         // db version
-        var dbVersion = VariantService.GetVariant(SqlLiteHandler.dbVersionKey);
+        var dbVersion = VariantService.GetVariant(SqlLiteHandler.DBVersionKey);
         int dbv = int.Parse(dbVersion ?? "0");
         jobj.Add(new JProperty("dbversion", dbv));
         // kinds
@@ -56,6 +56,12 @@ internal class ExportService
         jobj.Add(new JProperty("dailies", CreateExportJsonArray(dailies)));
         var dailyweeks = DailyService.GetDailyDatas(null);
         jobj.Add(new JProperty("dailyweeks", CreateExportJsonArray(dailyweeks)));
+
+        // clockin & clockinrecord
+        var clockIns = ClockInService.GetClockIns();
+        jobj.Add(new JProperty("clockin", CreateExportJsonArray(clockIns)));
+        var clockInRecords = ClockInService.GetRecords(null);
+        jobj.Add(new JProperty("clockinrecords", CreateExportJsonArray(clockInRecords)));
 
         return jobj.ToString(formatting);
     }

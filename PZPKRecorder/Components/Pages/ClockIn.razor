@@ -1,0 +1,146 @@
+﻿@page "/clock-in";
+@using Services;
+@using LD = Localization.LocalizeDict;
+
+<MudPaper Width="100%" Height="100%" class="d-flex flex-column">
+    <MudToolBar>
+        <MudButton Variant="Variant.Text"
+        StartIcon="@Icons.Material.Filled.Add"
+        Color="Color.Primary"
+        Style="text-transform:none"
+        Class="mt-4"
+        OnClick="OnAddClick">@LD.Add</MudButton>
+    </MudToolBar>
+    <MudSimpleTable Hover="true" FixedHeader="true" Elevation="0" Style="height: calc(100% - 65px);">
+        <thead>
+            <tr>
+                <th style="width: 90px;">@LD.OrderBy</th>
+                <th style="width: 150px;">@LD.Name</th>
+                <th>@LD.State</th>
+                <th style="width: 320px;">@LD.Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in items)
+            {
+                <tr>
+                    <td>@row.ClockIn.OrderNo</td>
+                    <td>
+                        <MudText Typo="Typo.body1" Inline="true">@row.ClockIn.Name</MudText>
+                    </td>
+                    <td>
+                        <MudText Typo="Typo.body1" Inline="true">@((MarkupString)GetStateText(row))</MudText>
+                    </td>
+                    <td class="ta-r">
+                        <MudButton Variant="Variant.Text" Color="Color.Success" OnClick="() => OnCheckInClick(row)">@LD.ClockIn</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Warning" OnClick="() => ShowRecordsDialog(row.ClockIn.Id)">@LD.Record</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => OnEditClick(row.ClockIn.Id)">@LD.Edit</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="() => OnDeleteClick(row.ClockIn.Id)">@LD.Delete</MudButton>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+</MudPaper>
+
+@code {
+    [Inject] private IDialogService DialogService { get; set; } = default!;
+
+    IList<ClockInModel> items = new List<ClockInModel>();
+
+    protected override void OnInitialized()
+    {
+        UpdateList();
+    }
+
+    private void OnAddClick()
+    {
+        ShowEditDialog(null);
+    }
+    private void OnEditClick(int id)
+    {
+        ShowEditDialog(id);
+    }
+    private void OnCheckInClick(ClockInModel model)
+    {
+        if (model.LastRecord != null)
+        {
+            var days = GetDays(DateTime.Now, model.LastRecord.Time.Date);
+            if (days == 0)
+            {
+                DialogService.ShowAlert(LD.ClockInTodayText);
+                return;
+            }
+        }
+
+        ClockInService.AddRecord(model.ClockIn.Id);
+        UpdateList();
+    }
+    private async void OnDeleteClick(int id)
+    {
+        bool result = await DialogService.ShowConfirm(LD.SureToDelete);
+        if (result == true)
+        {
+            ClockInService.DeleteClockIn(id);
+            UpdateList();
+        }
+    }
+
+    private void UpdateList()
+    {
+        items = ClockInService.GetClockInModels();
+        StateHasChanged();
+    }
+
+    private string GetStateText(ClockInModel model)
+    {
+        if (model.LastRecord != null)
+        {
+            var days = GetDays(DateTime.Now, model.LastRecord.Time.Date);
+            if (days == 0) 
+            {
+                return $"<span style=\"color: var(--mud-palette-success);\">{LD.ClockInTodayText}</span>";
+            }
+            else
+            {
+                return string.Format(
+                    LD.ClockInDiffText,
+                    $"<span style=\"color: var(--mud-palette-info);\">{days}</span>"
+                );
+            }
+        } 
+        else
+        {
+            return LD.ClockInNoRecord;
+        }
+    }
+    private int GetDays(DateTime d1, DateTime d2)
+    {
+        return DateOnly.FromDateTime(d1).DayNumber - DateOnly.FromDateTime(d2).DayNumber;
+    }
+
+    private async void ShowEditDialog(int? id)
+    {
+        DialogParameters<Dialogs.ClockInEditDialog> paramters = new();
+
+        paramters.Add(d => d.IsEdit, id is not null);
+        paramters.Add(d => d.Id, id ?? -1);
+        string title = id is not null ? LD.Edit : LD.Add;
+
+        var dialog = await DialogService.ShowAsync<Dialogs.ClockInEditDialog>(title, paramters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            UpdateList();
+        }
+    }
+    private async void ShowRecordsDialog(int id)
+    {
+        DialogParameters<Dialogs.ClockInRecordsDialog> paramters = new();
+
+        paramters.Add(d => d.Id, id);
+
+        var dialog = await DialogService.ShowAsync<Dialogs.ClockInRecordsDialog>(LD.Record, paramters);
+    }
+}
