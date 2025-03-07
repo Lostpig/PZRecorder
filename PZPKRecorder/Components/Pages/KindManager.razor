@@ -15,9 +15,8 @@
     <MudSimpleTable Hover="true" FixedHeader="true" Elevation="0" Style="height: calc(100% - 65px);">
         <thead>
             <tr>
-                <th style="width: 90px;">ID</th>
-                <th>@LD.Name</th>
                 <th style="width: 90px;">@LD.OrderBy</th>
+                <th>@LD.Name</th>
                 <th style="width: 210px;">@LD.Action</th>
             </tr>
         </thead>
@@ -25,9 +24,8 @@
             @foreach (var row in kinds)
             {
                 <tr>
-                    <td>@row.Id</td>
-                    <td>@row.Name</td>
                     <td>@row.OrderNo</td>
+                    <td>@row.Name</td>
                     <td>
                         <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => ShowDialog(row.Id)">@LD.Edit</MudButton>
                         <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="() => OnDeleteClick(row.Id)">@LD.Delete</MudButton>

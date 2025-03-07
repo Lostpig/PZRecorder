@@ -16,7 +16,7 @@
                 <MudSpacer />
                 <MudIconButton Icon="@Icons.Material.Filled.ArrowRight" OnClick="() => OnYearChanged(1)"></MudIconButton>
             </MudToolBar>
-            <MudText>@((MarkupString)yearText)</MudText>
+            <MudText Class="mt-3">@((MarkupString)yearText)</MudText>
             <div class="daily-statistic-container">
                 @{ var d = yearFirstDay; }
                 @while(d.Year == year)
@@ -45,17 +45,18 @@
 </MudDialog>
 
 @code {
-	[CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
     [Parameter] public int DailyId { get; set; }
     private Daily daily;
     IList<DailyWeek> datas;
 
     private int year = 2024;
-    private int[] dailyDatas;
+    private int[] dailyDatas = [];
     private DateOnly yearFirstDay;
 
+    private int checkinCount;
     private DateOnly firsyCheckDay;
-	private DateOnly lastCheckDay;
+    private DateOnly lastCheckDay;
 
     private string dateText = "";
     private string checkinText = "";
@@ -77,7 +78,7 @@
         daily = DailyService.GetDaily(DailyId);
         datas = DailyService.GetDailyDatas(daily.Id);
 
-        int checkinCount = 0;
+        checkinCount = 0;
         int firstDayNum = 0;
         int lastDayNum = 0;
 
@@ -133,34 +134,43 @@
             dailyDatas[i] = 0;
         }
 
-        int checkinDays = 0;
-        foreach (var dw in datas)
+        if (checkinCount > 0)
         {
-            for(int d = 1; d <= 7; d++)
+            int yearCheckinDays = 0;
+            foreach (var dw in datas)
             {
-                DayOfWeek dayOfWeek = d == 7 ? DayOfWeek.Sunday : (DayOfWeek)d;
-                int dayNum = dw.MondayDay + d - 1;
-
-                int diff = dayNum - yearFirstDay.DayNumber;
-                if (diff >= 0 && diff < dailyDatas.Length)
+                for (int d = 1; d <= 7; d++)
                 {
-                    dailyDatas[diff] = dw[dayOfWeek];
-                    if (dailyDatas[diff] == 1) checkinDays++;
+                    DayOfWeek dayOfWeek = d == 7 ? DayOfWeek.Sunday : (DayOfWeek)d;
+                    int dayNum = dw.MondayDay + d - 1;
+
+                    int diff = dayNum - yearFirstDay.DayNumber;
+                    if (diff >= 0 && diff < dailyDatas.Length)
+                    {
+                        dailyDatas[diff] = dw[dayOfWeek];
+                        if (dailyDatas[diff] == 1) yearCheckinDays++;
+                    }
                 }
             }
-        }
 
-		var factFirstDay = yearFirstDay > firsyCheckDay ? yearFirstDay : firsyCheckDay;
-		var factLastDay = yearLastDay < lastCheckDay ? yearLastDay : lastCheckDay;
+            if (yearCheckinDays > 0)
+            {
+                var factFirstDay = yearFirstDay > firsyCheckDay ? yearFirstDay : firsyCheckDay;
+                var factLastDay = yearLastDay < lastCheckDay ? yearLastDay : lastCheckDay;
 
-		int totalDays = factLastDay.DayNumber - factFirstDay.DayNumber + 1;
-        double checkinPrec = (double)checkinDays / totalDays * 100.0;
-        yearText = String.Format(
-            LD.StatisticTextYear,
-            year,
-            $"<span style=\"color: var(--mud-palette-info);\">{checkinDays}</span>",
-            $"<span style=\"color: var(--mud-palette-info);\">{totalDays}</span>",
-            $"<span style=\"color: var(--mud-palette-info);\">{checkinPrec.ToString("F2")}</span>"
-        );
+                int totalDays = factLastDay.DayNumber - factFirstDay.DayNumber + 1;
+                double checkinPrec = (double)yearCheckinDays / totalDays * 100.0;
+                yearText = String.Format(
+                    LD.StatisticTextYear,
+                    year,
+                    $"<span style=\"color: var(--mud-palette-info);\">{yearCheckinDays}</span>",
+                    $"<span style=\"color: var(--mud-palette-info);\">{totalDays}</span>",
+                    $"<span style=\"color: var(--mud-palette-info);\">{checkinPrec.ToString("F2")}</span>"
+                );
+                return;
+            }
+        } 
+
+        yearText = String.Format(LD.NoYearStatisticData, year);
     }
 }

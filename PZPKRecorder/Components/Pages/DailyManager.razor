@@ -15,9 +15,8 @@
     <MudSimpleTable Hover="true" FixedHeader="true" Elevation="0" Style="height: calc(100% - 65px);">
         <thead>
             <tr>
-                <th style="width: 90px;">ID</th>
-                <th>@LD.Name</th>
                 <th style="width: 90px;">@LD.OrderBy</th>
+                <th>@LD.Name</th>
                 <th style="width: 120px;">@LD.State</th>
                 <th style="width: 320px;">@LD.Action</th>
             </tr>
@@ -27,12 +26,11 @@
             {
                 Color stateColor = row.State == DailyState.Enabled ? Color.Success : Color.Error;
                 <tr>
-                    <td>@row.Id</td>
+                    <td>@row.OrderNo</td>
                     <td>
                         <MudText Typo="Typo.body1" Inline="true">@row.Name</MudText>
                         <MudText Typo="Typo.body2" Inline="true" Style="color: var(--mud-palette-text-secondary);">@row.Alias</MudText>
                     </td>
-                    <td>@row.OrderNo</td>
                     <td>
                         <MudButton Variant="Variant.Text" Color="stateColor" OnClick="() => OnChangeState(row)">@row.StateText</MudButton>
                     </td>
