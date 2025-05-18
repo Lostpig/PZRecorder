@@ -2,6 +2,7 @@
 using PZPKRecorder.Localization;
 using PZPKRecorder.Data;
 using System.Reflection;
+using SQLite;
 
 namespace PZPKRecorder.Services;
 
@@ -39,16 +40,9 @@ internal class ImportService
         JObject jobj = JObject.Parse(jsonStr);
 
         int version = jobj.Value<int>("dbversion");
-        switch (version)
+        if (!Helper.IsCompatibleVersion(version))
         {
-            case 0:
-            case 10001:
-            case 10002:
-            case 10003:
-            case 10004:
-            case Helper.DataVersion:
-                break;
-            default: throw new NotSupportedException("Not support json file to import");
+            throw new NotSupportedException("Not support json file to import");
         }
 
         // backup before import
@@ -68,26 +62,34 @@ internal class ImportService
 
     private static IList<T> CreateImportList<T>(JObject jobj, string tableName, int dbVersion) where T : new()
     {
+        Type t = typeof(T);
+        TableVersionAttribute? tverAttr = t.GetCustomAttribute<TableVersionAttribute>();
+        if (tverAttr is not null)
+        {
+            if (tverAttr.MaxVersion < dbVersion || tverAttr.MinVersion > dbVersion)
+            {
+                return [];
+            }
+        }
+
         JArray? jTable = jobj.Value<JArray>(tableName);
         if (jTable is null) throw new InvalidDataException($"Import file invalid: table {tableName} not available");
 
         List<T> list = new();
-        Type t = typeof(T);
-
         foreach (var item in jTable)
         {
             T instance = new T();
             foreach (PropertyInfo pi in t.GetProperties())
             {
-                SQLite.ColumnAttribute? colAttr = pi.GetCustomAttribute<SQLite.ColumnAttribute>();
+                ColumnAttribute? colAttr = pi.GetCustomAttribute<ColumnAttribute>();
                 if (colAttr is null) continue;
 
-                DataFieldAttribute? dfAttr = pi.GetCustomAttribute<DataFieldAttribute>();
-                if (dfAttr is not null)
+                FieldVersionAttribute? verAttr = pi.GetCustomAttribute<FieldVersionAttribute>();
+                if (verAttr is not null)
                 {
-                    if (dfAttr.MaxVersion < dbVersion || dfAttr.MinVersion > dbVersion) 
+                    if (verAttr.MaxVersion < dbVersion || verAttr.MinVersion > dbVersion) 
                     {
-                        pi.SetValue(instance, dfAttr.DefaultValue);
+                        pi.SetValue(instance, verAttr.DefaultValue);
                         continue;
                     }
                 }

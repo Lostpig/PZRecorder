@@ -16,6 +16,7 @@
     <MudSimpleTable Hover="true" FixedHeader="true" Elevation="0" Style="height: calc(100% - 76px); margin-top: 12px;">
         <thead>
             <tr>
+                <th style="width: 48px;"></th>
                 <th></th>
                 @foreach (var d in weekDays)
                 {
@@ -31,6 +32,10 @@
             @foreach (var (d, dw) in datas)
             {
                 <tr>
+                    <td>
+                        <MudIconButton Icon="@Icons.Material.Filled.BarChart" Size="Size.Small" Color="Color.Primary"
+                                       OnClick="() => OnStatisticClick(d.Id)"></MudIconButton>
+                    </td>
                     <td>
                         <MudText Typo="Typo.body1" Inline="true">@d.Name</MudText>
                         <MudText Typo="Typo.body2" Inline="true" Style="color: var(--mud-palette-text-secondary);">@d.Alias</MudText>
@@ -49,6 +54,7 @@
 </MudPaper>
 
 @code {
+    [Inject] private IDialogService DialogService { get; set; } = default!;
     private string weekText = "";
     private DateOnly mondayDate;
     private DateOnly today;
@@ -80,13 +86,20 @@
     {
         BroadcastService.RemoveReceiver(OnAvtived);
     }
-    private void OnAvtived (string eventName, string arg)
+    private void OnAvtived(BroadcastEvent ev, string arg)
     {
-        if (eventName == BroadcastEventName.WindowActivated)
+        if (ev == BroadcastEvent.WindowActivated)
         {
             today = DateOnly.FromDateTime(DateTime.Today);
             StateHasChanged();
         }
+    }
+    private void OnStatisticClick(int id)
+    {
+        DialogParameters<Dialogs.DailyStatistics> paramters = new();
+        paramters.Add(d => d.DailyId, id);
+
+        DialogService.ShowAsync<Dialogs.DailyStatistics>(LD.CheckinStatistic, paramters);
     }
 
     private void WeekChange(int change)

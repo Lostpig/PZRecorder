@@ -6,7 +6,7 @@ internal class ExceptionProxy
 {
     public static void CatchException(Exception ex)
     {
-        BroadcastService.Broadcast(BroadcastEventName.ExceptionCatch, string.IsNullOrWhiteSpace(ex.Message) ? "Unknown exception" : ex.Message);
+        BroadcastService.Broadcast(BroadcastEvent.ExceptionCatch, string.IsNullOrWhiteSpace(ex.Message) ? "Unknown exception" : ex.Message);
 
         try
         {

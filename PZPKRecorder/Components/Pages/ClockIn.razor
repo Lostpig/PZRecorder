@@ -74,6 +74,7 @@
         }
 
         ClockInService.AddRecord(model.ClockIn.Id);
+        BroadcastService.Broadcast(BroadcastEvent.RemindStateChanged, "");
         UpdateList();
     }
     private async void OnDeleteClick(int id)
@@ -96,17 +97,34 @@
     {
         if (model.LastRecord != null)
         {
-            var days = GetDays(DateTime.Now, model.LastRecord.Time.Date);
+            var days = model.GetLastDaySince(DateTime.Now);
             if (days == 0) 
             {
                 return $"<span style=\"color: var(--mud-palette-success);\">{LD.ClockInTodayText}</span>";
             }
             else
             {
-                return string.Format(
-                    LD.ClockInDiffText,
-                    $"<span style=\"color: var(--mud-palette-info);\">{days}</span>"
-                );
+                bool remind = model.CheckRemind(DateTime.Now);
+                if (remind)
+                {
+                    return string.Format(
+                        LD.ClockInDiffText,
+                        $"<span style=\"color: var(--mud-palette-warning);\">{days}</span>"
+                    ) 
+                    + "(" + string.Format(
+                        LD.ClockInRemindText,
+                        $"<span style=\"color: var(--mud-palette-warning);\">{days - model.ClockIn.RemindDays}</span>"
+                    ) 
+                    + ")";
+                }
+                else
+                {
+                    return string.Format(
+                        LD.ClockInDiffText,
+                        $"<span style=\"color: var(--mud-palette-info);\">{days}</span>"
+                    );
+                }
+
             }
         } 
         else

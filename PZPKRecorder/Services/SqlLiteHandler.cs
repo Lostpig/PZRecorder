@@ -2,7 +2,6 @@
 using PZPKRecorder.Data;
 using System.Reflection;
 using System;
-using Newtonsoft.Json.Linq;
 
 namespace PZPKRecorder.Services;
 
@@ -139,16 +138,13 @@ internal class SqlLiteHandler
 
     private void UpdateDB(int version, string oldDbPath)
     {
-        switch (version)
+        if (Helper.IsCompatibleVersion(version))
         {
-            case 0:
-            case 10001:
-            case 10002:
-            case 10003:
-            case 10004:
-                UpdateFromOldVersion(oldDbPath, version); break;
-            default:
-                throw new NotSupportedException($"Not supported DB version: {version}");
+            UpdateFromOldVersion(oldDbPath, version);
+        }
+        else
+        {
+            throw new NotSupportedException($"Not supported DB version: {version}");
         }
     }
 
@@ -156,76 +152,53 @@ internal class SqlLiteHandler
     {
         SQLiteConnection oldDB = new SQLiteConnection(oldDbPath, SQLiteOpenFlags.ReadOnly);
 
-        // kind
-        IList<Kind> kinds = oldDbVersion switch
-        {
-            0 => UpdateCollectionFromOldVersion<Kind, KindVersion0>(oldDB.Table<KindVersion0>().ToList(), oldDbVersion),
-            10002 => UpdateCollectionFromOldVersion<Kind, KindVersion10002>(oldDB.Table<KindVersion10002>().ToList(), oldDbVersion),
-            _ => oldDB.Table<Kind>().ToList()
-        };
-
-        // record
-        IList<Record> records = oldDB.Table<Record>().ToList();
-
-        // daily
-        IList<Daily> dailies = oldDbVersion switch
-        {
-            0 => UpdateCollectionFromOldVersion<Daily, DailyVersion0>(oldDB.Table<DailyVersion0>().ToList(), oldDbVersion),
-            10001 => UpdateCollectionFromOldVersion<Daily, DailyVersion10001>(oldDB.Table<DailyVersion10001>().ToList(), oldDbVersion),
-            _ => oldDB.Table<Daily>().ToList()
-        };
-
-        // dailyweek
-        IList<DailyWeek> dailyweeks = oldDB.Table<DailyWeek>().ToList();
+        // datas
+        var kinds = UpdateCollection<Kind>(oldDB, oldDbVersion);
+        var records = UpdateCollection<Record>(oldDB, oldDbVersion);
+        var dailies = UpdateCollection<Daily>(oldDB, oldDbVersion);
+        var dailyweeks = UpdateCollection<DailyWeek>(oldDB, oldDbVersion);
+        var clockIns = UpdateCollection<ClockIn>(oldDB, oldDbVersion);
+        var clockInRecords = UpdateCollection<ClockInRecord>(oldDB, oldDbVersion);
 
         // variant
         IList<VariantTable> vars = oldDB.Table<VariantTable>().Where(v => v.Key != DBVersionKey).ToList();
 
-        // clockin & clockinrecord
-        // add after version 10005
-        IList<ClockIn> clockIns = oldDbVersion switch
-        {
-            _ => new List<ClockIn>()
-        };
-        IList<ClockInRecord> clockInRecordss = oldDbVersion switch
-        {
-            _ => new List<ClockInRecord>()
-        };
-
-        ExcuteBatchInsert(kinds, records, dailies, dailyweeks, clockIns, clockInRecordss, vars);
+        ExcuteBatchInsert(kinds, records, dailies, dailyweeks, clockIns, clockInRecords, vars);
     }
-    private List<T> UpdateCollectionFromOldVersion<T, oldT>(IList<oldT> oldList, int oldDbVersion) where T : new ()
+    private List<T> UpdateCollection<T>(SQLiteConnection oldDB, int oldDbVersion) where T : new ()
     {
         List<T> list = new();
         Type t = typeof(T);
-        Type ot = typeof(oldT);
 
+        TableVersionAttribute? tverAttr = t.GetCustomAttribute<TableVersionAttribute>();
+        if (tverAttr is not null)
+        {
+            if (tverAttr.MaxVersion < oldDbVersion || tverAttr.MinVersion > oldDbVersion)
+            {
+                return list;
+            }
+        }
+
+        IList<T> oldList = oldDB.Table<T>().ToList();
         foreach (var item in oldList)
         {
             T instance = new T();
             foreach (PropertyInfo pi in t.GetProperties())
             {
-                SQLite.ColumnAttribute? colAttr = pi.GetCustomAttribute<SQLite.ColumnAttribute>();
+                ColumnAttribute? colAttr = pi.GetCustomAttribute<ColumnAttribute>();
                 if (colAttr is null) continue;
 
-                var otCol = ot.GetProperty(colAttr.Name);
-                if (otCol is null)
+                FieldVersionAttribute? versionAttr = pi.GetCustomAttribute<FieldVersionAttribute>();
+                if (versionAttr is not null)
                 {
-                    DataFieldAttribute? dfAttr = pi.GetCustomAttribute<DataFieldAttribute>();
-                    if (dfAttr is not null)
+                    if (versionAttr.MaxVersion < oldDbVersion || versionAttr.MinVersion > oldDbVersion)
                     {
-                        if (dfAttr.MaxVersion < oldDbVersion || dfAttr.MinVersion > oldDbVersion)
-                        {
-                            pi.SetValue(instance, dfAttr.DefaultValue);
-                            continue;
-                        }
+                        pi.SetValue(instance, versionAttr.DefaultValue);
+                        continue;
                     }
-                } 
-                else
-                {
-                    var oldVal = otCol.GetValue(item);
-                    pi.SetValue(instance, oldVal);
                 }
+
+                pi.SetValue(instance, pi.GetValue(item));
             }
 
             list.Add(instance);
@@ -294,7 +267,6 @@ internal class SqlLiteHandler
                         Day6 = dw.Day6,
                         Day7 = dw.Day7,
                     };
-                    ndw.Id = DailyWeek.GenerateId(newId, dw.MondayDate);
 
                     DB.Insert(ndw);
                 }

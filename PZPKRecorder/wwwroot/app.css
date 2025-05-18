@@ -104,3 +104,18 @@ th.dailyweek-cell {
     background-color: var(--mud-palette-action-default) !important;
     opacity: 0.125;
 }
+
+.remind {
+    display: inline-block;
+    position: relative;
+}
+.remind-show::after {
+    content: " ";
+    position: absolute;
+    top: 4px;
+    right: -16px;
+    background-color: var(--mud-palette-warning) !important;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}

@@ -61,6 +61,8 @@ namespace PZPKRecorder.Localization
             [TranslateBind("ClockInTime")] public static string ClockInTime { get; set; }
             [TranslateBind("Count")] public static string Count { get; set; }
             [TranslateBind("ClockInCounter")] public static string ClockInCounter { get; set; }
+            [TranslateBind("ClockInRemindText")] public static string ClockInRemindText { get; set; }
+            [TranslateBind("RemindDays")] public static string RemindDays { get; set; }
             [TranslateBind("Warning")] public static string Warning { get; set; }
             [TranslateBind("Alert")] public static string Alert { get; set; }
             [TranslateBind("Error")] public static string Error { get; set; }

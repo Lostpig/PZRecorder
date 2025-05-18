@@ -8,11 +8,35 @@ internal class ClockInModel(ClockIn clockIn, IList<ClockInRecord> records)
     public IList<ClockInRecord> Records { get; private set; } = records;
 
     public ClockInRecord? LastRecord => Records.LastOrDefault();
+    public int GetLastDaySince(DateTime time)
+    {
+        if (LastRecord == null)
+        {
+            return -1;
+        }
+        else
+        {
+            int d = DateOnly.FromDateTime(time).DayNumber - DateOnly.FromDateTime(LastRecord.Time).DayNumber;
+            return d >= 0 ? d : 0;
+        }
+    }
+
+    public bool CheckRemind(DateTime time)
+    {
+        if (ClockIn.RemindDays > 0)
+        {
+            var days = GetLastDaySince(time);
+            if (days > ClockIn.RemindDays)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 internal class ClockInService
 {
-
     public static ClockIn? GetClockIn(int id)
     {
         return SqlLiteHandler.Instance.DB.Find<ClockIn>(id);
@@ -38,7 +62,6 @@ internal class ClockInService
         });
     }
 
-
     public static IList<ClockInRecord> GetRecords(int? pid)
     {
         var q = SqlLiteHandler.Instance.DB.Table<ClockInRecord>();
@@ -61,22 +84,6 @@ internal class ClockInService
         });
     }
 
-#if DEBUG
-    public static int AddRecordTest(int pid)
-    {
-        int hours = Random.Shared.Next(16, 2048);
-        int minutes = Random.Shared.Next(0, 60);
-        int seconds = Random.Shared.Next(0, 60);
-        TimeSpan ts = new TimeSpan(hours, minutes, seconds);
-
-        return SqlLiteHandler.Instance.DB.Insert(new ClockInRecord
-        {
-            Pid = pid,
-            Time = DateTime.Now.Add(-ts)
-        });
-    }
-#endif
-
     public static ClockInModel GetClockInModel(int id)
     {
         var item = SqlLiteHandler.Instance.DB.Find<ClockIn>(id);
@@ -92,6 +99,15 @@ internal class ClockInService
         {
             var r = records.Where(r => r.Pid == i.Id).OrderBy(r => r.Time).ToList();
             return new ClockInModel(i, r);
-        }).ToList();
+        }).OrderBy(i => i.ClockIn.OrderNo).ToList();
+    }
+
+    public static bool CheckReminds()
+    {
+        var list = GetClockInModels();
+        var today = DateTime.Now;
+
+        bool remind = list.Any(m => m.CheckRemind(today));
+        return remind;
     }
 }

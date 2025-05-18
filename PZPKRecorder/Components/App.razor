@@ -2,11 +2,11 @@
 
 <MudThemeProvider @ref="@_mudThemeProvider" Theme="_theme" IsDarkMode="darkMode" />
 <MudDialogProvider FullWidth="true"
-    MaxWidth="MaxWidth.Small"
-    CloseButton="false"
-    DisableBackdropClick="true"
-    Position="DialogPosition.TopCenter"
-    CloseOnEscapeKey="true" />
+MaxWidth="MaxWidth.Small"
+CloseButton="false"
+DisableBackdropClick="true"
+Position="DialogPosition.TopCenter"
+CloseOnEscapeKey="true" />
 
 <MudLayout>
     <MudDrawer @bind-Open="@DrawOpen" Elevation="2">
@@ -20,7 +20,9 @@
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CalendarMonth" Href="/daily-week">@LD.Daily</MudNavLink>
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.EditCalendar" Href="/daily-manager">@LD.DailyManager</MudNavLink>
             <MudDivider Class="my-4" />
-            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.History" Href="/clock-in">@LD.ClockIn</MudNavLink>
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.History" Href="/clock-in">
+                <span class="remind @remindShow">@LD.ClockIn</span>
+            </MudNavLink>
             <MudDivider Class="my-4" />
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Settings" Href="/setting">@LD.Setting</MudNavLink>
             <MudNavLink Icon="@Icons.Material.Filled.ExitToApp" OnClick="OnExitClick">@LD.Exit</MudNavLink>
@@ -28,8 +30,8 @@
     </MudDrawer>
     <MudMainContent Style="padding-top: 0; height: 100%; background-color: var(--mud-palette-background-grey);">
         <Router AppAssembly="typeof(Program).Assembly">
-            <Found Context="routeData">
-                <RouteView RouteData="routeData" />
+            <Found Context="routeData" >
+                <RouteView RouteData="routeData"/>
             </Found>
             <NotFound>
                 <div class="content">
@@ -44,11 +46,12 @@
 </MudLayout>
 
 @code {
-	[Inject] private IDialogService DialogService { get; set; } = default!;
+    [Inject] private IDialogService DialogService { get; set; } = default!;
     private MudThemeProvider _mudThemeProvider = default!;
     private MudTheme _theme = new();
     bool DrawOpen = true;
     bool darkMode = true;
+    string remindShow = "";
 
     private void OnExitClick()
     {
@@ -68,28 +71,39 @@
 
         StateHasChanged();
     }
+    private void SetClockInRemind()
+    {
+        remindShow = ClockInService.CheckReminds() ? "remind-show" : "";
+        StateHasChanged();
+    }
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
 
-        BroadcastService.RegisterReceiver((name, arg) =>
+        BroadcastService.RegisterReceiver((ev, arg) =>
         {
-            switch(name)
+            switch (ev)
             {
-                case BroadcastEventName.ExceptionCatch:
+                case BroadcastEvent.ExceptionCatch:
                     DialogService.ShowError(arg);
                     break;
-                case BroadcastEventName.LanguageChanged:
+                case BroadcastEvent.LanguageChanged:
                     StateHasChanged();
                     break;
-                case BroadcastEventName.ThemeChanged:
+                case BroadcastEvent.ThemeChanged:
                     _ = SetTheme(arg);
+                    break;
+                case BroadcastEvent.RemindStateChanged:
+                case BroadcastEvent.DateChanged:
+                    SetClockInRemind();
                     break;
                 default: 
                     break;
             }
         });
+
+        SetClockInRemind();
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -99,5 +113,4 @@
             await SetTheme(theme);
         }
     }
-
 }

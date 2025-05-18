@@ -28,14 +28,14 @@ internal class Daily
     public DailyState State { get; set; }
 
     [Column("order_no")]
-    [DataField(10001, 99999, 0)]
+    [FieldVersion(10001, 99999, 0)]
     public int OrderNo { get; set; }
 
     [Column("start_day")]
-    [DataField(10004, 99999, 0)]
+    [FieldVersion(10004, 99999, 0)]
     public int StartDay { get; set; }
     [Column("end_day")]
-    [DataField(10004, 99999, 0)]
+    [FieldVersion(10004, 99999, 0)]
     public int EndDay { get; set; }
 
     [Ignore]
@@ -54,37 +54,25 @@ internal class Daily
 [Table("t_dailyweek")]
 internal class DailyWeek
 {
-    [PrimaryKey]
+    [PrimaryKey, AutoIncrement]
     [Column("id")]
     public int Id { get; set; }
 
-    [Column("daily_id")]
+    [Column("daily_id"), Indexed]
     public int DailyId { get; set; }
 
-    [Column("monday_day")]
+    [Column("monday_day"), Indexed]
     public int MondayDay { get; set; } // DateOnly.DayNumber
 
     [Ignore]
     public DateOnly MondayDate => DateOnly.FromDayNumber(MondayDay);
 
-    public static int GenerateId(int dailyId, DateOnly date)
+    public void Init(int dailyId, DateOnly date)
     {
-        var startDate = new DateOnly(2000, 1, 1);
-        int daysFromStart = date.DayNumber - startDate.DayNumber;
-
-        // Max to year 2273
-        int id = dailyId * 100000 + daysFromStart;
-        return id;
-    }
-    public int Init(int dailyId, DateOnly date)
-    {
-        Id = GenerateId(dailyId, date);
         DailyId = dailyId;
         MondayDay = date.DayNumber;
 
         Day1 = Day2 = Day3 = Day4 = Day5 = Day6 = Day7 = 0;
-
-        return Id;
     }
 
     // day state 0 = unknown; 1 = complete; 2 = giveup;
@@ -134,55 +122,4 @@ internal class DailyWeek
             }
         }
     }
-}
-
-// Old version
-[Table("t_daily")]
-internal class DailyVersion0
-{
-    [PrimaryKey, AutoIncrement]
-    [Column("id")]
-    public int Id { get; set; }
-
-    [Column("name"), Indexed]
-    public string Name { get; set; } = string.Empty;
-
-    [Column("alias")]
-    public string Alias { get; set; } = string.Empty;
-
-    [Column("remark")]
-    public string Remark { get; set; } = string.Empty;
-
-    [Column("state")]
-    public DailyState State { get; set; }
-
-    [Column("modify_date")]
-    public DateTime ModifyDate { get; set; }
-}
-
-[Table("t_daily")]
-internal class DailyVersion10001
-{
-    [PrimaryKey, AutoIncrement]
-    [Column("id")]
-    public int Id { get; set; }
-
-    [Column("name"), Indexed]
-    public string Name { get; set; } = string.Empty;
-
-    [Column("alias")]
-    public string Alias { get; set; } = string.Empty;
-
-    [Column("remark"), MaxLength(1000)]
-    public string Remark { get; set; } = string.Empty;
-
-    [Column("state")]
-    public DailyState State { get; set; }
-
-    [Column("order_no")]
-    [DataField(10001, 99999, 0)]
-    public int OrderNo { get; set; }
-
-    [Column("modify_date")]
-    public DateTime ModifyDate { get; set; }
 }

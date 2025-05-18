@@ -1,31 +1,33 @@
 ﻿namespace PZPKRecorder.Services;
 
-internal static class BroadcastEventName
+public enum BroadcastEvent
 {
-    public const string ExceptionCatch = "ExceptionCatch";
-    public const string LanguageChanged = "LanguageChanged";
-    public const string ThemeChanged = "ThemeChanged";
-    public const string WindowActivated = "WindowActivated";
+    ExceptionCatch,
+    LanguageChanged,
+    ThemeChanged,
+    WindowActivated,
+    DateChanged,
+    RemindStateChanged,
 }
 
 internal class BroadcastService
 {
-    static HashSet<Action<string, string>> ReceiverActions = new();
+    static HashSet<Action<BroadcastEvent, string>> ReceiverActions = new();
 
-    public static void RegisterReceiver(Action<string, string> action)
+    public static void RegisterReceiver(Action<BroadcastEvent, string> action)
     {
         ReceiverActions.Add(action);
     }
-    public static void RemoveReceiver(Action<string, string> action)
+    public static void RemoveReceiver(Action<BroadcastEvent, string> action)
     {
         ReceiverActions.Remove(action);
     }
 
-    public static void Broadcast(string eventName, string eventArg)
+    public static void Broadcast(BroadcastEvent ev, string eventArg)
     {
         foreach (var action in ReceiverActions)
         {
-            action(eventName, eventArg);
+            action(ev, eventArg);
         }
     }
 }

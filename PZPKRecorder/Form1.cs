@@ -8,6 +8,8 @@ namespace PZPKRecorder;
 
 public partial class Form1 : Form
 {
+    System.Threading.Timer tmr;
+
     public Form1()
     {
         InitializeComponent();
@@ -34,6 +36,24 @@ public partial class Form1 : Form
     {
         SqlLiteHandler.Instance.Initialize();
         Translate.Init();
+
+        int dayNumber = DateOnly.FromDateTime(DateTime.Now).DayNumber;
+
+        tmr = new((e) =>
+        {
+            if (this.IsHandleCreated)
+            {
+                this.Invoke(new Action(() =>
+                {
+                    int dn = DateOnly.FromDateTime(DateTime.Now).DayNumber;
+                    if (dn > dayNumber)
+                    {
+                        dayNumber = dn;
+                        BroadcastService.Broadcast(BroadcastEvent.DateChanged, string.Empty);
+                    }
+                }));
+            }
+        }, null, 1000, 1000 * 1800); // 30 minutes
     }
     private void ResumeWindow()
     {
@@ -61,7 +81,7 @@ public partial class Form1 : Form
     protected override void OnActivated(EventArgs e)
     {
         base.OnActivated(e);
-        BroadcastService.Broadcast(BroadcastEventName.WindowActivated, string.Empty);
+        BroadcastService.Broadcast(BroadcastEvent.WindowActivated, string.Empty);
     }
 
     protected override void OnResizeEnd(EventArgs e)
@@ -84,6 +104,7 @@ public partial class Form1 : Form
     {
         base.OnClosed(e);
 
+        tmr.Dispose();
         Services.SqlLiteHandler.Instance.Dispose();
     }
 }

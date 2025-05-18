@@ -47,7 +47,7 @@ internal static class Translate
             Current = language;
             SaveLanguageSet(language);
 
-            BroadcastService.Broadcast(BroadcastEventName.LanguageChanged, language);
+            BroadcastService.Broadcast(BroadcastEvent.LanguageChanged, language);
         }
         catch (Exception ex)
         {

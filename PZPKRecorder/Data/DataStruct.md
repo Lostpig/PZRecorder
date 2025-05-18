@@ -94,3 +94,12 @@
   + id: int
   + pid: int // t_clockin id
   + time: DateTime
+
+## version 10006
++ t_clockin
+  > add remind_days column
+  + id: int
+  + name: string
+  + remind_days: int
+  + remark: string
+  + order_no: int

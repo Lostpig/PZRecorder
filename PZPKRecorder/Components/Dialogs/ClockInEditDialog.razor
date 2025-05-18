@@ -8,6 +8,7 @@
             Immediate="true"
             Variant="Variant.Text" MaxLength="10" Counter="10"
             Required="true" RequiredError="@LD.RequiredError"></MudTextField>
+            <MudNumericField @bind-Value="clockIn.RemindDays" Label="@LD.RemindDays" Variant="Variant.Text" Min="0" Max="1000" />
             <MudTextField @bind-Value="clockIn.Remark" Label="@LD.Remark"
             Immediate="true"
             Lines="5"
@@ -42,6 +43,7 @@
             clockIn = new ClockIn()
             {
                 Name = string.Empty,
+                RemindDays = 0,
                 Remark = string.Empty,
                 OrderNo = 0
             };

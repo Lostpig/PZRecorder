@@ -5,7 +5,29 @@ namespace PZPKRecorder.Services;
 
 internal static class Helper
 {
-    public const int DataVersion = 10005;
+    public const int DataVersion = 10006;
+
+    public static bool IsCompatibleVersion(int version)
+    {
+        bool isCompatible = false;
+        switch (version)
+        {
+            case 0:
+            case 10001:
+            case 10002:
+            case 10003:
+            case 10004:
+            case 10005:
+            case DataVersion:
+                isCompatible = true;
+                break;
+            default:
+                isCompatible = false; 
+                break;
+        }
+
+        return isCompatible;
+    }
     public static void OpenFolder(string path)
     {
         if (File.Exists(path))

@@ -34,7 +34,7 @@
     private void OnThemeChanged()
     {
         VariantService.SetVariant("theme", theme);
-        BroadcastService.Broadcast(BroadcastEventName.ThemeChanged, theme);
+        BroadcastService.Broadcast(BroadcastEvent.ThemeChanged, theme);
     }
 
     private async void OnExportClick()
