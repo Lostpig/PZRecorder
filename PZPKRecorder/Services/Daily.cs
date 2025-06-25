@@ -57,7 +57,9 @@ internal class DailyService
     public static IList<DailyWeek> GetDailyWeeks(DateOnly mondayDate, IList<int> dailyIds)
     {
         int mondayDay = mondayDate.DayNumber;
+        var ids = dailyIds.Select(d => DailyWeek.CreateId(d, mondayDay)).ToList();
 
+        /// return SqlLiteHandler.Instance.DB.Table<DailyWeek>().Where(dw => ids.Contains(dw.Id)).ToList();
         return SqlLiteHandler.Instance.DB.Table<DailyWeek>().Where(dw => dw.MondayDay == mondayDay && dailyIds.Contains(dw.DailyId)).ToList();
     }
 }

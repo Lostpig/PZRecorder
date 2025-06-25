@@ -76,6 +76,9 @@ public partial class Form1 : Form
         }
 
         Text = "PZ Recorder V" + Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+#if DEBUG
+        Text += " (Debug)";
+#endif
     }
 
     protected override void OnActivated(EventArgs e)

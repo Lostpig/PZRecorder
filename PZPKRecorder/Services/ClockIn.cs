@@ -33,6 +33,17 @@ internal class ClockInModel(ClockIn clockIn, IList<ClockInRecord> records)
         }
         return false;
     }
+
+    public int GetDaysApart(int index)
+    {
+        if (index <= 0 || index >= Records.Count)
+        {
+            return 0;
+        }
+        var lastRecord = Records[index - 1];
+        var record = Records[index];
+        return DateOnly.FromDateTime(record.Time).DayNumber - DateOnly.FromDateTime(lastRecord.Time).DayNumber;
+    }
 }
 
 internal class ClockInService

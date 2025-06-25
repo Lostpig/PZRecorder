@@ -159,6 +159,6 @@
 
         paramters.Add(d => d.Id, id);
 
-        var dialog = await DialogService.ShowAsync<Dialogs.ClockInRecordsDialog>(LD.Record, paramters);
+        _ = await DialogService.ShowAsync<Dialogs.ClockInRecordsDialog>(LD.Record, paramters);
     }
 }

@@ -255,18 +255,8 @@ internal class SqlLiteHandler
 
                 foreach (var dw in weeksForDaily)
                 {
-                    var ndw = new DailyWeek()
-                    {
-                        DailyId = newId,
-                        MondayDay = dw.MondayDay,
-                        Day1 = dw.Day1,
-                        Day2 = dw.Day2,
-                        Day3 = dw.Day3,
-                        Day4 = dw.Day4,
-                        Day5 = dw.Day5,
-                        Day6 = dw.Day6,
-                        Day7 = dw.Day7,
-                    };
+                    var ndw = new DailyWeek();
+                    ndw.Init(newId, dw);
 
                     DB.Insert(ndw);
                 }

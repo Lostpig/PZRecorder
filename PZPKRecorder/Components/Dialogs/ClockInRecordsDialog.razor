@@ -2,28 +2,33 @@
 
 <MudDialog>
     <DialogContent>
-        <MudText>
-            <span class="mud-typography-h5">@model.ClockIn.Name</span>
-            <span style="color: var(--mud-palette-text-secondary);">@counterText</span>
-        </MudText>
-        <MudSimpleTable Hover="true" FixedHeader="true" Elevation="0" Style="height: 400px;" Class="mt-6">
-            <thead>
-                <tr>
-                    <th style="width: 90px;">@LD.Count</th>
-                    <th class="ta-r">@LD.ClockInTime</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for (int i = model.Records.Count; i > 0; i--)
-                {
-                    var row = model.Records[i - 1];
+        @if (model is not null)
+        {
+            <MudText>
+                <span class="mud-typography-h5">@model.ClockIn.Name</span>
+                <span style="color: var(--mud-palette-text-secondary);">@counterText</span>
+            </MudText>
+            <MudSimpleTable Hover="true" FixedHeader="true" Elevation="0" Style="height: 400px;" Class="mt-6">
+                <thead>
                     <tr>
-                        <td>@i</td>
-                        <td class="ta-r">@row.Time.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <th style="width: 90px;">@LD.Count</th>
+                        <th class="ta-r">@LD.ClockInTime</th>
+                        <th style="width: 90px;" class="ta-r">@LD.ApartDays</th>
                     </tr>
-                }
-            </tbody>
-        </MudSimpleTable>
+                </thead>
+                <tbody>
+                    @for (int i = model.Records.Count; i > 0; i--)
+                    {
+                        var row = model.Records[i - 1];
+                        <tr>
+                            <td>@i</td>
+                            <td class="ta-r">@row.Time.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            <td class="ta-r">@model.GetDaysApart(i - 1)</td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        }
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">@LD.Close</MudButton>

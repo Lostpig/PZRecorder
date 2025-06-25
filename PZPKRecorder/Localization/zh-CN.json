@@ -58,6 +58,7 @@
   "ClockInCounter": "合计已打卡 {0} 次",
   "ClockInRemindText": "已超期 {0} 天",
   "RemindDays": "超期提醒天数",
+  "ApartDays": "间隔(天)",
 
   "Warning": "警告",
   "Alert": "提醒",

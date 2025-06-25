@@ -1,4 +1,5 @@
 ﻿using SQLite;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PZPKRecorder.Data;
 
@@ -54,7 +55,7 @@ internal class Daily
 [Table("t_dailyweek")]
 internal class DailyWeek
 {
-    [PrimaryKey, AutoIncrement]
+    [PrimaryKey]
     [Column("id")]
     public int Id { get; set; }
 
@@ -67,12 +68,32 @@ internal class DailyWeek
     [Ignore]
     public DateOnly MondayDate => DateOnly.FromDayNumber(MondayDay);
 
+    public static int CreateId(int dailyId, int monDayNumber)
+    {
+        return dailyId * 1_000_000 + monDayNumber / 7;
+    }
+
     public void Init(int dailyId, DateOnly date)
     {
         DailyId = dailyId;
         MondayDay = date.DayNumber;
+        Id = CreateId(DailyId, MondayDay);
 
         Day1 = Day2 = Day3 = Day4 = Day5 = Day6 = Day7 = 0;
+    }
+    public void Init(int newDailyId, DailyWeek oldRecord)
+    {
+        DailyId = newDailyId;
+        MondayDay = oldRecord.MondayDay;
+        Id = CreateId(DailyId, MondayDay);
+
+        Day1 = oldRecord.Day1;
+        Day2 = oldRecord.Day2;
+        Day3 = oldRecord.Day3;
+        Day4 = oldRecord.Day4;
+        Day5 = oldRecord.Day5;
+        Day6 = oldRecord.Day6;
+        Day7 = oldRecord.Day7;
     }
 
     // day state 0 = unknown; 1 = complete; 2 = giveup;
