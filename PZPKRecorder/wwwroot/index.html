@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WinFormsBlazor</title>
     <base href="/" />
-    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link href="_content/MudBlazor/MudBlazor.min.css?v=@(MudBlazor.Metadata.Version)" rel="stylesheet" />
     <link href="app.css" rel="stylesheet" />
 </head>
 
@@ -14,8 +14,7 @@
     <div id="app">Loading...</div>
 
     <script src="_framework/blazor.webview.js"></script>
-    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
-
+    <script src="_content/MudBlazor/MudBlazor.min.js?v=@(MudBlazor.Metadata.Version)"></script>
 </body>
 
 </html>

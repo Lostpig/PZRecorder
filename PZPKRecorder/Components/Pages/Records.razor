@@ -25,13 +25,13 @@
                                   AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                     <MudText Typo="Typo.h6" Class="mt-4">@LD.State</MudText>
                     <div>
-                        <MudChip Variant="Variant.Filled" OnClick="() => OnStateChange(RecordState.Wish)" Size="Size.Medium"
+                        <MudChip T="string" Variant="Variant.Filled" OnClick="() => OnStateChange(RecordState.Wish)" Size="Size.Medium"
                                  Color="@(records.State == RecordState.Wish ? Color.Primary : Color.Default)">@kind.GetStateName(RecordState.Wish)</MudChip>
-                        <MudChip Variant="Variant.Filled" OnClick="() => OnStateChange(RecordState.Doing)" Size="Size.Medium"
+                        <MudChip T="string" Variant="Variant.Filled" OnClick="() => OnStateChange(RecordState.Doing)" Size="Size.Medium"
                                  Color="@(records.State == RecordState.Doing ? Color.Primary : Color.Default)">@kind.GetStateName(RecordState.Doing)</MudChip>
-                        <MudChip Variant="Variant.Filled" OnClick="() => OnStateChange(RecordState.Complete)" Size="Size.Medium"
+                        <MudChip T="string" Variant="Variant.Filled" OnClick="() => OnStateChange(RecordState.Complete)" Size="Size.Medium"
                                  Color="@(records.State == RecordState.Complete ? Color.Primary : Color.Default)">@kind.GetStateName(RecordState.Complete)</MudChip>
-                        <MudChip Variant="Variant.Filled" OnClick="() => OnStateChange(RecordState.Giveup)" Size="Size.Medium"
+                        <MudChip T="string" Variant="Variant.Filled" OnClick="() => OnStateChange(RecordState.Giveup)" Size="Size.Medium"
                                  Color="@(records.State == RecordState.Giveup ? Color.Primary : Color.Default)">@kind.GetStateName(RecordState.Giveup)</MudChip>
                     </div>
                     <MudDivider Class="my-2" />

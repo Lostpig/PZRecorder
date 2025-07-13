@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json.Linq;
-using PZPKRecorder.Localization;
 using PZPKRecorder.Data;
-using System.Reflection;
+using PZPKRecorder.Localization;
 using SQLite;
+using System.Reflection;
 
 namespace PZPKRecorder.Services;
 
@@ -57,7 +57,19 @@ internal class ImportService
         var clockIns = version >= 10005 ? CreateImportList<ClockIn>(jobj, "clockin", version) : [];
         var clockInRecords = version >= 10005 ? CreateImportList<ClockInRecord>(jobj, "clockinrecords", version) : [];
 
-        SqlLiteHandler.Instance.ExcuteBatchInsert(kinds, records, dailies, dailyweeks, clockIns, clockInRecords, new List<VariantTable>());
+        var processWatches = version >= 10007 ? CreateImportList<ProcessWatch>(jobj, "processwatches", version) : [];
+        var processRecords = version >= 10007 ? CreateImportList<ProcessRecord>(jobj, "processrecords", version) : [];
+
+        SqlLiteHandler.Instance.ExcuteBatchInsert(
+            kinds, records,
+            dailies, dailyweeks,
+            clockIns, clockInRecords,
+            processWatches, processRecords,
+            []);
+
+        // after import
+        BroadcastService.Broadcast(BroadcastEvent.RemindStateChanged, string.Empty);
+        ProcessWatchService.UpdateWatcher();
     }
 
     private static IList<T> CreateImportList<T>(JObject jobj, string tableName, int dbVersion) where T : new()
@@ -87,7 +99,7 @@ internal class ImportService
                 FieldVersionAttribute? verAttr = pi.GetCustomAttribute<FieldVersionAttribute>();
                 if (verAttr is not null)
                 {
-                    if (verAttr.MaxVersion < dbVersion || verAttr.MinVersion > dbVersion) 
+                    if (verAttr.MaxVersion < dbVersion || verAttr.MinVersion > dbVersion)
                     {
                         pi.SetValue(instance, verAttr.DefaultValue);
                         continue;

@@ -14,7 +14,9 @@ public partial class Form1 : Form
     {
         InitializeComponent();
 
-        StartUp();
+        SqlLiteHandler.Instance.Initialize();
+        Translate.Init();
+        tmr = StartDateChangeTimer();
         ResumeWindow();
 
         var services = new ServiceCollection();
@@ -30,16 +32,15 @@ public partial class Form1 : Form
         blazorWebView1.RootComponents.Add<Components.App>("#app");
 
         blazorWebView1.StartPath = "/records";
+
+        ProcessWatchService.InitializeWatcher();
     }
 
-    private void StartUp()
+    private System.Threading.Timer StartDateChangeTimer()
     {
-        SqlLiteHandler.Instance.Initialize();
-        Translate.Init();
-
         int dayNumber = DateOnly.FromDateTime(DateTime.Now).DayNumber;
 
-        tmr = new((e) =>
+        return new System.Threading.Timer((e) =>
         {
             if (this.IsHandleCreated)
             {
@@ -108,6 +109,7 @@ public partial class Form1 : Form
         base.OnClosed(e);
 
         tmr.Dispose();
-        Services.SqlLiteHandler.Instance.Dispose();
+        ProcessWatchService.Watcher?.Dispose();
+        SqlLiteHandler.Instance.Dispose();
     }
 }

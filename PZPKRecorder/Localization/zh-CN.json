@@ -97,5 +97,16 @@
   "ExportSuccess": "导出成功！",
   "ImportSuccess": "导入成功！",
   "OpenFolder": "打开文件夹",
-  "ImportConfirmMessage": "导入数据会覆盖当前数据库，确认要导入吗？"
+  "ImportConfirmMessage": "导入数据会覆盖当前数据库，确认要导入吗？",
+
+  "ProcessWatcher": "进程监视",
+  "ProcessName": "进程名称",
+  "ProcessNameIsExists": "该进程名已存在",
+  "BindingDaily": "绑定日常",
+  "Duration": "时长",
+  "RecordCount": "共 {0} 条记录",
+  "Date": "日期",
+  "StartTime": "开始时间",
+  "EndTime": "结束时间",
+  "ProcessRecords": "进程记录"
 }

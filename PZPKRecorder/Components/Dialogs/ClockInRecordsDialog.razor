@@ -1,6 +1,6 @@
 ﻿@using Services;
 
-<MudDialog>
+<MudDialog Style="width: 720px; height: 700px;">
     <DialogContent>
         @if (model is not null)
         {
@@ -8,26 +8,27 @@
                 <span class="mud-typography-h5">@model.ClockIn.Name</span>
                 <span style="color: var(--mud-palette-text-secondary);">@counterText</span>
             </MudText>
-            <MudSimpleTable Hover="true" FixedHeader="true" Elevation="0" Style="height: 400px;" Class="mt-6">
-                <thead>
-                    <tr>
-                        <th style="width: 90px;">@LD.Count</th>
-                        <th class="ta-r">@LD.ClockInTime</th>
-                        <th style="width: 90px;" class="ta-r">@LD.ApartDays</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (int i = model.Records.Count; i > 0; i--)
-                    {
-                        var row = model.Records[i - 1];
-                        <tr>
-                            <td>@i</td>
-                            <td class="ta-r">@row.Time.ToString("yyyy-MM-dd HH:mm:ss")</td>
-                            <td class="ta-r">@model.GetDaysApart(i - 1)</td>
-                        </tr>
-                    }
-                </tbody>
-            </MudSimpleTable>
+
+            <MudTable Height="480px" Items="model.Records" RowsPerPage="20" Hover="true" FixedHeader="true" Breakpoint="Breakpoint.Sm">
+                <ColGroup>
+                    <col style="width: 90px;" />
+                    <col />
+                    <col style="width: 90px;" />
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>@LD.Count</MudTh>
+                    <MudTh>@LD.ClockInTime</MudTh>
+                    <MudTh>@LD.ApartDays</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Counter">@context.Counter</MudTd>
+                    <MudTd DataLabel="Time">@context.Time.ToString("yyyy-MM-dd HH:mm:ss")</MudTd>
+                    <MudTd DataLabel="DaysApart">@model.GetDaysApart(context.Counter)</MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager HideRowsPerPage="true" />
+                </PagerContent>
+            </MudTable>
         }
     </DialogContent>
     <DialogActions>
@@ -36,7 +37,7 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
     [Parameter] public int Id { get; set; }
 
     private ClockInModel? model;

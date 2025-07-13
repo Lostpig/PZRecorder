@@ -34,7 +34,7 @@
                 <tr>
                     <td>
                         <MudIconButton Icon="@Icons.Material.Filled.BarChart" Size="Size.Small" Color="Color.Primary"
-                                       OnClick="() => OnStatisticClick(d.Id)"></MudIconButton>
+                        OnClick="() => OnStatisticClick(d.Id)"></MudIconButton>
                     </td>
                     <td>
                         <MudText Typo="Typo.body1" Inline="true">@d.Name</MudText>
@@ -70,28 +70,27 @@
     protected override void OnInitialized()
     {
         today = DateOnly.FromDateTime(DateTime.Today);
-
-        int diffDays = 0;
-        if (today.DayOfWeek == DayOfWeek.Sunday) diffDays = 6;
-        else diffDays = (int)today.DayOfWeek - 1;
-
-        mondayDate = DateOnly.FromDayNumber(today.DayNumber - diffDays);
+        mondayDate = DailyService.GetMondayDate(today);
         dailies = DailyService.GetDailies(DailyState.Enabled);
 
-        BroadcastService.RegisterReceiver(OnAvtived);
+        BroadcastService.RegisterReceiver(OnBroadcast);
 
         UpdatePage();
     }
     public void Dispose()
     {
-        BroadcastService.RemoveReceiver(OnAvtived);
+        BroadcastService.RemoveReceiver(OnBroadcast);
     }
-    private void OnAvtived(BroadcastEvent ev, string arg)
+    private void OnBroadcast(BroadcastEvent ev, string arg)
     {
         if (ev == BroadcastEvent.WindowActivated)
         {
             today = DateOnly.FromDateTime(DateTime.Today);
             StateHasChanged();
+        } 
+        else if (ev == BroadcastEvent.WatcherChangedDaily)
+        {
+            UpdatePage();
         }
     }
     private void OnStatisticClick(int id)

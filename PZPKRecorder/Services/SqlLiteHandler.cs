@@ -1,11 +1,10 @@
-﻿using SQLite;
-using PZPKRecorder.Data;
+﻿using PZPKRecorder.Data;
+using SQLite;
 using System.Reflection;
-using System;
 
 namespace PZPKRecorder.Services;
 
-internal class SqlLiteHandler
+internal class SqlLiteHandler : IDisposable
 {
     static private SqlLiteHandler? _instance;
     static public SqlLiteHandler Instance
@@ -18,7 +17,8 @@ internal class SqlLiteHandler
     }
 
     private SQLiteConnection? _db;
-    public SQLiteConnection DB {
+    public SQLiteConnection DB
+    {
         get
         {
             if (_db == null)
@@ -66,6 +66,8 @@ internal class SqlLiteHandler
             {
                 // DO compatibles process
                 _db.Close();
+                _db.Dispose();
+
                 string backupDBPath = BackupDB(path);
                 File.Delete(path);
 
@@ -93,6 +95,8 @@ internal class SqlLiteHandler
             _db.CreateTable<DailyWeek>();
             _db.CreateTable<ClockIn>();
             _db.CreateTable<ClockInRecord>();
+            _db.CreateTable<ProcessWatch>();
+            _db.CreateTable<ProcessRecord>();
 
             _db.InsertOrReplace(new VariantTable() { Key = DBVersionKey, Value = Helper.DataVersion.ToString() });
         }
@@ -102,13 +106,13 @@ internal class SqlLiteHandler
             throw;
         }
     }
-    public string BackupDB(string path) 
+    public string BackupDB(string path)
     {
         string rootPath = System.AppDomain.CurrentDomain.BaseDirectory;
         string backupPath = Path.Join(rootPath, "backup", $"records.{DateTime.Now.ToString("yyyy-MM-dd-HHmmss")}.db");
         string backupDirPath = Path.GetDirectoryName(backupPath)!;
 
-        if (!Directory.Exists(backupDirPath)) 
+        if (!Directory.Exists(backupDirPath))
         {
             Directory.CreateDirectory(backupDirPath);
         }
@@ -128,12 +132,15 @@ internal class SqlLiteHandler
         DB.DeleteAll<DailyWeek>();
         DB.DeleteAll<ClockIn>();
         DB.DeleteAll<ClockInRecord>();
+        DB.DeleteAll<ProcessWatch>();
+        DB.DeleteAll<ProcessRecord>();
 
         DB.Execute("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE 1 = 1");
     }
     public void Dispose()
     {
         _db?.Close();
+        _db?.Dispose();
     }
 
     private void UpdateDB(int version, string oldDbPath)
@@ -159,13 +166,15 @@ internal class SqlLiteHandler
         var dailyweeks = UpdateCollection<DailyWeek>(oldDB, oldDbVersion);
         var clockIns = UpdateCollection<ClockIn>(oldDB, oldDbVersion);
         var clockInRecords = UpdateCollection<ClockInRecord>(oldDB, oldDbVersion);
+        var processWatches = UpdateCollection<ProcessWatch>(oldDB, oldDbVersion);
+        var processRecords = UpdateCollection<ProcessRecord>(oldDB, oldDbVersion);
 
         // variant
         IList<VariantTable> vars = oldDB.Table<VariantTable>().Where(v => v.Key != DBVersionKey).ToList();
 
-        ExcuteBatchInsert(kinds, records, dailies, dailyweeks, clockIns, clockInRecords, vars);
+        ExcuteBatchInsert(kinds, records, dailies, dailyweeks, clockIns, clockInRecords, processWatches, processRecords, vars);
     }
-    private List<T> UpdateCollection<T>(SQLiteConnection oldDB, int oldDbVersion) where T : new ()
+    private List<T> UpdateCollection<T>(SQLiteConnection oldDB, int oldDbVersion) where T : new()
     {
         List<T> list = new();
         Type t = typeof(T);
@@ -212,9 +221,10 @@ internal class SqlLiteHandler
         所以关联的表需要在之后插入,并基于原ID关联上新ID
      */
     public void ExcuteBatchInsert(
-        IList<Kind> kinds, IList<Record> records, 
+        IList<Kind> kinds, IList<Record> records,
         IList<Daily> dailies, IList<DailyWeek> dailyweeks,
         IList<ClockIn> clockIns, IList<ClockInRecord> clockInRecords,
+        IList<ProcessWatch> processWatches, IList<ProcessRecord> processRecords,
         IList<VariantTable> vars)
     {
         DB.RunInTransaction(() =>
@@ -276,6 +286,26 @@ internal class SqlLiteHandler
                     {
                         Pid = newId,
                         Time = item.Time
+                    });
+                }
+            }
+
+            foreach (var watch in processWatches)
+            {
+                var currentItems = processRecords.Where(r => r.Pid == watch.Id).ToList();
+
+                watch.Id = 0;
+                DB.Insert(watch);
+                int newId = watch.Id;
+
+                foreach (var item in currentItems)
+                {
+                    DB.Insert(new ProcessRecord()
+                    {
+                        Pid = newId,
+                        Date = item.Date,
+                        StartTime = item.StartTime,
+                        EndTime = item.EndTime,
                     });
                 }
             }

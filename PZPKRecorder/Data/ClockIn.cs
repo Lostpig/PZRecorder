@@ -37,4 +37,7 @@ internal class ClockInRecord
 
     [Column("time")]
     public DateTime Time { get; set; }
+
+    [Ignore]
+    public int Counter { get; set; } = 0;
 }

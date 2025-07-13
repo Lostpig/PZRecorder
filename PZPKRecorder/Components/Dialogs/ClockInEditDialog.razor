@@ -1,7 +1,7 @@
 ﻿@using Data;
 @using Services;
 
-<MudDialog>
+<MudDialog Style="width: 640px; height: 520px;">
     <DialogContent>
         <MudForm @ref="form" @bind-IsValid="@success">
             <MudTextField @bind-Value="clockIn.Name" Label="@LD.Name"
@@ -24,7 +24,7 @@
 
 
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
     [Parameter] public bool IsEdit { get; set; }
     [Parameter] public int Id { get; set; }
 

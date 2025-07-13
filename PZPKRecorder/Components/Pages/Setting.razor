@@ -7,7 +7,7 @@
     <MudSelect T="string" @bind-Value="language" @bind-Value:after="OnLanguageChanged" Label="@LD.Language" Class="mb-4">
         @foreach(var l in languages)
         {
-            <MudSelectItem Value="l">@l</MudSelectItem>
+            <MudSelectItem Value="l.Value">@l.Name</MudSelectItem>
         }
     </MudSelect>
     <MudSelect T="string" @bind-Value="theme" @bind-Value:after="OnThemeChanged" Label="@LD.Theme" Class="mb-4">
@@ -24,7 +24,7 @@
     [Inject] private IDialogService DialogService { get; set; }
     private int DBVersion = 0;
     private string language;
-    private IList<string> languages;
+    private IList<LanguageItem> languages;
     private string theme = "dark";
 
     private void OnLanguageChanged()

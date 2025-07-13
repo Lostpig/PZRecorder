@@ -1,5 +1,4 @@
 ﻿using SQLite;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PZPKRecorder.Data;
 
@@ -12,7 +11,7 @@ enum DailyState
 [Table("t_daily")]
 internal class Daily
 {
-    [PrimaryKey,AutoIncrement]
+    [PrimaryKey, AutoIncrement]
     [Column("id")]
     public int Id { get; set; }
 
@@ -131,7 +130,8 @@ internal class DailyWeek
         }
         set
         {
-            switch (index) {
+            switch (index)
+            {
                 case DayOfWeek.Monday: Day1 = value; break;
                 case DayOfWeek.Tuesday: Day2 = value; break;
                 case DayOfWeek.Wednesday: Day3 = value; break;

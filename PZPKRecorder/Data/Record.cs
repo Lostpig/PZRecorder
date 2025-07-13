@@ -37,7 +37,8 @@ internal class Record
     public RecordState State { get; set; }
 
     [Ignore]
-    public string StateText => State switch {
+    public string StateText => State switch
+    {
         RecordState.Wish => LD.Wish,
         RecordState.Doing => LD.Doing,
         RecordState.Complete => LD.Complete,

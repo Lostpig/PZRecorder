@@ -1,12 +1,13 @@
 ﻿@using Services;
 
 <MudThemeProvider @ref="@_mudThemeProvider" Theme="_theme" IsDarkMode="darkMode" />
+<MudPopoverProvider />
 <MudDialogProvider FullWidth="true"
-MaxWidth="MaxWidth.Small"
-CloseButton="false"
-DisableBackdropClick="true"
-Position="DialogPosition.TopCenter"
-CloseOnEscapeKey="true" />
+    MaxWidth="MaxWidth.Large"
+    CloseButton="false"
+    BackdropClick="false"
+    Position="DialogPosition.TopCenter"
+    CloseOnEscapeKey="true" />
 
 <MudLayout>
     <MudDrawer @bind-Open="@DrawOpen" Elevation="2">
@@ -19,6 +20,7 @@ CloseOnEscapeKey="true" />
             <MudDivider Class="my-4" />
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.CalendarMonth" Href="/daily-week">@LD.Daily</MudNavLink>
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.EditCalendar" Href="/daily-manager">@LD.DailyManager</MudNavLink>
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.MonitorHeart" Href="/process-watch">@LD.ProcessWatcher</MudNavLink>
             <MudDivider Class="my-4" />
             <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.History" Href="/clock-in">
                 <span class="remind @remindShow">@LD.ClockIn</span>
@@ -62,7 +64,7 @@ CloseOnEscapeKey="true" />
     {
         if (theme == "system")
         {
-            darkMode = await _mudThemeProvider.GetSystemPreference();
+            darkMode = await _mudThemeProvider.GetSystemDarkModeAsync();
         }
         else
         {

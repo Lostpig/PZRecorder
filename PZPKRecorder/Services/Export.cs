@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Reflection;
 using PZPKRecorder.Localization;
+using System.Reflection;
 
 namespace PZPKRecorder.Services;
 
@@ -40,7 +40,7 @@ internal class ExportService
     private static string CreateExportData(Formatting formatting)
     {
         JObject jobj = [];
-        
+
         // db version
         var dbVersion = VariantService.GetVariant(SqlLiteHandler.DBVersionKey);
         int dbv = int.Parse(dbVersion ?? "0");
@@ -62,6 +62,12 @@ internal class ExportService
         jobj.Add(new JProperty("clockin", CreateExportJsonArray(clockIns)));
         var clockInRecords = ClockInService.GetRecords(null);
         jobj.Add(new JProperty("clockinrecords", CreateExportJsonArray(clockInRecords)));
+
+        // processwatch & processrecord
+        var processWatches = ProcessWatchService.GetAllWatches();
+        jobj.Add(new JProperty("processwatches", CreateExportJsonArray(processWatches)));
+        var processRecords = ProcessWatchService.GetAllRecords();
+        jobj.Add(new JProperty("processrecords", CreateExportJsonArray(processRecords)));
 
         return jobj.ToString(formatting);
     }

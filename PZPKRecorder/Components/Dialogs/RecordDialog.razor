@@ -1,7 +1,7 @@
 ﻿@using Data;
 @using Services;
 
-<MudDialog>
+<MudDialog Style="width: 640px; height: 640px;">
     <DialogContent>
         <MudForm @ref="form" @bind-IsValid="success">
             <MudTextField @bind-Value="record.Name" Label="@LD.Name" Variant="Variant.Text" MaxLength="50" Counter="50" 
@@ -36,7 +36,7 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public bool IsEdit { get; set; }
     [Parameter] public int RecordId { get; set; }
     [Parameter] public int KindId { get; set; }

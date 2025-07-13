@@ -1,34 +1,49 @@
 ﻿
-using System.Diagnostics;
-using System.Reflection;
-using System.Text;
 using Newtonsoft.Json;
+using System.Text;
 
 namespace PZPKRecorder.Services;
+
+internal record LanguageItem(string Name, string Value)
+{
+    [JsonProperty("name")]
+    public string Name { get; set; } = Name;
+
+    [JsonProperty("value")]
+    public string Value { get; set; } = Value;
+}
+internal class LanguageJson
+{
+    [JsonProperty("languages")]
+    public List<LanguageItem> Languages { get; set; } = new();
+
+    [JsonProperty("fields")]
+    public List<string> Fields { get; set; } = new();
+
+    [JsonProperty("default")]
+    public string DefaultLanguage { get; set; } = string.Empty;
+}
 
 internal static class Translate
 {
     const string DefaultLanguage = "zh-CN";
     public static string Current { get; private set; } = DefaultLanguage;
-    private static readonly List<string> _languages = new();
-    public static IList<string> Languages => _languages;
+    private static readonly List<LanguageItem> _languages = new();
+    public static IList<LanguageItem> Languages => _languages;
 
     public static void Init()
     {
         string rootPath = System.AppDomain.CurrentDomain.BaseDirectory;
-        string dirPath = Path.Join(rootPath, "Localization");
-
-        string[] files = Directory.GetFiles(dirPath);
-        string[] langFiles = files
-            .Where(f => Path.GetExtension(f).ToLower() == ".json")
-            .Select(f => Path.GetFileNameWithoutExtension(f))
-            .ToArray();
-
-        _languages.Clear();
-        _languages.AddRange(langFiles);
+        string langFilePath = Path.Join(rootPath, "Localization", "languages.json");
 
         try
         {
+            var langText = File.ReadAllText(langFilePath);
+            var langJson = JsonConvert.DeserializeObject<LanguageJson>(langText);
+
+            _languages.Clear();
+            _languages.AddRange(langJson.Languages);
+
             string userSetLang = ReadLanguageSet();
             LoadLanguage(userSetLang);
             Current = userSetLang;
@@ -77,38 +92,8 @@ internal static class Translate
 
         string langJson = File.ReadAllText(langPath, Encoding.UTF8);
         Dictionary<string, string>? map = JsonConvert.DeserializeObject<Dictionary<string, string>>(langJson);
-        if (map != null) UpdateLanguage(map);
+        if (map != null) Localization.LocalizeDict.Update(map);
         else throw new Exception("Language file load error: language map is null");
     }
-    private static void UpdateLanguage(Dictionary<string, string>? languageMap)
-    {
-        Type t = typeof(Localization.LocalizeDict);
-        foreach (PropertyInfo pi in t.GetProperties())
-        {
-            Attribute? attr = pi.GetCustomAttribute(typeof(TranslateBindAttribute));
-            if (attr is TranslateBindAttribute trans)
-            {
-                pi.SetValue(null, getText(trans.Key));
-            }
-        }
-
-        string getText(string key)
-        {
-            if (languageMap != null && languageMap.ContainsKey(key))
-            {
-                return languageMap[key];
-            }
-            return key;
-        }
-    }
 }
 
-[AttributeUsage(AttributeTargets.Property)]
-internal class TranslateBindAttribute : Attribute
-{
-    public string Key { get; private set; }
-    public TranslateBindAttribute(string key)
-    {
-        Key = key;
-    }
-}

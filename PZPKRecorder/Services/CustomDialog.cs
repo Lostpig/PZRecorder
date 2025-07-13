@@ -10,7 +10,7 @@ public enum MessageBoxType
     Error = 2,
 }
 
-internal static  class CustomDialog
+internal static class CustomDialog
 {
     public static async Task<bool> ShowMessageDialog(this IDialogService ds, string message, MessageBoxType msgType, bool isConfirm = false, string? OKText = null, string? CancelText = null)
     {

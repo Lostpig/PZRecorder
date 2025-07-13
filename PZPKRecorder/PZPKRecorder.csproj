@@ -8,17 +8,29 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>bitbug_favicon.ico</ApplicationIcon>
     <Authors>Losipigz</Authors>
-    <Version>1.0.9.2</Version>
+    <Version>1.0.10.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
     <Content Include="bitbug_favicon.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="Localization\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.WindowsForms" Version="8.0.40" />
-    <PackageReference Include="MudBlazor" Version="6.19.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.WindowsForms" Version="8.0.100" />
+    <PackageReference Include="MudBlazor" Version="8.9.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PZPKRecorderGenerator\PZPKRecorderGenerator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"/>
+    <AdditionalFiles Include="Localization\languages.json" />
   </ItemGroup>
 </Project>

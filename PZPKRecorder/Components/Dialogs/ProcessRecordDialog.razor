@@ -1,0 +1,57 @@
+﻿@using Services;
+@using Data;
+
+<MudDialog Style="width: 720px; height: 700px;">
+    <DialogContent>
+        <MudText>
+            <span class="mud-typography-h5">@watch.Name</span>
+            <span style="color: var(--mud-palette-text-secondary);">@counterText</span>
+        </MudText>
+        <MudTable Height="480px" Items="list" RowsPerPage="20" Hover="true" FixedHeader="true" Breakpoint="Breakpoint.Sm">
+            <ColGroup>
+                <col />
+                <col style="width: 90px;" />
+                <col style="width: 90px;" />
+                <col style="width: 90px;" />
+            </ColGroup>
+            <HeaderContent>
+                <MudTh>@LD.Date</MudTh>
+                <MudTh>@LD.StartTime</MudTh>
+                <MudTh>@LD.EndTime</MudTh>
+                <MudTh>@LD.Duration</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Date">@context.DateText</MudTd>
+                <MudTd DataLabel="StartTime">@context.StartTimeText</MudTd>
+                <MudTd DataLabel="EndTime">@context.EndTimeText</MudTd>
+                <MudTd DataLabel="Duration">@context.DurationText</MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager HideRowsPerPage="true" />
+            </PagerContent>
+        </MudTable>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@LD.Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public int Id { get; set; }
+
+    private ProcessWatch watch = default!;
+    private List<ProcessRecord> list = new();
+    private string counterText = "";
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        watch = ProcessWatchService.GetWatch(Id);
+        list = ProcessWatchService.GetRecords(Id);
+
+        counterText = string.Format(LD.RecordCount, list.Count);
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}

@@ -1,11 +1,11 @@
-﻿using System.Diagnostics;
-using PZPKRecorder.Localization;
+﻿using PZPKRecorder.Localization;
+using System.Diagnostics;
 
 namespace PZPKRecorder.Services;
 
 internal static class Helper
 {
-    public const int DataVersion = 10006;
+    public const int DataVersion = 10007;
 
     public static bool IsCompatibleVersion(int version)
     {
@@ -18,11 +18,12 @@ internal static class Helper
             case 10003:
             case 10004:
             case 10005:
+            case 10006:
             case DataVersion:
                 isCompatible = true;
                 break;
             default:
-                isCompatible = false; 
+                isCompatible = false;
                 break;
         }
 
@@ -35,7 +36,7 @@ internal static class Helper
             string? folderPath = Path.GetDirectoryName(path);
             if (folderPath != null) path = folderPath;
         }
-        
+
         if (Directory.Exists(path))
         {
             var psi = new ProcessStartInfo()

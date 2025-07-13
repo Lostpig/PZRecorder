@@ -2,12 +2,23 @@
 
 namespace PZPKRecorder.Services;
 
-internal class ClockInModel(ClockIn clockIn, IList<ClockInRecord> records)
+internal class ClockInModel
 {
-    public ClockIn ClockIn { get; private set; } = clockIn;
-    public IList<ClockInRecord> Records { get; private set; } = records;
+    public ClockIn ClockIn { get; private set; }
+    public IList<ClockInRecord> Records { get; private set; }
 
-    public ClockInRecord? LastRecord => Records.LastOrDefault();
+    public ClockInModel(ClockIn clockIn, IList<ClockInRecord> records)
+    {
+        ClockIn = clockIn;
+        Records = records;
+
+        for (int i = 0; i < Records.Count; i++)
+        {
+            Records[i].Counter = Records.Count - i;
+        }
+    }
+
+    public ClockInRecord? LastRecord => Records.FirstOrDefault();
     public int GetLastDaySince(DateTime time)
     {
         if (LastRecord == null)
@@ -34,13 +45,15 @@ internal class ClockInModel(ClockIn clockIn, IList<ClockInRecord> records)
         return false;
     }
 
-    public int GetDaysApart(int index)
+    public int GetDaysApart(int counter)
     {
-        if (index <= 0 || index >= Records.Count)
+        var index = Records.Count - counter;
+
+        if (index < 0 || index >= Records.Count - 1)
         {
             return 0;
         }
-        var lastRecord = Records[index - 1];
+        var lastRecord = Records[index + 1];
         var record = Records[index];
         return DateOnly.FromDateTime(record.Time).DayNumber - DateOnly.FromDateTime(lastRecord.Time).DayNumber;
     }
@@ -98,7 +111,7 @@ internal class ClockInService
     public static ClockInModel GetClockInModel(int id)
     {
         var item = SqlLiteHandler.Instance.DB.Find<ClockIn>(id);
-        var records = SqlLiteHandler.Instance.DB.Table<ClockInRecord>().Where(r => r.Pid == id).OrderBy(r => r.Time).ToList();
+        var records = SqlLiteHandler.Instance.DB.Table<ClockInRecord>().Where(r => r.Pid == id).OrderByDescending(r => r.Time).ToList();
         return new ClockInModel(item, records);
     }
     public static IList<ClockInModel> GetClockInModels()
@@ -108,7 +121,7 @@ internal class ClockInService
 
         return items.Select(i =>
         {
-            var r = records.Where(r => r.Pid == i.Id).OrderBy(r => r.Time).ToList();
+            var r = records.Where(r => r.Pid == i.Id).OrderByDescending(r => r.Time).ToList();
             return new ClockInModel(i, r);
         }).OrderBy(i => i.ClockIn.OrderNo).ToList();
     }

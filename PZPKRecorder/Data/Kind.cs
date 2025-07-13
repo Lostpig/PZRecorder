@@ -24,11 +24,11 @@ internal class Kind
     [Column("state_doing")]
     [FieldVersion(10003, 99999, "")]
     public string StateDoingName { get; set; } = string.Empty;
-    
+
     [Column("state_complete")]
     [FieldVersion(10003, 99999, "")]
     public string StateCompleteName { get; set; } = string.Empty;
-    
+
     [Column("state_giveup")]
     [FieldVersion(10003, 99999, "")]
     public string StateGiveupName { get; set; } = string.Empty;

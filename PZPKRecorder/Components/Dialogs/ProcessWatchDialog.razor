@@ -1,0 +1,99 @@
+﻿@using Data;
+@using Services;
+@using System.Diagnostics;
+
+<MudDialog Style="width: 640px; height: 700px;">
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@success">
+            <MudTextField @bind-Value="item.Name" Label="@LD.Name"
+                          Immediate="true" Required="true" RequiredError="@LD.RequiredError"
+                          Variant="Variant.Text" MaxLength="10" Counter="10"></MudTextField>
+            <MudTextField T="string" @bind-Value="item.ProcessName" Label="@LD.ProcessName"
+                          Immediate="true" Required="true" RequiredError="@LD.RequiredError"
+                          DebounceInterval="500"
+                          Validation="@(new Func<string, string?>(CheckProcessName))"
+                          Variant="Variant.Text" MaxLength="30" Counter="30"></MudTextField>
+            <MudTextField @bind-Value="item.Remark" Label="@LD.Remark"
+            Immediate="true"
+            Lines="5"
+            Variant="Variant.Text" MaxLength="500" Counter="500"></MudTextField>
+            <MudNumericField @bind-Value="item.OrderNo" Label="@LD.OrderBy" Variant="Variant.Text" Min="0" Max="1000" />
+            <MudDivider Class="my-2" />
+            <MudCheckBox @bind-Value="item.Enabled" Label="@LD.Enabled" />
+            <MudDivider Class="my-2" />
+            <MudCheckBox @bind-Value="item.BindingDaily" Label="@LD.BindingDaily" />
+            <MudSelect @bind-Value="item.DailyId" Label="@LD.Daily" Variant="Variant.Text" Disabled="!item.BindingDaily">
+                @foreach (var daily in dailies)
+                {
+                    <MudSelectItem Value="@daily.Id">@daily.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudNumericField @bind-Value="item.DailyDuration" Label="@LD.Duration" Variant="Variant.Text" Min="0" Max="60" Disabled="!item.BindingDaily" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@LD.Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit" Disabled="@(!success)">@LD.OK</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public bool IsEdit { get; set; }
+    [Parameter] public int Id { get; set; }
+
+    private MudForm form = default!;
+    private bool success = false;
+    private ProcessWatch item = default!;
+    private List<Daily> dailies = new();
+
+    protected override void OnInitialized()
+    {
+        dailies = DailyService.GetDailies(null);
+
+        if (IsEdit)
+        {
+            item = ProcessWatchService.GetWatch(Id);
+        }
+        else
+        {
+            item = new()
+                {
+                    Name = "",
+                    ProcessName = "",
+                    Enabled = true,
+                    Remark = "",
+                    OrderNo = 0,
+                    BindingDaily = false,
+                    DailyId = 0,
+                    DailyDuration = 0
+                };
+        }
+    }
+
+    string? CheckProcessName(string processName)
+    {
+        if (!ProcessWatchService.CheckDuplicate(item.ProcessName))
+        {
+            return LD.ProcessNameIsExists;
+        }
+
+        Debug.WriteLine($"Process Name: {processName} is valid.");
+        return null;
+    }
+
+    void Submit()
+    {
+        if (!success)
+        {
+            return;
+        }
+
+        if (IsEdit) ProcessWatchService.UpdateWatch(item);
+        else ProcessWatchService.InsertWatch(item);
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+    void Cancel() => MudDialog.Cancel();
+}

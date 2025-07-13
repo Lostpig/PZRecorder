@@ -1,6 +1,4 @@
-﻿using PZPKRecorder.Components.Pages;
-using PZPKRecorder.Data;
-using System.Drawing.Printing;
+﻿using PZPKRecorder.Data;
 
 namespace PZPKRecorder.Services;
 
@@ -49,7 +47,8 @@ class RecordCollection
     public int Year
     {
         get => year;
-        set {
+        set
+        {
             if (value == year) return;
 
             year = value;
@@ -163,7 +162,7 @@ class RecordCollection
 
 internal class RecordService
 {
-    public static IList<Record> GetRecords(int kindId, string searchText, int? year, int? month, RecordState? state, int limit, int offset)
+    public static List<Record> GetRecords(int kindId, string searchText, int? year, int? month, RecordState? state, int limit, int offset)
     {
         string query = $"SELECT * FROM t_record WHERE kind = {kindId}"
             + $" {(state is not null ? "AND state = " + (int)state : "")}"
@@ -174,7 +173,7 @@ internal class RecordService
 
         return SqlLiteHandler.Instance.DB.Query<Record>(query);
     }
-    public static IList<Record> GetAllRecords()
+    public static List<Record> GetAllRecords()
     {
         return SqlLiteHandler.Instance.DB.Table<Record>().ToList();
     }
@@ -207,7 +206,7 @@ internal class RecordService
         }
     }
 
-    public static IList<int> GetYears(int kindId)
+    public static List<int> GetYears(int kindId)
     {
         return SqlLiteHandler.Instance.DB.Table<Record>()
             .Where(r => r.Kind == kindId)

@@ -8,6 +8,7 @@ public enum BroadcastEvent
     WindowActivated,
     DateChanged,
     RemindStateChanged,
+    WatcherChangedDaily,
 }
 
 internal class BroadcastService

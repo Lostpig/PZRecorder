@@ -83,7 +83,7 @@
   + order_no: int
 
 ## version 10005
-> add t_clockin & t_clockin_record tables_
+> add t_clockin & t_clockin_record tables  
 + t_clockin
   + id: int
   + name: string
@@ -97,9 +97,28 @@
 
 ## version 10006
 + t_clockin
-  > add remind_days column
+  > add remind_days column  
   + id: int
   + name: string
   + remind_days: int
   + remark: string
   + order_no: int
+
+## version 10007
+> add t_process_watch & t_process_record tables  
++ t_process_watch
+  + id: int
+  + name: string
+  + enable: boolean
+  + process_name: string
+  + binding_daily: boolean
+  + daily_id: int
+  + daily_duration: int
+  + reamrk: string
+  + order_no: int
++ t_process_record
+  + id: int
+  + pid: int // t_process_watch id
+  + date: int
+  + start_time: int // TimeOfDay.TotalSeconds
+  + end_time: int  // TimeOfDay.TotalSeconds

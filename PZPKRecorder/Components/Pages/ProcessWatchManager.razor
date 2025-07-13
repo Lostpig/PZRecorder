@@ -1,0 +1,113 @@
+﻿@page "/process-watch";
+
+@using Services;
+@using Data;
+
+<MudPaper Width="100%" Height="100%" class="d-flex flex-column">
+    <MudToolBar>
+        <MudButton Variant="Variant.Text"
+        StartIcon="@Icons.Material.Filled.Add"
+        Color="Color.Primary"
+        Style="text-transform:none"
+        Class="mt-4"
+        OnClick="OnAddClick">@LD.Add</MudButton>
+    </MudToolBar>
+    <MudSimpleTable Hover="true" FixedHeader="true" Elevation="0" Style="height: calc(100% - 65px);">
+        <thead>
+            <tr>
+                <th style="width: 90px;">@LD.OrderBy</th>
+                <th>@LD.Name</th>
+                <th style="width: 120px;">@LD.State</th>
+                <th style="width: 320px;">@LD.Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in watches)
+            {
+                Color stateColor = row.Enabled ? Color.Success : Color.Error;
+                <tr>
+                    <td>@row.OrderNo</td>
+                    <td>
+                        <MudText Typo="Typo.body1" Inline="true">@row.Name</MudText>
+                        <MudText Typo="Typo.body2" Inline="true" Style="color: var(--mud-palette-text-secondary);">@row.ProcessName</MudText>
+                    </td>
+                    <td>
+                        <MudButton Variant="Variant.Text" Color="stateColor" OnClick="() => OnChangeState(row)">@row.StateText</MudButton>
+                    </td>
+                    <td>
+                        <MudButton Variant="Variant.Text" Color="Color.Warning" OnClick="() => OnStatisticClick(row.Id)">@LD.Record</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => ShowDialog(row.Id)">@LD.Edit</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="() => OnDeleteClick(row.Id)">@LD.Delete</MudButton>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+</MudPaper>
+
+
+@code {
+    [Inject] private IDialogService DialogService { get; set; } = default!;
+
+    List<ProcessWatch> watches = new();
+
+    protected override void OnInitialized()
+    {
+        watches = ProcessWatchService.GetAllWatches();
+    }
+
+    private void UpdateList()
+    {
+        watches = ProcessWatchService.GetAllWatches();
+        StateHasChanged();
+    }
+    private async void OnDeleteClick(int id)
+    {
+        bool result = await DialogService.ShowConfirm(LD.SureToDelete);
+        if (result == true)
+        {
+            try
+            {
+                ProcessWatchService.DeleteWatch(id);
+                UpdateList();
+            }
+            catch (Exception ex)
+            {
+                await DialogService.ShowError(ex.Message);
+            }
+        }
+    }
+    private void OnAddClick()
+    {
+        ShowDialog(null);
+    }
+    private void OnStatisticClick(int id)
+    {
+        DialogParameters<Dialogs.ProcessRecordDialog> paramters = new();
+        paramters.Add(d => d.Id, id);
+        DialogService.ShowAsync<Dialogs.ProcessRecordDialog>(LD.ProcessRecords, paramters); // TODO
+    }
+
+    private void OnChangeState(ProcessWatch item)
+    {
+        item.Enabled = !item.Enabled;
+        ProcessWatchService.UpdateWatch(item);
+    }
+
+    private async void ShowDialog(int? id)
+    {
+        DialogParameters<Dialogs.ProcessWatchDialog> paramters = new();
+
+        paramters.Add(d => d.IsEdit, id is not null);
+        paramters.Add(d => d.Id, id ?? -1);
+        string title = id is not null ? LD.Edit : LD.Add;
+
+        var dialog = await DialogService.ShowAsync<Dialogs.ProcessWatchDialog>(title, paramters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            UpdateList();
+        }
+    }
+}
