@@ -104,9 +104,10 @@
   "ProcessNameIsExists": "该进程名已存在",
   "BindingDaily": "绑定日常",
   "Duration": "时长",
-  "RecordCount": "共 {0} 条记录",
+  "RecordCount": "本月共 {0} 条记录，合计时长 {1}",
   "Date": "日期",
   "StartTime": "开始时间",
   "EndTime": "结束时间",
-  "ProcessRecords": "进程记录"
+  "ProcessRecords": "进程记录",
+  "Running": "运行中"
 }

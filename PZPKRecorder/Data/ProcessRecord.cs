@@ -1,4 +1,5 @@
 ﻿using SQLite;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 
 namespace PZPKRecorder.Data;
 
@@ -63,6 +64,12 @@ internal class ProcessRecord
     [Column("end_time")]
     public int EndTime { get; set; }
 
+    public static string FormatTimeSpan(TimeSpan time)
+    {
+        int hours = time.Hours + time.Days * 24;
+        return $"{hours}:{time.Minutes:d2}:{time.Seconds:d2}";
+    }
+
     [Ignore]
     public string DateText
     {
@@ -78,7 +85,7 @@ internal class ProcessRecord
         get
         {
             var time = TimeSpan.FromSeconds(StartTime);
-            return time.ToString("g");
+            return FormatTimeSpan(time);
         }
     }
     [Ignore]
@@ -87,7 +94,15 @@ internal class ProcessRecord
         get
         {
             var time = TimeSpan.FromSeconds(EndTime);
-            return time.ToString("g");
+            return FormatTimeSpan(time);
+        }
+    }
+    [Ignore]
+    public TimeSpan Duration
+    {
+        get
+        {
+            return TimeSpan.FromSeconds(EndTime - StartTime);
         }
     }
     [Ignore]
@@ -96,7 +111,9 @@ internal class ProcessRecord
         get
         {
             var duration = TimeSpan.FromSeconds(EndTime - StartTime);
-            return duration.ToString("g");
+            int hours = duration.Hours + duration.Days * 24;
+            string hoursStr = hours > 0 ? hours + "h" : "";
+            return $"{hoursStr} {duration.Minutes:d2}m";
         }
     }
 }

@@ -6,11 +6,24 @@
 <MudPaper Width="100%" Height="100%" class="d-flex flex-column">
     <MudToolBar>
         <MudButton Variant="Variant.Text"
-        StartIcon="@Icons.Material.Filled.Add"
-        Color="Color.Primary"
-        Style="text-transform:none"
-        Class="mt-4"
-        OnClick="OnAddClick">@LD.Add</MudButton>
+            StartIcon="@Icons.Material.Filled.Add"
+            Color="Color.Primary"
+            Style="text-transform:none"
+            Class="mt-4"
+            OnClick="OnAddClick">@LD.Add</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" DropShadow="false"
+                   Class="mt-4" Style="margin-left: auto;"
+                   OnClick="@ToggleOpen">@LD.Running (@runningRecords.Count)</MudButton>
+        <MudPopover Open="_runningPopOpen" OverflowBehavior="OverflowBehavior.FlipAlways" 
+                AnchorOrigin="Origin.BottomRight" 
+                TransformOrigin="Origin.TopRight" Paper="false">
+            <MudPaper Outlined="true" Class="px-4 py-4" MinWidth="">
+                @foreach(var record in runningRecords)
+                {
+                    <MudText>@record.Name (@record.ProcessName) - @GetRunningTime(record)</MudText>
+                }
+            </MudPaper>
+        </MudPopover>
     </MudToolBar>
     <MudSimpleTable Hover="true" FixedHeader="true" Elevation="0" Style="height: calc(100% - 65px);">
         <thead>
@@ -50,10 +63,19 @@
     [Inject] private IDialogService DialogService { get; set; } = default!;
 
     List<ProcessWatch> watches = new();
+    bool _runningPopOpen = false;
+    List<WatchingRecord> runningRecords = [];
 
     protected override void OnInitialized()
     {
         watches = ProcessWatchService.GetAllWatches();
+        RunningProcessChanged();
+
+        BroadcastService.RegisterReceiver(OnBroadcast);
+    }
+    public void Dispose()
+    {
+        BroadcastService.RemoveReceiver(OnBroadcast);
     }
 
     private void UpdateList()
@@ -92,6 +114,43 @@
     {
         item.Enabled = !item.Enabled;
         ProcessWatchService.UpdateWatch(item);
+    }
+
+    private void ToggleOpen()
+    {
+        if (runningRecords.Count == 0)
+        {
+            _runningPopOpen = false;
+            return;
+        }
+
+        _runningPopOpen = !_runningPopOpen;
+
+    }
+    private void OnBroadcast(BroadcastEventArgs ev)
+    {
+        if (ev.Event != BroadcastEvent.RunningProcessChanged)
+        {
+            return;
+        }
+
+        if (ev.UseInvokeAsync)
+        {
+            InvokeAsync(() => RunningProcessChanged());
+        }
+        else
+        {
+            RunningProcessChanged();
+        }
+    }
+    private void RunningProcessChanged()
+    {
+        runningRecords = ProcessWatchService.WatchManager!.GetRunningRecords();
+        StateHasChanged();
+    }
+    private string GetRunningTime(WatchingRecord wr)
+    {
+        return DateTime.Now.Subtract(wr.StartTime).ToString(@"hh\:mm\:ss");
     }
 
     private async void ShowDialog(int? id)

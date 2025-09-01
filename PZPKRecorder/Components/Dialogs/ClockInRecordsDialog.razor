@@ -13,17 +13,17 @@
                 <ColGroup>
                     <col style="width: 90px;" />
                     <col />
-                    <col style="width: 90px;" />
+                    <col style="width: 120px;" />
                 </ColGroup>
                 <HeaderContent>
                     <MudTh>@LD.Count</MudTh>
                     <MudTh>@LD.ClockInTime</MudTh>
-                    <MudTh>@LD.ApartDays</MudTh>
+                    <MudTh Style="text-align: right;">@LD.ApartDays</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="Counter">@context.Counter</MudTd>
                     <MudTd DataLabel="Time">@context.Time.ToString("yyyy-MM-dd HH:mm:ss")</MudTd>
-                    <MudTd DataLabel="DaysApart">@model.GetDaysApart(context.Counter)</MudTd>
+                    <MudTd DataLabel="DaysApart" Style="text-align: right;">@model.GetDaysApart(context.Counter)</MudTd>
                 </RowTemplate>
                 <PagerContent>
                     <MudTablePager HideRowsPerPage="true" />

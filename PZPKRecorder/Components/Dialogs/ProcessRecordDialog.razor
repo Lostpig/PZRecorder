@@ -1,8 +1,14 @@
 ﻿@using Services;
 @using Data;
 
-<MudDialog Style="width: 720px; height: 700px;">
+<MudDialog Style="width: 720px; height: 780px;">
     <DialogContent>
+        <MudDatePicker Label="@LD.Month"
+                       @bind-Date="setDate"
+                       OpenTo="OpenTo.Year"
+                       FixDay="1" DisableToolbar="true"
+                       DateFormat="yyyy-MM" />
+        <MudDivider Class="my-2" />
         <MudText>
             <span class="mud-typography-h5">@watch.Name</span>
             <span style="color: var(--mud-palette-text-secondary);">@counterText</span>
@@ -12,19 +18,19 @@
                 <col />
                 <col style="width: 90px;" />
                 <col style="width: 90px;" />
-                <col style="width: 90px;" />
+                <col style="width: 120px;" />
             </ColGroup>
             <HeaderContent>
                 <MudTh>@LD.Date</MudTh>
                 <MudTh>@LD.StartTime</MudTh>
                 <MudTh>@LD.EndTime</MudTh>
-                <MudTh>@LD.Duration</MudTh>
+                <MudTh Style="text-align: right;">@LD.Duration</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Date">@context.DateText</MudTd>
                 <MudTd DataLabel="StartTime">@context.StartTimeText</MudTd>
                 <MudTd DataLabel="EndTime">@context.EndTimeText</MudTd>
-                <MudTd DataLabel="Duration">@context.DurationText</MudTd>
+                <MudTd DataLabel="Duration" Style="text-align: right;">@context.DurationText</MudTd>
             </RowTemplate>
             <PagerContent>
                 <MudTablePager HideRowsPerPage="true" />
@@ -43,14 +49,36 @@
     private ProcessWatch watch = default!;
     private List<ProcessRecord> list = new();
     private string counterText = "";
+    private DateTime _setDate = DateTime.Today;
+    private DateTime? setDate
+    {
+        get => _setDate;
+        set {
+            _setDate = value ?? DateTime.Today;
+            OnDateChanged(_setDate);
+        }
+    }
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
         watch = ProcessWatchService.GetWatch(Id);
-        list = ProcessWatchService.GetRecords(Id);
+        OnDateChanged(_setDate);
+    }
+    private void OnDateChanged(DateTime date)
+    {
+        var fd = new DateTime(date.Year, date.Month, 1);
+        var ld = fd.AddMonths(1).AddDays(-1);
+        var fdNum = DateOnly.FromDateTime(fd).DayNumber;
+        var ldNum = DateOnly.FromDateTime(ld).DayNumber;
 
-        counterText = string.Format(LD.RecordCount, list.Count);
+        list = ProcessWatchService.GetRecords(Id, fdNum, ldNum);
+        TimeSpan totalTime = TimeSpan.FromSeconds(0);
+        foreach (var p in list) totalTime += p.Duration;
+        int hours = totalTime.Hours + totalTime.Days * 24;
+        var totalTimeText = $"{hours}h {totalTime.Minutes:d2}m";
+
+        counterText = string.Format(LD.RecordCount, list.Count, totalTimeText);
     }
 
     void Cancel() => MudDialog.Cancel();

@@ -9,26 +9,28 @@ public enum BroadcastEvent
     DateChanged,
     RemindStateChanged,
     WatcherChangedDaily,
+    RunningProcessChanged,
 }
+public record BroadcastEventArgs(BroadcastEvent Event, string EventArg, bool UseInvokeAsync);
 
 internal class BroadcastService
 {
-    static HashSet<Action<BroadcastEvent, string>> ReceiverActions = new();
+    static HashSet<Action<BroadcastEventArgs>> ReceiverActions = new();
 
-    public static void RegisterReceiver(Action<BroadcastEvent, string> action)
+    public static void RegisterReceiver(Action<BroadcastEventArgs> action)
     {
         ReceiverActions.Add(action);
     }
-    public static void RemoveReceiver(Action<BroadcastEvent, string> action)
+    public static void RemoveReceiver(Action<BroadcastEventArgs> action)
     {
         ReceiverActions.Remove(action);
     }
 
-    public static void Broadcast(BroadcastEvent ev, string eventArg)
+    public static void Broadcast(BroadcastEvent ev, string eventArg = "", bool useInvokeAsync = false)
     {
         foreach (var action in ReceiverActions)
         {
-            action(ev, eventArg);
+            action(new(ev, eventArg, useInvokeAsync));
         }
     }
 }

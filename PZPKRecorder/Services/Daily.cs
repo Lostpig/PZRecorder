@@ -95,6 +95,5 @@ internal class DailyService
 
         dailyweek[day.DayOfWeek] = 1;
         WriteDailyWeek(dailyweek);
-        BroadcastService.Broadcast(BroadcastEvent.WatcherChangedDaily, string.Empty);
     }
 }

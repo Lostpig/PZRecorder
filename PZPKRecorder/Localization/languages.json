@@ -114,6 +114,7 @@
     "Date",
     "StartTime",
     "EndTime",
-    "ProcessRecords"
+    "ProcessRecords",
+    "Running"
   ]
 }

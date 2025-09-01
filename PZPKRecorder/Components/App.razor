@@ -78,30 +78,40 @@
         remindShow = ClockInService.CheckReminds() ? "remind-show" : "";
         StateHasChanged();
     }
+    private void BroadcastHandler(BroadcastEvent ev, string arg)
+    {
+        switch (ev)
+        {
+            case BroadcastEvent.ExceptionCatch:
+                DialogService.ShowError(arg);
+                break;
+            case BroadcastEvent.LanguageChanged:
+                StateHasChanged();
+                break;
+            case BroadcastEvent.ThemeChanged:
+                _ = SetTheme(arg);
+                break;
+            case BroadcastEvent.RemindStateChanged:
+            case BroadcastEvent.DateChanged:
+                SetClockInRemind();
+                break;
+            default:
+                break;
+        }
+    }
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
 
-        BroadcastService.RegisterReceiver((ev, arg) =>
+        BroadcastService.RegisterReceiver((ev) =>
         {
-            switch (ev)
+            if (ev.UseInvokeAsync)
             {
-                case BroadcastEvent.ExceptionCatch:
-                    DialogService.ShowError(arg);
-                    break;
-                case BroadcastEvent.LanguageChanged:
-                    StateHasChanged();
-                    break;
-                case BroadcastEvent.ThemeChanged:
-                    _ = SetTheme(arg);
-                    break;
-                case BroadcastEvent.RemindStateChanged:
-                case BroadcastEvent.DateChanged:
-                    SetClockInRemind();
-                    break;
-                default: 
-                    break;
+                InvokeAsync(() => BroadcastHandler(ev.Event, ev.EventArg));
+            } else
+            {
+                BroadcastHandler(ev.Event, ev.EventArg);
             }
         });
 

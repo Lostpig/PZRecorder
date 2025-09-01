@@ -109,7 +109,7 @@ public partial class Form1 : Form
         base.OnClosed(e);
 
         tmr.Dispose();
-        ProcessWatchService.Watcher?.Dispose();
+        ProcessWatchService.WatchManager?.Dispose();
         SqlLiteHandler.Instance.Dispose();
     }
 }

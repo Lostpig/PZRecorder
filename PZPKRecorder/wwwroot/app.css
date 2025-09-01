@@ -70,7 +70,7 @@ th.dailyweek-cell {
 }
 
 .today-cell {
-    background-color: var(--mud-palette-background-grey) !important;
+    background-color: var(--mud-palette-background-gray) !important;
 }
 
 .daily-statistic-container {

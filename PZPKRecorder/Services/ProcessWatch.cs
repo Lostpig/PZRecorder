@@ -6,19 +6,19 @@ namespace PZPKRecorder.Services;
 
 internal class ProcessWatchService
 {
-    public static ProcessWatcher? Watcher { get; private set; }
+    public static WatcherManager? WatchManager { get; private set; }
     public static void InitializeWatcher()
     {
-        if (Watcher is not null) return;
+        if (WatchManager is not null) return;
         var watches = GetAllWatches();
-        Watcher = new ProcessWatcher(watches);
+        WatchManager = new WatcherManager(watches);
     }
     public static void UpdateWatcher()
     {
-        if (Watcher is not null)
+        if (WatchManager is not null)
         {
             var watches = GetAllWatches();
-            Watcher.UpdateWatches(watches);
+            WatchManager.UpdateWatches(watches);
         }
     }
 
@@ -64,11 +64,11 @@ internal class ProcessWatchService
     {
         return SqlLiteHandler.Instance.DB.Insert(record);
     }
-    public static List<ProcessRecord> GetRecords(int pid)
+    public static List<ProcessRecord> GetRecords(int pid, int startDate, int endDate)
     {
         return SqlLiteHandler.Instance.DB.Table<ProcessRecord>()
-            .Where(pr => pr.Pid == pid)
-            .OrderBy(pr => pr.StartTime)
+            .Where(pr => pr.Pid == pid && pr.Date >= startDate && pr.Date <= endDate)
+            .OrderByDescending(pr => pr.Date)
             .ToList();
     }
     public static List<ProcessRecord> GetAllRecords()
@@ -77,17 +77,18 @@ internal class ProcessWatchService
     }
 }
 
-class WatcherRecord
+internal record WatchingRecord(int Id, string Name, string ProcessName, DateTime StartTime);
+class ProcessWatcher
 {
     public ProcessWatch Watch { get; init; }
-    private DateTime StartTime { get; set; }
-    private bool Runing { get; set; } = false;
+    public DateTime StartTime { get; private set; }
+    public bool Runing { get; private set; } = false;
 
-    public WatcherRecord(ProcessWatch watch)
+    public ProcessWatcher(ProcessWatch watch)
     {
         Watch = watch;
     }
-    public void CheckProcess()
+    public bool CheckProcess()
     {
         var process = Process.GetProcessesByName(Watch.ProcessName).FirstOrDefault();
         if (process == null && Runing)
@@ -95,21 +96,27 @@ class WatcherRecord
             // Process has exited
             Runing = false;
             AddProcessRecord(Watch, StartTime, DateTime.Now);
+            
 #if DEBUG
             Debug.WriteLine($"Find Process [{Watch.ProcessName}] exited");
 #endif
+            return true;
         }
         else if (process is not null && !Runing)
         {
             Runing = true;
             StartTime = DateTime.Now;
+            
 #if DEBUG
             Debug.WriteLine($"Find Process [{Watch.ProcessName}] running");
 #endif
+            return true;
         }
+
+        return false;
     }
 
-    private void AddProcessRecord(ProcessWatch watch, DateTime startTime, DateTime exitTime)
+    private static void AddProcessRecord(ProcessWatch watch, DateTime startTime, DateTime exitTime)
     {
         var date = DateOnly.FromDateTime(startTime);
         int startTimeSeconds = (int)startTime.TimeOfDay.TotalSeconds;
@@ -132,27 +139,28 @@ class WatcherRecord
         if (watch.BindingDaily)
         {
             TimeSpan duration = DateTime.Now - startTime;
-            if (duration.Minutes >= watch.DailyDuration)
+            if (duration.TotalMinutes >= watch.DailyDuration)
             {
                 DailyService.UpdateDailyWeekByWatcher(watch.DailyId, date);
+                BroadcastService.Broadcast(BroadcastEvent.WatcherChangedDaily, string.Empty, true);
             }
         }
     }
 }
-internal class ProcessWatcher : IDisposable
+internal class WatcherManager : IDisposable
 {
-    TrdTimer _timer;
-    List<WatcherRecord> _items = new();
+    readonly TrdTimer _timer;
+    readonly List<ProcessWatcher> _items = new();
 
-    public ProcessWatcher(List<ProcessWatch> watches)
+    public WatcherManager(List<ProcessWatch> watches)
     {
         UpdateWatches(watches);
 
-        int timerInterval = 60 * 1000; // 1 minute
+        int timerInterval = 60 * 1000; // per minute
 #if DEBUG
         timerInterval = 10 * 1000; // 10 seconds for debugging
 #endif
-        _timer = new TrdTimer(ExcuteWatch, null, timerInterval, timerInterval); // per minute
+        _timer = new TrdTimer(ExcuteWatch, null, timerInterval, timerInterval); 
     }
     private void ExcuteWatch(object? _)
     {
@@ -162,7 +170,11 @@ internal class ProcessWatcher : IDisposable
             {
                 foreach (var item in _items)
                 {
-                    item.CheckProcess();
+                    var changed = item.CheckProcess();
+                    if (changed)
+                    {
+                        BroadcastService.Broadcast(BroadcastEvent.RunningProcessChanged, string.Empty, true);
+                    }
                 }
             }
             catch (Exception ex)
@@ -171,7 +183,6 @@ internal class ProcessWatcher : IDisposable
             }
         }
     }
-
     public void UpdateWatches(List<ProcessWatch> watches)
     {
         lock (_items)
@@ -181,12 +192,22 @@ internal class ProcessWatcher : IDisposable
             {
                 if (watch.Enabled && !string.IsNullOrWhiteSpace(watch.ProcessName))
                 {
-                    _items.Add(new WatcherRecord(watch));
+                    _items.Add(new ProcessWatcher(watch));
                 }
             }
         }
     }
 
+    public List<WatchingRecord> GetRunningRecords()
+    {
+        lock (_items)
+        {
+            return _items
+                .Where(i => i.Runing)
+                .Select(i => new WatchingRecord(i.Watch.Id, i.Watch.Name, i.Watch.ProcessName, i.StartTime))
+                .ToList();
+        }
+    }
     public void Dispose()
     {
         _items.Clear();

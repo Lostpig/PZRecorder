@@ -81,16 +81,28 @@
     {
         BroadcastService.RemoveReceiver(OnBroadcast);
     }
-    private void OnBroadcast(BroadcastEvent ev, string arg)
+    private void OnBroadcast(BroadcastEventArgs ev)
+    {
+        if (ev.UseInvokeAsync)
+        {
+            InvokeAsync(() => BroadcastHandler(ev.Event, ev.EventArg));
+        }
+        else
+        {
+            BroadcastHandler(ev.Event, ev.EventArg);
+        }
+    }
+    private void BroadcastHandler(BroadcastEvent ev, string arg)
     {
         if (ev == BroadcastEvent.WindowActivated)
         {
             today = DateOnly.FromDateTime(DateTime.Today);
             StateHasChanged();
-        } 
+        }
         else if (ev == BroadcastEvent.WatcherChangedDaily)
         {
-            UpdatePage();
+            UpdateData();
+            StateHasChanged();
         }
     }
     private void OnStatisticClick(int id)
