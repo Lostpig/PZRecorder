@@ -3,17 +3,20 @@
 
 <MudDialog Style="width: 720px; height: 780px;">
     <DialogContent>
-        <MudDatePicker Label="@LD.Month"
-                       @bind-Date="setDate"
-                       OpenTo="OpenTo.Year"
-                       FixDay="1" DisableToolbar="true"
-                       DateFormat="yyyy-MM" />
+        <MudToolBar Class="mud-elevation-2">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowLeft" OnClick="() => OnMonthChanged(-1)"></MudIconButton>
+            <MudDatePicker Label="@LD.Month"
+                           @bind-Date="setDate"
+                           OpenTo="OpenTo.Year"
+                           FixDay="1" DisableToolbar="true"
+                           DateFormat="yyyy-MM" />
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowRight" OnClick="() => OnMonthChanged(1)"></MudIconButton>
+        </MudToolBar>
         <MudDivider Class="my-2" />
-        <MudText>
-            <span class="mud-typography-h5">@watch.Name</span>
-            <span style="color: var(--mud-palette-text-secondary);">@counterText</span>
-        </MudText>
-        <MudTable Height="480px" Items="list" RowsPerPage="20" Hover="true" FixedHeader="true" Breakpoint="Breakpoint.Sm">
+        <MudText Typo="Typo.h5">@watch.Name</MudText>
+        <MudText Typo="Typo.body2" Style="color: var(--mud-palette-text-secondary);">@counterText</MudText>
+        <MudDivider Class="my-2" />
+        <MudTable Height="450px" Items="list" Hover="true" FixedHeader="true" Breakpoint="Breakpoint.Sm">
             <ColGroup>
                 <col />
                 <col style="width: 90px;" />
@@ -32,9 +35,6 @@
                 <MudTd DataLabel="EndTime">@context.EndTimeText</MudTd>
                 <MudTd DataLabel="Duration" Style="text-align: right;">@context.DurationText</MudTd>
             </RowTemplate>
-            <PagerContent>
-                <MudTablePager HideRowsPerPage="true" />
-            </PagerContent>
         </MudTable>
     </DialogContent>
     <DialogActions>
@@ -74,11 +74,24 @@
 
         list = ProcessWatchService.GetRecords(Id, fdNum, ldNum);
         TimeSpan totalTime = TimeSpan.FromSeconds(0);
-        foreach (var p in list) totalTime += p.Duration;
+        HashSet<int> days = new();
+
+        foreach (var p in list) 
+        {
+            totalTime += p.Duration;
+            days.Add(p.Date);
+        }
         int hours = totalTime.Hours + totalTime.Days * 24;
         var totalTimeText = $"{hours}h {totalTime.Minutes:d2}m";
+        var timePerDay = days.Count > 0 ? TimeSpan.FromSeconds(totalTime.TotalSeconds / days.Count) : TimeSpan.FromSeconds(0);
+        var tpdHours = timePerDay.Hours + timePerDay.Days * 24;
+        var timePerDayText = $"{tpdHours}h {timePerDay.Minutes:d2}m";
 
-        counterText = string.Format(LD.RecordCount, list.Count, totalTimeText);
+        counterText = string.Format(LD.RecordCount, list.Count, totalTimeText, days.Count, timePerDayText);
+    }
+    private void OnMonthChanged(int add)
+    {
+        setDate = _setDate.AddMonths(add);
     }
 
     void Cancel() => MudDialog.Cancel();

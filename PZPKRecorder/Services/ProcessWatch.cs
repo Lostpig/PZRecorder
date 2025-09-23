@@ -105,7 +105,7 @@ class ProcessWatcher
         else if (process is not null && !Runing)
         {
             Runing = true;
-            StartTime = DateTime.Now;
+            StartTime = process.StartTime;
             
 #if DEBUG
             Debug.WriteLine($"Find Process [{Watch.ProcessName}] running");
