@@ -156,7 +156,8 @@
     }
     private string GetRunningTime(WatchingRecord wr)
     {
-        return DateTime.Now.Subtract(wr.StartTime).ToString(@"hh\h mm\m");
+        var runningTime = DateTime.Now.Subtract(wr.StartTime);
+        return Helper.FormatDuration(runningTime);
     }
 
     private async void ShowDialog(int? id)

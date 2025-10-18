@@ -1,12 +1,10 @@
 ﻿using PZPKRecorder.Localization;
 using System.Diagnostics;
 
-namespace PZPKRecorder.Services;
+namespace PZPKRecorder;
 
 internal static class Helper
 {
-    public const int DataVersion = 10007;
-
     public static bool IsCompatibleVersion(int version)
     {
         bool isCompatible = false;
@@ -19,7 +17,8 @@ internal static class Helper
             case 10004:
             case 10005:
             case 10006:
-            case DataVersion:
+            case 10007:
+            case 10010:
                 isCompatible = true;
                 break;
             default:
@@ -61,5 +60,17 @@ internal static class Helper
             DayOfWeek.Saturday => isShort ? LocalizeDict.Sat : LocalizeDict.Saturday,
             _ => ""
         };
+    }
+
+    public static string FormatTimeSpan(TimeSpan time)
+    {
+        int hours = time.Hours + time.Days * 24;
+        return $"{hours}:{time.Minutes:d2}:{time.Seconds:d2}";
+    }
+    public static string FormatDuration(TimeSpan duration)
+    {
+        int hours = duration.Hours + duration.Days * 24;
+        string hoursStr = hours > 0 ? hours + "h" : "";
+        return $"{hoursStr} {duration.Minutes:d2}m";
     }
 }

@@ -10,7 +10,7 @@
                           Immediate="true"></MudTextField>
             <MudTextField @bind-Value="record.Remark" Label="@LD.Remark" Variant="Variant.Text" MaxLength="500" Counter="500" Immediate="true" Lines="5"></MudTextField>
             <MudDivider Class="my-2" />
-            <MudToggleGroup T="int" Outline="true" Delimiters="true" @bind-Value="stateInt">
+            <MudToggleGroup T="int" Outline="true" Delimiters="true" @bind-Value="stateInt" @bind-Value:after="OnFieldChanged">
                 <MudToggleItem Value="0" Text="@kind.GetStateName(RecordState.Wish)" />
                 <MudToggleItem Value="1" Text="@kind.GetStateName(RecordState.Doing)" />
                 <MudToggleItem Value="2" Text="@kind.GetStateName(RecordState.Complete)" />
@@ -21,6 +21,10 @@
                 <MudNumericField @bind-Value="record.Episode" Label="@LD.Episode" Variant="Variant.Text" Min="0" Max="1000" />
                 <MudNumericField @bind-Value="record.EpisodeCount" Label="@LD.EpisodeCount" Variant="Variant.Text" Min="1" Max="1000" />
             </MudStack>
+            <div class="d-flex align-center mt-4">
+                <MudRating MaxValue="10" @bind-SelectedValue="record.Rating" @bind-SelectedValue:after="OnFieldChanged" />
+                <MudText Inline Typo="Typo.subtitle2" Color="Color.Secondary" Class="ml-4">@record.Rating</MudText>
+            </div>
             <MudDivider Class="my-2" />
             <MudDatePicker Label="@LD.PublishDate"
                            @bind-Date="publishDate"
@@ -108,5 +112,9 @@
                 };
             kind = KindService.GetKind(record.Kind);
         }
+    }
+    public void OnFieldChanged()
+    {
+        form.Validate();
     }
 }

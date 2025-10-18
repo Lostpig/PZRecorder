@@ -109,5 +109,13 @@
   "StartTime": "开始时间",
   "EndTime": "结束时间",
   "ProcessRecords": "进程记录",
-  "Running": "运行中"
+  "Running": "运行中",
+  "Rating": "评分",
+  "Variants": "参数",
+  "Key": "键",
+  "Value": "值",
+  "Sort": "排序",
+  "EditTime": "编辑时间",
+  "Ascending": "升序",
+  "Descending": "降序"
 }

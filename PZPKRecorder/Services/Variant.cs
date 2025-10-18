@@ -6,6 +6,11 @@ internal class VariantService
 {
     static Dictionary<string, string?> cacheDict = new();
 
+    public static List<VariantTable> GetAllVariants()
+    {
+        return SqlLiteHandler.Instance.DB.Table<VariantTable>().ToList();
+    }
+
     public static string? GetVariant(string key)
     {
         if (cacheDict.ContainsKey(key)) return cacheDict[key];

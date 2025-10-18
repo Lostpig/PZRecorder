@@ -13,8 +13,13 @@ public partial class Form1 : Form
     public Form1()
     {
         InitializeComponent();
+        bool dbVersionCheck = SqlLiteHandler.Instance.Initialize();
+        if (!dbVersionCheck)
+        {
+            MessageBox.Show("Database version is not compatible, please check the log file for details.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Environment.Exit(1);
+        }
 
-        SqlLiteHandler.Instance.Initialize();
         Translate.Init();
         tmr = StartDateChangeTimer();
         ResumeWindow();
@@ -76,6 +81,12 @@ public partial class Form1 : Form
             Location = new Point(x, y);
         }
 
+        string? maximize = VariantService.GetVariant("window_maximize");
+        if (maximize is not null && maximize == "1")
+        {
+            WindowState = FormWindowState.Maximized;
+        }
+
         Text = "PZ Recorder V" + Assembly.GetExecutingAssembly().GetName().Version?.ToString();
 #if DEBUG
         Text += " (Debug)";
@@ -102,6 +113,24 @@ public partial class Form1 : Form
 
         string position = $"{Location.X},{Location.Y}";
         VariantService.SetVariant("window_position", position);
+    }
+
+    protected override void WndProc(ref Message m)
+    {
+        base.WndProc(ref m);
+
+        // WM_SYSCOMMAND
+        if (m.Msg == 0x0112)
+        {
+            if (m.WParam == new IntPtr(0xF030)) // Maximize event - SC_MAXIMIZE from Winuser.h
+            {
+                VariantService.SetVariant("window_maximize", "1");
+            }
+            else if (m.WParam == new IntPtr(0xF120)) // Restore event - SC_RESTORE from Winuser.h
+            {
+                VariantService.SetVariant("window_maximize", "0");
+            }
+        }
     }
 
     protected override void OnClosed(EventArgs e)

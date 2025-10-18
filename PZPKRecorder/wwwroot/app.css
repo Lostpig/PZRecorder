@@ -31,6 +31,10 @@ table {
 .fl-r {
     float: right !important;
 }
+.no-events
+{
+    pointer-events: none;
+}
 
 .no-data-container {
     text-align: center;

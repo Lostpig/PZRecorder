@@ -14,17 +14,19 @@ internal static class CustomDialog
 {
     public static async Task<bool> ShowMessageDialog(this IDialogService ds, string message, MessageBoxType msgType, bool isConfirm = false, string? OKText = null, string? CancelText = null)
     {
-        DialogParameters<MessageDialog> paramters = new();
-        paramters.Add(d => d.MsssageType, msgType);
-        paramters.Add(d => d.Message, message);
-        paramters.Add(d => d.Confirm, isConfirm);
+        DialogParameters<MessageDialog> paramters = new()
+        {
+            { d => d.MsssageType, msgType },
+            { d => d.Message, message },
+            { d => d.Confirm, isConfirm }
+        };
         if (!string.IsNullOrWhiteSpace(OKText)) paramters.Add(d => d.OKText, OKText);
         if (!string.IsNullOrWhiteSpace(CancelText)) paramters.Add(d => d.CancelText, CancelText);
 
         var dialog = await ds.ShowAsync<MessageDialog>("", paramters);
-        var result = await dialog.Result;
+        var result = await dialog.Result ?? MudBlazor.DialogResult.Cancel();
 
-        return result.Canceled ? false : true;
+        return !result.Canceled;
     }
 
     public static Task<bool> ShowAlert(this IDialogService ds, string message, string? buttonText = null)

@@ -4,7 +4,7 @@ namespace PZPKRecorder.Services;
 
 internal class KindService
 {
-    public static IList<Kind> GetKinds()
+    public static List<Kind> GetKinds()
     {
         return SqlLiteHandler.Instance.DB.Table<Kind>().OrderBy(k => k.OrderNo).ToList();
     }

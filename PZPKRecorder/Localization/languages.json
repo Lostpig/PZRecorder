@@ -115,6 +115,14 @@
     "StartTime",
     "EndTime",
     "ProcessRecords",
-    "Running"
+    "Running",
+    "Rating",
+    "Variants",
+    "Key",
+    "Value",
+    "Sort",
+    "EditTime",
+    "Ascending",
+    "Descending"
   ]
 }

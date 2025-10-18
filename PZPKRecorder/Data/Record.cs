@@ -57,4 +57,8 @@ internal class Record
 
     [Column("modify_date")]
     public DateTime ModifyDate { get; set; }
+
+    [Column("rating")]
+    [FieldVersion(10010, 99999, 0)]
+    public int Rating { get; set; }
 }

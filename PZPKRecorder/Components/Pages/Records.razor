@@ -23,7 +23,7 @@
                 <MudPaper Elevation="2" Class="pa-2" >
                     <MudTextField T="string" @bind-Value="records.SearchText" Placeholder="@LD.Search" Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-                    <MudText Typo="Typo.h6" Class="mt-4">@LD.State</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="mt-4">@LD.State</MudText>
                     <div>
                         <MudChip T="string" Variant="Variant.Filled" OnClick="() => OnStateChange(RecordState.Wish)" Size="Size.Medium"
                                  Color="@(records.State == RecordState.Wish ? Color.Primary : Color.Default)">@kind.GetStateName(RecordState.Wish)</MudChip>
@@ -35,19 +35,35 @@
                                  Color="@(records.State == RecordState.Giveup ? Color.Primary : Color.Default)">@kind.GetStateName(RecordState.Giveup)</MudChip>
                     </div>
                     <MudDivider Class="my-2" />
-                    <MudSelect T="int" Label="@LD.PublishYear" AnchorOrigin="Origin.BottomCenter" @bind-Value="records.Year">
+                    <MudSelect T="int" Label="@LD.PublishYear" AnchorOrigin="Origin.BottomLeft" @bind-Value="records.Year">
                         <MudSelectItem T="int" Value="0">-</MudSelectItem>
                         @foreach (var y in records.Years)
                         {
                             <MudSelectItem T="int" Value="@y" />
                         }
                     </MudSelect>
-                    <MudSelect T="int" Label="@LD.PublishMonth" Class="mb-4" AnchorOrigin="Origin.BottomCenter" @bind-Value="records.Month">
+                    <MudSelect T="int" Label="@LD.PublishMonth" AnchorOrigin="Origin.BottomLeft" @bind-Value="records.Month">
                         <MudSelectItem T="int" Value="0">-</MudSelectItem>
                         @foreach (var m in records.Months)
                         {
                             <MudSelectItem T="int" Value="@m" />
                         }
+                    </MudSelect>
+                    <MudSelect T="int" Label="@LD.Rating" AnchorOrigin="Origin.BottomLeft" @bind-Value="records.Rating">
+                        <MudSelectItem T="int" Value="-1">-</MudSelectItem>
+                        @for (int i = 0; i <= 10; i++)
+                        {
+                            <MudSelectItem T="int" Value="@i" />
+                        }
+                    </MudSelect>
+                    <MudDivider Class="my-2" />
+                    <MudSelect T="int" Label="@LD.Sort" Class="mb-4" AnchorOrigin="Origin.BottomLeft" @bind-Value="records.Sort">
+                        <MudSelectItem T="int" Value="11">@LD.PublishDate (@LD.Ascending)</MudSelectItem>
+                        <MudSelectItem T="int" Value="12">@LD.PublishDate (@LD.Descending)</MudSelectItem>
+                        <MudSelectItem T="int" Value="21">@LD.EditTime (@LD.Ascending)</MudSelectItem>
+                        <MudSelectItem T="int" Value="22">@LD.EditTime (@LD.Descending)</MudSelectItem>
+                        <MudSelectItem T="int" Value="31">@LD.Rating (@LD.Ascending)</MudSelectItem>
+                        <MudSelectItem T="int" Value="32">@LD.Rating (@LD.Descending)</MudSelectItem>
                     </MudSelect>
                 </MudPaper>
                 <MudButton Variant="Variant.Outlined"
@@ -86,6 +102,10 @@
                                 <MudText Typo="Typo.body1" Class="fl-r" Inline="true">@record.ModifyDate.ToString("yyyy-MM-dd HH:mm")</MudText>
                             </div>
                             <MudText Typo="Typo.body2" Class="mt-4" Style="color: var(--mud-palette-text-secondary);">@record.Remark</MudText>
+                            <div class="d-flex align-center no-events mt-2">
+                                <MudRating Size="Size.Small" MaxValue="10" @bind-SelectedValue="record.Rating" ReadOnly />
+                                <MudText Inline Typo="Typo.subtitle2" Color="Color.Secondary" Class="ml-2">@record.Rating</MudText>
+                            </div>
                         </div>
                         <MudDivider Vertical="true" FlexItem="true" Class="mx-2" />
                         <MudStack Row="false">
@@ -111,7 +131,7 @@
     [Inject] private IDialogService DialogService { get; set; }
     private bool disable = false;
 
-    private IList<Kind> kinds = new List<Kind>();
+    private List<Kind> kinds = new List<Kind>();
     private int kindIndex = 0;
     private Kind kind => kinds[kindIndex];
     private RecordCollection records;
@@ -127,6 +147,8 @@
     private void OnKindChange()
     {
         LoadRecords();
+
+        VariantService.SetVariant("KindId", kind.Id.ToString());
     }
 
     private void LoadRecords()
@@ -208,6 +230,13 @@
         {
             disable = true;
             return;
+        }
+
+        var kindId = VariantService.GetVariant("KindId");
+        if (!string.IsNullOrEmpty(kindId) && int.TryParse(kindId, out int kId))
+        {
+            var index = kinds.FindIndex(k => k.Id == kId);
+            if (index >= 0) kindIndex = index;
         }
 
         var recordState = VariantService.GetVariant("RecordState");

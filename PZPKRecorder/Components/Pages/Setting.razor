@@ -1,5 +1,6 @@
 ﻿@page "/setting";
 
+@using PZPKRecorder.Data
 @using Services;
 
 <MudPaper Width="100%" Height="100%" class="pa-4">
@@ -18,6 +19,22 @@
     <MudDivider Class="my-2" />
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ImportExport" Color="Color.Tertiary" OnClick="OnImportClick">@LD.Import</MudButton>
     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ImportExport" Color="Color.Primary" OnClick="OnExportClick">@LD.Export</MudButton>
+    <MudDivider Class="my-4" />
+    <MudText Typo="Typo.body2" Style="color: var(--mud-palette-text-secondary);">@LD.Variants</MudText>
+    <MudTable Height="450px" Items="variants" Hover="true" FixedHeader="true" Breakpoint="Breakpoint.Sm">
+        <ColGroup>
+            <col style="width: 300px;" />
+            <col />
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>@LD.Key</MudTh>
+            <MudTh>@LD.Value</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Key">@context.Key</MudTd>
+            <MudTd DataLabel="Value">@context.Value</MudTd>
+        </RowTemplate>
+    </MudTable>
 </MudPaper>
 
 @code {
@@ -25,6 +42,7 @@
     private int DBVersion = 0;
     private string language;
     private IList<LanguageItem> languages;
+    private IList<VariantTable> variants;
     private string theme = "dark";
 
     private void OnLanguageChanged()
@@ -84,5 +102,7 @@
         DBVersion = int.Parse(dbver ?? "0");
 
         theme = VariantService.GetVariant("theme") ?? "dark";
+
+        variants = VariantService.GetAllVariants();
     }
 }

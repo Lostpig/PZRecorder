@@ -6,12 +6,8 @@ class RecordCollection
 {
     readonly Kind kind;
     readonly List<Record> records;
-    private IOrderedEnumerable<Record> queriedRecords => records.Where(r =>
+    private IOrderedEnumerable<Record> QueriedRecords => records.Where(r =>
     {
-        if (!string.IsNullOrWhiteSpace(searchText))
-        {
-            if (!(r.Name.Contains(searchText) || r.Alias.Contains(searchText))) return false;
-        }
         if (state != null)
         {
             if (r.State != state) { return false; }
@@ -24,15 +20,36 @@ class RecordCollection
         {
             if (r.PublishMonth != month) return false;
         }
+        if (rating >= 0)
+        {
+            if (r.Rating != rating) return false;
+        } 
+
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            if (!(r.Name.Contains(searchText) || r.Alias.Contains(searchText))) return false;
+        }
 
         return true;
-    }).OrderByDescending(x => x.PublishYear * 100 + x.PublishMonth);
+    }).OrderBy(x => {
+        return sort switch {
+            11 => x.PublishYear * 100 + x.PublishMonth,
+            12 => -(x.PublishYear * 100 + x.PublishMonth),
+            21 => x.ModifyDate.Ticks,
+            22 => -x.ModifyDate.Ticks,
+            31 => x.Rating,
+            32 => -x.Rating,
+            _ => -(x.PublishYear * 100 + x.PublishMonth),
+        };
+    });
 
     #region Query Parameters
     string searchText = "";
     int year = 0;
     int month = 0;
+    int rating = -1;
     RecordState? state;
+    int sort = 12;
 
     public string SearchText
     {
@@ -64,6 +81,15 @@ class RecordCollection
             month = value;
         }
     }
+    public int Rating
+    {
+        get => rating;
+        set
+        {
+            if (value == rating) return;
+            rating = value;
+        }
+    }
     public RecordState? State
     {
         get => state;
@@ -72,6 +98,15 @@ class RecordCollection
             if (value == state) return;
 
             state = value;
+        }
+    }
+    public int Sort
+    {
+        get => sort;
+        set
+        {
+            if (value == sort) return;
+            sort = value;
         }
     }
     #endregion
@@ -101,12 +136,12 @@ class RecordCollection
     public int PageCount => ComputePageCount();
     public int From => (page - 1) * pageSize + 1;
     public int To => From + CurrentPageCount - 1;
-    public int Total => queriedRecords.Count();
+    public int Total => QueriedRecords.Count();
 
     public Kind Kind => kind;
     public IEnumerable<int> Years => records.Select(r => r.PublishYear).Distinct().Order();
     public IEnumerable<int> Months => records.Where(r => r.PublishYear == year).Select(r => r.PublishMonth).Distinct().Order();
-    public IEnumerable<Record> Items => queriedRecords.Skip((page - 1) * pageSize).Take(pageSize);
+    public IEnumerable<Record> Items => QueriedRecords.Skip((page - 1) * pageSize).Take(pageSize);
 
     public int CurrentPageCount => Items.Count();
 
@@ -122,7 +157,7 @@ class RecordCollection
     }
     private int ComputePageCount()
     {
-        int total = queriedRecords.Count();
+        int total = QueriedRecords.Count();
 
         int n = total % pageSize;
         return (total - n) / pageSize + (n > 0 ? 1 : 0);
