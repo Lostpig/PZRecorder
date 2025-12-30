@@ -1,11 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.10.34928.147
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11312.151
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PZPKRecorder", "PZPKRecorder\PZPKRecorder.csproj", "{7EAE2C69-FA66-4A82-AFB9-4FD25B96E958}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PZPKRecorderGenerator", "PZPKRecorderGenerator\PZPKRecorderGenerator.csproj", "{76C507E8-3C4A-4936-A68C-142893DACFEA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PZRecorder.Core", "PZRecord.Core\PZRecorder.Core.csproj", "{7F3E38FA-7327-4B5A-A438-C57289BC03F6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PZRecorder.Desktop", "PZRecorder.Desktop\PZRecorder.Desktop.csproj", "{22B399A6-6FF7-4B25-B931-927302206E82}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PZ.RxAvalonia", "..\PZ.RxAvalonia\PZ.RxAvalonia\PZ.RxAvalonia.csproj", "{E4A8D257-3094-6EE1-E3AB-681F63FA80FE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +27,18 @@ Global
 		{76C507E8-3C4A-4936-A68C-142893DACFEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{76C507E8-3C4A-4936-A68C-142893DACFEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{76C507E8-3C4A-4936-A68C-142893DACFEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F3E38FA-7327-4B5A-A438-C57289BC03F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F3E38FA-7327-4B5A-A438-C57289BC03F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F3E38FA-7327-4B5A-A438-C57289BC03F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F3E38FA-7327-4B5A-A438-C57289BC03F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22B399A6-6FF7-4B25-B931-927302206E82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22B399A6-6FF7-4B25-B931-927302206E82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22B399A6-6FF7-4B25-B931-927302206E82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22B399A6-6FF7-4B25-B931-927302206E82}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E4A8D257-3094-6EE1-E3AB-681F63FA80FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4A8D257-3094-6EE1-E3AB-681F63FA80FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4A8D257-3094-6EE1-E3AB-681F63FA80FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E4A8D257-3094-6EE1-E3AB-681F63FA80FE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
