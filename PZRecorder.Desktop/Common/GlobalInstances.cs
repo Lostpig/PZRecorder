@@ -5,42 +5,19 @@ namespace PZRecorder.Desktop.Common;
 internal static class GlobalInstances
 {
     private static MainWindow? _mainWindow;
-    public static MainWindow GetMainWindow()
-    {
-        if (_mainWindow == null)
-            throw new InvalidOperationException("Not set MainWindow!");
-
-        return _mainWindow;
-    }
+    public static MainWindow MainWindow => _mainWindow ?? throw new InvalidOperationException("Not set MainWindow!");
     public static void SetMainWindow(MainWindow mainWindow)
     {
         _mainWindow = mainWindow;
     }
 
     private static ServiceProvider? _serviceProvider;
-    public static ServiceProvider GetServiceProvider()
-    {
-        if (_serviceProvider == null)
-            throw new InvalidOperationException("Not set ServiceProvider!");
-
-        return _serviceProvider;
-    }
+    public static ServiceProvider Services => _serviceProvider ?? throw new InvalidOperationException("Not set ServiceProvider!");
     public static void SetServiceProvider(ServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
     }
 
-    private static SukiHelpers? _sukiHelper;
-    public static SukiHelpers GetSukiHelpers()
-    {
-        if (_sukiHelper == null)
-            throw new InvalidOperationException("Not set SukiHelpers!");
-
-        return _sukiHelper;
-    }
-    public static void SetSukiHelpers(SukiHelpers sukiHelper)
-    {
-        _sukiHelper = sukiHelper;
-    }
-
+    private static SemiHelper? _semiHelper;
+    public static SemiHelper Semi => _semiHelper ??= new SemiHelper();
 }

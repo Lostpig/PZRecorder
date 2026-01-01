@@ -1,14 +1,12 @@
 ﻿using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Notifications;
 using Material.Icons.Avalonia;
 using Microsoft.Extensions.DependencyInjection;
 using PZRecorder.Core;
 using PZRecorder.Core.Managers;
 using PZRecorder.Desktop.Common;
-using SukiUI;
-using SukiUI.Controls;
-using SukiUI.Dialogs;
-using SukiUI.Toasts;
+using Semi.Avalonia;
 
 namespace PZRecorder.Desktop;
 
@@ -63,10 +61,9 @@ internal sealed class Program
             .LogToTrace()
             .AfterSetup(b =>
             {
-                SukiTheme theme = new() { ThemeColor = SukiUI.Enums.SukiColor.Blue };
-                b.Instance?.Styles.Add(theme);
+                b.Instance?.Styles.Add(new SemiTheme());
+                b.Instance?.Styles.Add(new Ursa.Themes.Semi.SemiTheme());
                 b.Instance?.Styles.Add(new MaterialIconStyles(null));
-                b.Instance?.DataTemplates.Add(PageLocator.Instance);
             })
 #if DEBUG
             .UseHotReload()
@@ -79,28 +76,22 @@ internal sealed class Program
         // }
 
         var mainWindow = new MainWindow();
-        // suki managers
-        var toastManager = new SukiToastManager();
-        var pzToast = new PzToast(toastManager);
-        var dialogManager = new SukiDialogManager();
-        var pzDialog = new PzDialog(dialogManager);
-        services.AddSingleton(pzToast);
-        services.AddSingleton(pzDialog);
-        var toastHost = new SukiToastHost { Manager = toastManager };
-        var dialogHost = new SukiDialogHost() { Manager = dialogManager };
-        mainWindow.Hosts.Add(toastHost);
-        mainWindow.Hosts.Add(dialogHost);
+        var notificationManager = new WindowNotificationManager(mainWindow)
+        {
+            MaxItems = 3
+        };
+        var pzNotification = new PzNotification(notificationManager);
+        services.AddSingleton(pzNotification);
 
         lifetime.MainWindow = mainWindow;
 
         var serviceProvider = services.BuildServiceProvider();
-        SukiHelpers suki = new();
-        GlobalInstances.SetSukiHelpers(suki);
         GlobalInstances.SetMainWindow(mainWindow);
         GlobalInstances.SetServiceProvider(serviceProvider);
 #if DEBUG
         lifetime.MainWindow?.AttachDevTools();
 #endif
+        mainWindow.BuildContent();
         lifetime.Start(args);
     }
 }

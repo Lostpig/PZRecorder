@@ -1,30 +1,40 @@
 ﻿using Avalonia.Controls.Templates;
-using Material.Icons;
 using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Daily;
 using PZRecorder.Desktop.Dev;
 using PZRecorder.Desktop.Record;
+using System.Reactive.Subjects;
 
 namespace PZRecorder.Desktop;
 
 internal class Routes
 {
     static public readonly PageRecord[] Pages = [
-        new PageRecord(() => "Records", MaterialIconKind.ViewGallery, typeof(RecordPage)),
-        new PageRecord(() => "Kind", MaterialIconKind.ViewGallery, typeof(KindPage)),
-        new PageRecord(() => "Daily", MaterialIconKind.ViewGallery, typeof(DailyPage)),
-        new PageRecord(() => "Dev", MaterialIconKind.DeveloperBoard, typeof(DevGridPage)),
+        new PageRecord(() => "Records", "SemiIconExcel", typeof(RecordPage)),
+        new PageRecord(() => "Kind", "SemiIconExport", typeof(KindPage)),
+        new PageRecord(() => "Daily", "SemiIconExport", typeof(DailyPage)),
+        new PageRecord(() => "Dev", "SemiIconExport", typeof(DevGridPage)),
     ];
 }
 
-internal class PageRecord(Func<string> PageNameGetter, MaterialIconKind icon, Type pageType)
+internal class PageRecord(Func<string> PageNameGetter, string icon, Type pageType)
 {
     private readonly Func<string> _getter = PageNameGetter;
-    public MaterialIconKind Icon { get; init; } = icon;
+    public string Icon { get; init; } = icon;
     public Type PageType { get; init; } = pageType;
     public string PageName => _getter();
-
+    public BehaviorSubject<string> Status { get; set; } = new("");
 }
+internal class PageRouter
+{
+    public readonly BehaviorSubject<PageRecord> CurrentPage;
+
+    public PageRouter()
+    {
+        CurrentPage = new(Routes.Pages[0]);
+    }
+}
+
 internal class PageLocator : IDataTemplate
 {
     private static PageLocator? _instance;
@@ -46,7 +56,7 @@ internal class PageLocator : IDataTemplate
         _views.Clear();
     }
 
-    private PZPageBase? GetPage(PageRecord pr)
+    public PZPageBase? GetPage(PageRecord pr)
     {
         if (_views.TryGetValue(pr.PageType, out var page))
         {

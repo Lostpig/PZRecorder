@@ -35,7 +35,7 @@ internal class DevGridPage : PZPageBase
                 BuildGridRow("AAA"),
                 BuildGridRow("XXX_BBB_CCC"),
                 BuildGridRow("FFFFF"),
-                SukiButton("Text").OnClick(_ => FireTest())
+                PzButton("Text").OnClick(_ => FireTest())
             );
     }
 

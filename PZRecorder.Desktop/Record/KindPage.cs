@@ -1,13 +1,10 @@
-﻿using Avalonia;
-using Avalonia.Layout;
-using Avalonia.Markup.Xaml.MarkupExtensions;
+﻿using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using PZRecorder.Core.Managers;
 using PZRecorder.Core.Tables;
 using PZRecorder.Desktop.Common;
-using SukiUI.Controls;
 using System.Reactive.Subjects;
 
 namespace PZRecorder.Desktop.Record;
@@ -21,7 +18,7 @@ internal class KindPage : PZPageBase
                 {
                     new Style<Grid>().Setter(Grid.BackgroundProperty, Brushes.Transparent),
                     new Style<Grid>(s => s.Class(":pointerover"))
-                        .SetterEx(Grid.BackgroundProperty, () => Suki.GetSukiColor("SukiPrimaryColor10"))
+                        .SetterEx(Grid.BackgroundProperty, () => SemiHelper.GetColor("SemiColorTertiaryLightActive"))
                 },
                 new Style<TextBlock>().VerticalAlignment(VerticalAlignment.Center)
             ];
@@ -30,7 +27,7 @@ internal class KindPage : PZPageBase
     private StackPanel BuildOperatorBar()
     {
         return HStackPanel()
-            .HorizontalAlignment(HorizontalAlignment.Stretch)
+            .Align(UnionAlign.HStretch)
             .Spacing(10)
             .Children(
                 IconButton(MIcon.Add, "Add", "Basic")
@@ -46,9 +43,9 @@ internal class KindPage : PZPageBase
                     .ColSharedGroup(2, "OperatorsCol")
                     .Dock(Dock.Top)
                     .Children(
-                        PzText("Order").Col(0),
+                        PzText("Order").Col(0).TextAlignment(TextAlignment.Left),
                         PzText("Name").Col(1),
-                        PzText("Operators").HorizontalAlignment(HorizontalAlignment.Center).Col(2)
+                        PzText("Operators").Align(UnionAlign.HCenter).Col(2)
                     ),
                 new ScrollViewer()
                     .Dock(Dock.Bottom)
@@ -86,13 +83,9 @@ internal class KindPage : PZPageBase
             .RowSpacing(8)
             .Children(
                 BuildOperatorBar().Row(0),
-                new GlassCard()
+                BuildKindList()
                     .Row(1)
-                    .Padding(10)
-                    .VerticalAlignment(VerticalAlignment.Stretch)
-                    .Content(
-                        BuildKindList()
-                    )
+                    .Align(UnionAlign.VStretch)
             );
 
     private readonly RecordManager _manager;
@@ -113,41 +106,40 @@ internal class KindPage : PZPageBase
     {
         Kinds.OnNext(_manager.GetKinds());
     }
-
     private async void OnAdd()
     {
-        var opt = PzDialog.ResultOptions("Add", new KindDialog(new Kind()));
+        var opt = PzDialogManager.ResultOptions("Add", new KindDialog(new Kind()));
         opt.Buttons[0].Text = "Add";
 
-        var res = await Dialog.ShowResultDialog(opt);
-        if (res.ButtonValue)
+        var res = await PzDialogManager.ShowDialog(opt);
+        if (res != null)
         {
-            _manager.InsertKind(res.Result);
+            _manager.InsertKind(res);
             UpdateKinds();
         }
     }
     private async void OnEdit(Kind kind)
     {
-        var opt = PzDialog.ResultOptions("Edit", new KindDialog(kind));
+        var opt = PzDialogManager.ResultOptions("Edit", new KindDialog(kind));
         opt.Buttons[0].Text = "Save";
 
-        var res = await Dialog.ShowResultDialog(opt);
-        if (res.ButtonValue)
+        var res = await PzDialogManager.ShowDialog(opt);
+        if (res != null)
         {
-            _manager.UpdateKind(res.Result);
+            _manager.UpdateKind(res);
             UpdateKinds();
         }
     }
     private async void OnDelete(Kind kind)
     {
-        var opt = PzDialog.ConfirmOptions("Delete", "Sure to delete?");
-        opt.Type = Avalonia.Controls.Notifications.NotificationType.Warning;
+        var opt = PzDialogManager.ConfirmOptions("Delete", "Sure to delete?");
+        opt.Mode = Uc.DialogMode.Question;
         opt.Buttons[0].Text = "Delete";
         opt.Buttons[0].Styles = ["Danger"];
 
-        var delete = await Dialog.ShowDialog(opt);
+        var delete = await PzDialogManager.ShowDialog(opt);
 
-        if (delete)
+        if (PzDialogManager.IsSureResult(delete))
         {
             _manager.DeleteKind(kind.Id);
             UpdateKinds();

@@ -1,16 +1,15 @@
 ﻿using Avalonia.Platform;
-using SukiUI.Controls;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using Ursa.Controls;
 
 namespace PZRecorder.Desktop;
 
-using static PZRecorder.Desktop.Common.ControlHeplers;
-
-public class MainWindow : SukiWindow
+public class MainWindow : UrsaWindow
 {
+    PageRouter _router;
     public MainWindow() : base()
     {
+        _router = new();
         var icon = AssetLoader.Open(new Uri($"avares://PZRecorder.Desktop/pz-recorder-icon.ico"));
         Icon = new WindowIcon(icon);
 
@@ -21,69 +20,22 @@ public class MainWindow : SukiWindow
 
         Width = 1280;
         Height = 720;
-
-        Initialize();
     }
 
-    private SukiSideMenu Sidemenu;
-    [MemberNotNull(nameof(Sidemenu))]
-    private void Initialize()
+    public void BuildContent()
     {
-        Sidemenu = new SukiSideMenu()
-        {
-            IsSearchEnabled = false,
-        };
-
-        foreach (var p in Routes.Pages)
-        {
-            var item = new SukiSideMenuItem()
-            {
-                Icon = MaterialIcon(p.Icon),
-                Header = p.PageName,
-                PageContent = p,
-            };
-
-            Sidemenu.Items.Add(item);
-        }
-
-        Content = Sidemenu;
+        Content = new MainView(_router);
     }
 
     protected void UpdateState()
     {
-        foreach (var item in Sidemenu.Items)
-        {
-            if (item is SukiSideMenuItem ssmi)
-            {
-                ssmi.Header = ((PageRecord)ssmi.PageContent).PageName;
-            }
-        }
-    }
-
-    public void DebugReRender()
-    {
-        Sidemenu.Items.Clear();
-        Sidemenu.Content = null;
-        PageLocator.Instance.Reset();
-
-        Sidemenu = new SukiSideMenu()
-        {
-            IsSearchEnabled = false
-        };
-
-        foreach (var p in Routes.Pages)
-        {
-            var item = new SukiSideMenuItem()
-            {
-                Icon = MaterialIcon(p.Icon),
-                Header = p.PageName,
-                PageContent = p
-            };
-
-            Sidemenu.Items.Add(item);
-        }
-
-        Content = Sidemenu;
+        // foreach (var item in _container.Items)
+        // {
+        //     if (item is TabItem tab)
+        //     {
+        //         tab.Header = ((PageRecord)tab.Content!).PageName;
+        //     }
+        // }
     }
 
     protected override void OnClosed(EventArgs e)

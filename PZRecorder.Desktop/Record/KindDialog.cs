@@ -37,7 +37,7 @@ internal class KindDialogModel
     }
 }
 
-internal class KindDialog : PZComponentBase, IResultDialog<Kind>
+internal class KindDialog : DialogContentBase<Kind>
 {
     private static readonly KindDialogModel Model = new();
     public KindDialog(Kind kind)
@@ -65,8 +65,8 @@ internal class KindDialog : PZComponentBase, IResultDialog<Kind>
             .ColSharedGroup(0, "FieldColumn")
             .Children(
                 PzText(label).Col(0).VerticalAlignment(VerticalAlignment.Center),
-                new NumericUpDown().Col(2)
-                .ValueEx(subject)
+                new Uc.NumericIntUpDown().Col(2)
+                    .ValueEx(subject)
             );
     }
     protected override Control Build()
@@ -86,12 +86,14 @@ internal class KindDialog : PZComponentBase, IResultDialog<Kind>
             );
     }
 
-    public Kind GetResult()
+    public override Kind GetResult(Uc.DialogResult btnValue)
     {
         return Model.Kind.Value;
     }
-    public bool Check()
+    public override bool Check(Uc.DialogResult btnValue)
     {
-        return !string.IsNullOrWhiteSpace(Model.Kind.Value.Name);
+        if (btnValue == Uc.DialogResult.OK || btnValue == Uc.DialogResult.Yes)
+            return !string.IsNullOrWhiteSpace(Model.Kind.Value.Name);
+        else return true;
     }
 }

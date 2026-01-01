@@ -1,127 +1,173 @@
-﻿using Avalonia.Controls.Notifications;
-using SukiUI.Dialogs;
+﻿using Avalonia.Media;
+using Irihi.Avalonia.Shared.Contracts;
+using Ursa.Controls;
 
 namespace PZRecorder.Desktop.Common;
 
-public interface IResultDialog<T>
+public abstract class DialogContentBase<T> : PZComponentBase
 {
-    T GetResult();
-    bool Check();
+    public abstract T GetResult(DialogResult buttonValue);
+    public abstract bool Check(DialogResult buttonValue);
+    protected DialogContentBase(ViewInitializationStrategy strategy = ViewInitializationStrategy.Lazy) : base(strategy) { }
 }
-public record DialogResult<T>(bool ButtonValue, T Result);
+public class PzDialog<T> : ContentControl, IDialogContext
+{
+    private DialogContentBase<T> _content;
+    public PzDialog(ResultDialogOptions<T> options)
+    {
+        _content = options.Content;
+        Content = PzGrid(rows: "auto, *, auto")
+            .Margin(24)
+            .Children(
+                PzText(options.Title)
+                    .Row(0)
+                    .FontSize(16)
+                    .FontWeight(Avalonia.Media.FontWeight.Bold)
+                    .Margin(8),
+                options.Content.Row(1),
+                BuildButtons(options.Buttons).Row(2)
+            );
+    }
+    private StackPanel BuildButtons(DialogButton[] buttons)
+    {
+        var btns = buttons.Select(btn =>
+            PzButton(btn.Text, btn.Styles ?? [])
+            .OnClick(_ => TryClose(btn))
+        ).ToArray();
 
-public class DialogButton<T>(string text, T value, bool dismiss = false)
+        return HStackPanel()
+                .Align(UnionAlign.Right)
+                .Spacing(8)
+                .Children(children: btns);
+    }
+
+    private void TryClose(DialogButton btn)
+    {
+        if (btn.HasResult && _content.Check(btn.Value))
+        {
+            RequestClose?.Invoke(this, _content.GetResult(btn.Value));
+        }
+        else if (!btn.HasResult)
+        {
+            RequestClose?.Invoke(this, null);
+        }
+    }
+    public event EventHandler<object?>? RequestClose;
+    public void Close()
+    {
+        
+    }
+}
+
+public sealed class PzMessageBoxContent : DialogContentBase<DialogResult>
+{
+    private string _message;
+    public PzMessageBoxContent(string message) : base()
+    {
+        _message = message;
+        Initialize();
+    }
+
+    protected override Control Build()
+    {
+        return PzText(_message)
+            .TextWrapping(TextWrapping.Wrap)
+            .Margin(8);
+    }
+    public override DialogResult GetResult(DialogResult buttonValue)
+    {
+        return buttonValue;
+    }
+    override public bool Check(DialogResult buttonValue)
+    {
+        return true;
+    }
+}
+
+public record DialogResult<T>(bool ButtonValue, T Result);
+public class DialogButton(string text, DialogResult value, bool hasResult = false)
 {
     public string Text { get; set; } = text;
     public string[]? Styles { get; set; }
-    public T Value { get; set; } = value;
-    public bool Dismiss { get; set; } = dismiss;
+    public DialogResult Value { get; set; } = value;
+    public bool HasResult { get; set; } = hasResult;
 }
-public class DialogOptions<T>
+public class ResultDialogOptions<T>(DialogContentBase<T> content)
 {
     public string Title { get; set; } = "";
-    public object Content { get; set; } = "";
-    public NotificationType? Type { get; set; } = null;
-    public DialogButton<T>[] Buttons { get; set; } = [];
-}
-public class ResultDialogOptions<T>(IResultDialog<T> content)
-{
-    public string Title { get; set; } = "";
-    public IResultDialog<T> Content { get; set; } = content;
-    public NotificationType? Type { get; set; } = null;
-    public DialogButton<bool>[] Buttons { get; set; } = [];
+    public DialogContentBase<T> Content { get; set; } = content;
+    public DialogMode Mode { get; set; } = DialogMode.None;
+    public DialogButton[] Buttons { get; set; } = [];
 }
 
-public class PzDialog(ISukiDialogManager manager)
+public class PzDialogManager
 {
-    public ISukiDialogManager Manager { get; init; } = manager;
-
-    public Task<T> ShowDialog<T>(DialogOptions<T> options)
+    public static Task<DialogResult> Confirm(string message, string title)
     {
-        var builder = Manager.CreateDialog()
-            .WithTitle(options.Title)
-            .WithContent(options.Content);
-        if (options.Type != null) builder.OfType(options.Type.Value);
-
-        var completion = new TaskCompletionSource<T>();
-        for (int i = 0; i < options.Buttons.Length; i++)
-        {
-            var btn = options.Buttons[i];
-            builder.AddActionButton(btn.Text, d =>
-            {
-                completion.SetResult(btn.Value);
-            }, btn.Dismiss, btn.Styles ?? []);
-        }
-        builder.TryShow();
-
-        return completion.Task;
+        var opt = ConfirmOptions(message, title);
+        return ShowDialog(opt);
     }
-    public Task<DialogResult<T>> ShowResultDialog<T>(ResultDialogOptions<T> options)
+    public static Task<DialogResult> Alert(string message, string title)
     {
-        var builder = Manager.CreateDialog()
-            .WithTitle(options.Title)
-            .WithContent(options.Content);
-        if (options.Type != null) builder.OfType(options.Type.Value);
-
-        var completion = new TaskCompletionSource<DialogResult<T>>();
-        for (int i = 0; i < options.Buttons.Length; i++)
+        var opt = AlertOptions(message, title);
+        return ShowDialog(opt);
+    }
+    public static async Task<T?> ShowDialog<T>(ResultDialogOptions<T> options)
+    {
+        var semiOpts = new OverlayDialogOptions()
         {
-            var btn = options.Buttons[i];
-            builder.AddActionButton(btn.Text, d =>
-            {
-                var res = options.Content.GetResult();
-                if (btn.Value && options.Content.Check())
-                {
-                    completion.SetResult(new(btn.Value, res));
-                    d.Dismiss();
-                }
-                else
-                {
-                    completion.SetResult(new(btn.Value, res));
-                    d.Dismiss();
-                }
-            }, false, btn.Styles ?? []);
-        }
-        builder.TryShow();
+            FullScreen = false,
+            HorizontalAnchor = HorizontalPosition.Center,
+            VerticalAnchor = VerticalPosition.Center,
+            Mode = DialogMode.None,
+            CanLightDismiss = false,
+            CanDragMove = true,
+            IsCloseButtonVisible = false,
+            CanResize = false
+        };
 
-        return completion.Task;
+        var dialog = new PzDialog<T>(options);
+        return await OverlayDialog.ShowCustomModal<T>(dialog, dialog, options: semiOpts);
     }
 
-    public static DialogOptions<bool> ConfirmOptions(string title, object content)
+    public static ResultDialogOptions<DialogResult> ConfirmOptions(string title, string message)
     {
-        return new DialogOptions<bool>
+        return new ResultDialogOptions<DialogResult>(new PzMessageBoxContent(message))
         {
             Title = title,
-            Content = content,
-            Type = NotificationType.Information,
+            Mode = DialogMode.Info,
             Buttons = [
-                new("OK", true, true),
-                new("Cancel", false, true) { Styles = ["Accent"] },
+                new("OK", DialogResult.OK, true),
+                new("Cancel", DialogResult.Cancel, true) { Styles = ["Tertiary"] },
             ]
         };
     }
-    public static DialogOptions<bool> AlertOptions(string title, object content)
+    public static ResultDialogOptions<DialogResult> AlertOptions(string title, string message)
     {
-        return new DialogOptions<bool>
+        return new ResultDialogOptions<DialogResult>(new PzMessageBoxContent(message))
         {
             Title = title,
-            Content = content,
-            Type = NotificationType.Warning,
+            Mode = DialogMode.Info,
             Buttons = [
-                new("OK", true, true)
+                new("OK", DialogResult.OK, false)
             ]
         };
     }
-    public static ResultDialogOptions<T> ResultOptions<T>(string title, IResultDialog<T> content)
+    public static ResultDialogOptions<T> ResultOptions<T>(string title, DialogContentBase<T> content)
     {
         return new ResultDialogOptions<T>(content)
         {
             Title = title,
             Buttons = [
-                new("OK", true, true),
-                new("Cancel", false, true) { Styles = ["Accent"] },
+                new("OK", DialogResult.OK, true),
+                new("Cancel", DialogResult.Cancel, false) { Styles = ["Tertiary"] },
             ],
         };
+    }
+
+    public static bool IsSureResult(DialogResult res)
+    {
+        return res == DialogResult.OK || res == DialogResult.Yes;
     }
 }
 

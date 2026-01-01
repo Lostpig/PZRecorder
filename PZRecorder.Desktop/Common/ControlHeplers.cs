@@ -1,8 +1,9 @@
-﻿using Avalonia.Layout;
+﻿using Avalonia;
+using Avalonia.Layout;
 using Material.Icons;
 using Material.Icons.Avalonia;
+using Semi.Avalonia;
 using System.Reactive.Subjects;
-using System.Linq;
 
 namespace PZRecorder.Desktop.Common;
 
@@ -91,7 +92,7 @@ internal static class ControlHeplers
         return icon;
     }
 
-    public static Button SukiButton(string text, params string[] classes)
+    public static Button PzButton(string text, params string[] classes)
     {
         var btn = new Button()
         {
@@ -102,41 +103,31 @@ internal static class ControlHeplers
 
         return btn;
     }
-    public static Button SukiButton(Func<string> textGetter, params string[] classes)
+    public static Button PzButton(Func<string> textGetter, params string[] classes)
     {
         var btn = new Button().Content(textGetter);
         foreach (var c in classes) btn.Classes.Add(c);
 
         return btn;
     }
-    public static Button IconButton(MaterialIconKind icon, params string[] classes)
+    public static Button IconButton(MIcon icon, params string[] classes)
     {
         var btn = new Button()
         {
-            Padding = new Avalonia.Thickness(0),
-            CornerRadius = new Avalonia.CornerRadius(100),
+            Padding = new Thickness(0),
+            CornerRadius = new CornerRadius(100),
             Width = 40,
             Height = 40,
-            Content = new MaterialIcon()
-            {
-                Kind = icon,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-            },
+            Content = MaterialIcon(icon),
         };
         foreach (var c in classes) btn.Classes.Add(c);
 
         return btn;
     }
-    public static Button IconButton(MaterialIconKind icon, string text, params string[] classes)
+    public static Button IconButton(MIcon icon, string text, params string[] classes)
     {
         var tx = new TextBlock().Text(text);
-        var ic = new MaterialIcon()
-        {
-            Kind = icon,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
+        var ic = MaterialIcon(icon);
 
         var btn = new Button()
         {
@@ -146,15 +137,10 @@ internal static class ControlHeplers
 
         return btn;
     }
-    public static Button IconButton(MaterialIconKind icon, Func<string> textGetter, params string[] classes)
+    public static Button IconButton(MIcon icon, Func<string> textGetter, params string[] classes)
     {
         var tx = new TextBlock().Text(textGetter);
-        var ic = new MaterialIcon()
-        {
-            Kind = icon,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
+        var ic = MaterialIcon(icon);
 
         var btn = new Button()
         {

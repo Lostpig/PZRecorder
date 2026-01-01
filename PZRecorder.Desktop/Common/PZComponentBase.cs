@@ -6,17 +6,15 @@ namespace PZRecorder.Desktop.Common;
 public abstract class PZComponentBase : ComponentBase
 {
     protected ServiceProvider ServiceProvider { get; private set; }
-    protected SukiHelpers Suki { get; private set; }
-    protected PzDialog Dialog { get; private set; }
-    protected PzToast Toast { get; private set; }
+    protected SemiHelper Semi { get; private set; }
+    protected PzNotification Notification { get; private set; }
 
-    [MemberNotNull(nameof(ServiceProvider), nameof(Suki), nameof(Dialog), nameof(Toast))]
+    [MemberNotNull(nameof(ServiceProvider), nameof(Semi), nameof(Notification))]
     private void InjectProperties()
     {
-        ServiceProvider = GlobalInstances.GetServiceProvider();
-        Suki = GlobalInstances.GetSukiHelpers();
-        Dialog = ServiceProvider.GetRequiredService<PzDialog>();
-        Toast = ServiceProvider.GetRequiredService<PzToast>();
+        ServiceProvider = GlobalInstances.Services;
+        Semi = GlobalInstances.Semi;
+        Notification = ServiceProvider.GetRequiredService<PzNotification>();
     }
 
     protected PZComponentBase() : base()
