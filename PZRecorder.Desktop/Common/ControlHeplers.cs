@@ -9,21 +9,17 @@ namespace PZRecorder.Desktop.Common;
 
 internal static class ControlHeplers
 {
-    public static StackPanel VStackPanel(HorizontalAlignment alignment = HorizontalAlignment.Left)
+    public static StackPanel VStackPanel(params Aligns[] aligns)
     {
-        return new StackPanel
-        {
-            Orientation = Orientation.Vertical,
-            HorizontalAlignment = alignment,
-        };
+        return new StackPanel()
+            .Orientation(Orientation.Vertical)
+            .Align(aligns);
     }
-    public static StackPanel HStackPanel(VerticalAlignment alignment = VerticalAlignment.Center)
+    public static StackPanel HStackPanel(params Aligns[] aligns)
     {
-        return new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            VerticalAlignment = alignment
-        };
+        return new StackPanel()
+            .Orientation(Orientation.Horizontal)
+            .Align(aligns);
     }
 
     public static Grid PzGrid(string? cols = null, string? rows = null)
@@ -183,4 +179,8 @@ internal static class ControlHeplers
         return new TextBox().Text(obs);
     }
 
+    public static Uc.NumericIntUpDown PzNumericInt(ISubject<int> subject)
+    {
+        return new Uc.NumericIntUpDown().ValueEx(subject);
+    }
 }

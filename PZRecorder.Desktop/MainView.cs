@@ -1,10 +1,7 @@
-﻿using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
-using Avalonia.Styling;
+﻿using Avalonia.Styling;
 using PZ.RxAvalonia.Reactive;
 using PZRecorder.Desktop.Common;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using Ursa.Controls;
 
 namespace PZRecorder.Desktop;
@@ -12,10 +9,8 @@ namespace PZRecorder.Desktop;
 internal class MainView: PZComponentBase
 {
     private readonly PageRouter _router;
-    private PageRecord PageRecord => _router.CurrentPage.Value;
     public MainView(PageRouter router) : base(ViewInitializationStrategy.Lazy)
     {
-        Margin = new Avalonia.Thickness(0, 32, 0, 0);
         _router = router;
         Initialize();
     }
@@ -32,10 +27,10 @@ internal class MainView: PZComponentBase
             Width = 16,
             Height = 16,
             Data = GlobalInstances.Semi.GetIconGeometry(p.Icon),
-            Foreground = SemiHelper.GetColor("SemiGrey5"),
-            StrokeBrush = SemiHelper.GetColor("SemiGrey5"),
-            ActiveForeground = SemiHelper.GetColor("SemiBlue5"),
-            ActiveStrokeBrush = SemiHelper.GetColor("SemiBlue5"),
+            Foreground = StaticColor("SemiGrey5"),
+            StrokeBrush = StaticColor("SemiGrey5"),
+            ActiveForeground = StaticColor("SemiBlue5"),
+            ActiveStrokeBrush = StaticColor("SemiBlue5"),
         };
         icon._set(TwoTonePathIcon.IsActiveProperty, _router.CurrentPage.Select(c => c == p));
         var header = HStackPanel().Spacing(8)
@@ -44,7 +39,7 @@ internal class MainView: PZComponentBase
                 new Label()
                     .IsVisible(p.Status.Select(s => !string.IsNullOrEmpty(s)))
                     .Content(p.Status)
-                    .Theme((ControlTheme)SemiHelper.GetStaticResource("TagLabel"))
+                    .Theme(StaticResource("TagLabel", o => (ControlTheme)o!))
             );
 
         return new NavMenuItem()
@@ -56,28 +51,33 @@ internal class MainView: PZComponentBase
     }
     protected override Control Build()
     {
-        var menu = new NavMenu()
+        var menu = new NavMenu
         {
             ExpandWidth = 300,
             IsHorizontalCollapsed = false,
+            Header = PzText("PZRecorder", "H4")
+                .Align(Aligns.HCenter, Aligns.VCenter)
+                .Margin(8, 32, 8, 8)
+                .Theme(StaticResource<ControlTheme>("TitleTextBlock"))
         };
         foreach (var p in Routes.Pages)
         {
             menu.Items.Add(NavItemTemplate(p));
         }
-        // menu.SelectionChanged += Menu_SelectionChanged;
+
         var objSubject = new ObjectSubject<PageRecord>(_router.CurrentPage);
         menu._set(NavMenu.SelectedItemProperty!, objSubject);
-
-        // menu.ItemTemplate<PageRecord, NavMenu>(p => NavItemTemplate(p));
-        // menu.ItemsSource(Routes.Pages);
 
         return new Panel()
             .Children(
                 PzGrid(cols: "auto, *")
                 .Children(
-                     new Border().Col(0).Padding(8, 4).Child(menu),
-                     new ContentControl().Col(1)
+                     new Border().Col(0)
+                        .Padding(8, 4)
+                        .Align(Aligns.VStretch)
+                        .Theme(DynamicResource("CardBorder", TypeConverter<ControlTheme>))
+                        .Child(menu),
+                     new ContentControl().Col(1).Margin(12, 36, 12, 12)
                         .ContentTemplate(PageLocator.Instance)
                         .Content(_router.CurrentPage)
                 )

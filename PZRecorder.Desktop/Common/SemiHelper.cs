@@ -13,21 +13,6 @@ public class SemiHelper
         _icons = new();
     }
 
-    public static DynamicResource GetDynamicColor(Control control, string key)
-    {
-        return new DynamicResource(key, control, null);
-    }
-    public static IBrush GetColor(string key, IResourceHost? anchor = null)
-    {
-        anchor ??= Application.Current!;
-        if (DynamicResource.TryGetResource(anchor, key, out var color))
-        {
-            if (color is IBrush b) return b;
-            if (color is Color c) return new SolidColorBrush(c);
-        }
-
-        return Brushes.Black;
-    }
     public static IBrush GetStaticColor(string key, IResourceNode? anchor = null)
     {
         anchor ??= Application.Current!;

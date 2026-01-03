@@ -1,8 +1,11 @@
 ﻿using Avalonia.Layout;
+using PZ.RxAvalonia.DataValidations;
+using PZ.RxAvalonia.Extensions;
 using PZRecorder.Core.Tables;
 using PZRecorder.Desktop.Common;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using Ursa.Common;
 
 namespace PZRecorder.Desktop.Record;
 
@@ -37,63 +40,74 @@ internal class KindDialogModel
     }
 }
 
-internal class KindDialog : DialogContentBase<Kind>
+internal class KindDialog : DialogContentBase<Kind?>
 {
     private static readonly KindDialogModel Model = new();
+    private readonly bool _isAdd = false;
+    public KindDialog()
+    {
+        _isAdd = true;
+        Title = "Add Kind";
+        Model.Kind.OnNext(new Kind());
+    }
     public KindDialog(Kind kind)
     {
-        Width = 480;
+        _isAdd = false;
+        Title = "Edit Kind";
         Model.Kind.OnNext(kind);
+    }
+    protected override void OnCreated()
+    {
+        base.OnCreated();
+        Width = 480;
+        RegisterDataValidation();
     }
     protected override IEnumerable<IDisposable> WhenActivate()
     {
         return Model.Activate();
     }
 
-    private Grid TextRow(string label, Subject<string> subject)
-    {
-        return PzGrid("auto, 4, 1*")
-            .ColSharedGroup(0, "FieldColumn")
-            .Children(
-                PzText(label).Col(0).VerticalAlignment(VerticalAlignment.Center),
-                PzTextBox(subject).Col(2)
-            );
-    }
-    private Grid NumericRow(string label, Subject<int> subject)
-    {
-        return PzGrid("auto, 4, 1*")
-            .ColSharedGroup(0, "FieldColumn")
-            .Children(
-                PzText(label).Col(0).VerticalAlignment(VerticalAlignment.Center),
-                new Uc.NumericIntUpDown().Col(2)
-                    .ValueEx(subject)
-            );
-    }
     protected override Control Build()
     {
-        return VStackPanel(HorizontalAlignment.Stretch)
-            .Grid_IsSharedSizeScope(true)
+        return VStackPanel()
+            .Align(Aligns.HStretch)
             .Spacing(10)
             .Children(
-                TextRow("Name", Model.KindName),
-                NumericRow("OrderNo", Model.Order),
-                new Separator(),
-                PzText("Custom State Text").Classes("h5"),
-                TextRow("Wish", Model.StateWishName),
-                TextRow("Doing", Model.StateDoingName),
-                TextRow("Completed", Model.StateCompleteName),
-                TextRow("Give up", Model.StateGiveupName)
+                new Uc.Form() { LabelPosition = Position.Left, LabelWidth = GridLength.Star }
+                .Align(Aligns.HStretch)
+                .Items(
+                    PzTextBox(Model.KindName)
+                        .FormLabel("Name")
+                        .FormRequired(true)
+                        .Validation(DataValidations.Required())
+                        .Validation(DataValidations.MaxLength(30)),
+                    PzNumericInt(Model.Order).FormLabel("Order No"),
+                    new Uc.Divider().Content("Custom State Name"),
+                    PzTextBox(Model.StateWishName).FormLabel("Wish"),
+                    PzTextBox(Model.StateDoingName).FormLabel("Doing"),
+                    PzTextBox(Model.StateCompleteName).FormLabel("Complete"),
+                    PzTextBox(Model.StateGiveupName).FormLabel("Give up")
+                )
             );
     }
-
-    public override Kind GetResult(Uc.DialogResult btnValue)
+    public override DialogButton[] Buttons()
     {
-        return Model.Kind.Value;
+        return [
+            new DialogButton(_isAdd ? "Add" : "Save", Uc.DialogResult.OK) { Validation = true },
+            new DialogButton("Cancel", Uc.DialogResult.Cancel) { Styles = ["Tertiary"] }
+        ];
+    }
+
+    public override Kind? GetResult(Uc.DialogResult btnValue)
+    {
+        if (PzDialogManager.IsSureResult(btnValue))
+        {
+            return Model.Kind.Value;
+        }
+        return null;
     }
     public override bool Check(Uc.DialogResult btnValue)
     {
-        if (btnValue == Uc.DialogResult.OK || btnValue == Uc.DialogResult.Yes)
-            return !string.IsNullOrWhiteSpace(Model.Kind.Value.Name);
-        else return true;
+        return CheckDataValidation();
     }
 }

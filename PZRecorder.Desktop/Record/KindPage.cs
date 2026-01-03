@@ -18,19 +18,21 @@ internal class KindPage : PZPageBase
                 {
                     new Style<Grid>().Setter(Grid.BackgroundProperty, Brushes.Transparent),
                     new Style<Grid>(s => s.Class(":pointerover"))
-                        .SetterEx(Grid.BackgroundProperty, () => SemiHelper.GetColor("SemiColorTertiaryLightActive"))
+                        .SetterEx(Grid.BackgroundProperty, DynamicColor("SemiColorFill0")),
                 },
-                new Style<TextBlock>().VerticalAlignment(VerticalAlignment.Center)
+                new Style<Grid>(s => s.Class("KindRow").Child()).Margin(16, 0),
+                new Style<TextBlock>().VerticalAlignment(VerticalAlignment.Center),
+                new Style<Button>().Theme(StaticResource<ControlTheme>("BorderlessButton"))
             ];
     }
 
     private StackPanel BuildOperatorBar()
     {
         return HStackPanel()
-            .Align(UnionAlign.HStretch)
+            .Align(Aligns.HStretch)
             .Spacing(10)
             .Children(
-                IconButton(MIcon.Add, "Add", "Basic")
+                IconButton(MIcon.Add, "Add")
                     .OnClick(_ => OnAdd())
             );
     }
@@ -40,25 +42,23 @@ internal class KindPage : PZPageBase
             .Grid_IsSharedSizeScope(true)
             .Children(
                 PzGrid(cols: "60, 1*, auto")
-                    .ColSharedGroup(2, "OperatorsCol")
-                    .Dock(Dock.Top)
-                    .Children(
-                        PzText("Order").Col(0).TextAlignment(TextAlignment.Left),
-                        PzText("Name").Col(1),
-                        PzText("Operators").Align(UnionAlign.HCenter).Col(2)
-                    ),
+                .Dock(Dock.Top)
+                .ColSharedGroup(2, "OperatorsCol")
+                .Styles(new Style<TextBlock>().FontWeight(FontWeight.Bold).Margin(16, 0))
+                .Children(
+                    PzText("Order").Col(0).TextAlignment(TextAlignment.Left),
+                    PzText("Name").Col(1),
+                    PzText("Operators").Align(Aligns.HCenter).Col(2)
+                ),
                 new ScrollViewer()
-                    .Dock(Dock.Bottom)
-                    .Margin(0, 8, 0 ,0)
-                    .Content(
-                        new ItemsControl()
-                            .ItemsPanel(
-                                VStackPanel(HorizontalAlignment.Stretch)
-                                    .Spacing(5)
-                            )
-                            .ItemsSource(Kinds)
-                            .ItemTemplate<Kind, ItemsControl>(KindItemTemplate)
-                    )
+                .Dock(Dock.Bottom)
+                .Margin(0, 8, 0 ,0)
+                .Content(
+                    new ItemsControl()
+                    .ItemsPanel(VStackPanel(Aligns.HStretch).Spacing(5))
+                    .ItemsSource(Kinds)
+                    .ItemTemplate<Kind, ItemsControl>(KindItemTemplate)
+                )
             );
     }
     private Grid KindItemTemplate(Kind kind)
@@ -69,10 +69,10 @@ internal class KindPage : PZPageBase
             .Children(
                 PzText(kind.OrderNo.ToString()).Col(0),
                 PzText(kind.Name).Col(1),
-                HStackPanel().Col(2).Spacing(10).Children(
-                        IconButton(MIcon.Edit, "Edit", "Basic")
+                HStackPanel(Aligns.Right).Col(2).Spacing(10).Children(
+                        IconButton(MIcon.Edit, "Edit")
                             .OnClick(_ => OnEdit(kind)),
-                        IconButton(MIcon.Delete, "Delete", "Basic", "Accent")
+                        IconButton(MIcon.Delete, "Delete", "Danger")
                             .OnClick(_ => OnDelete(kind))
                     )
             );
@@ -85,7 +85,7 @@ internal class KindPage : PZPageBase
                 BuildOperatorBar().Row(0),
                 BuildKindList()
                     .Row(1)
-                    .Align(UnionAlign.VStretch)
+                    .Align(Aligns.VStretch)
             );
 
     private readonly RecordManager _manager;
@@ -108,10 +108,7 @@ internal class KindPage : PZPageBase
     }
     private async void OnAdd()
     {
-        var opt = PzDialogManager.ResultOptions("Add", new KindDialog(new Kind()));
-        opt.Buttons[0].Text = "Add";
-
-        var res = await PzDialogManager.ShowDialog(opt);
+        var res = await PzDialogManager.ShowDialog(new KindDialog());
         if (res != null)
         {
             _manager.InsertKind(res);
@@ -120,10 +117,7 @@ internal class KindPage : PZPageBase
     }
     private async void OnEdit(Kind kind)
     {
-        var opt = PzDialogManager.ResultOptions("Edit", new KindDialog(kind));
-        opt.Buttons[0].Text = "Save";
-
-        var res = await PzDialogManager.ShowDialog(opt);
+        var res = await PzDialogManager.ShowDialog(new KindDialog(kind));
         if (res != null)
         {
             _manager.UpdateKind(res);
@@ -132,13 +126,12 @@ internal class KindPage : PZPageBase
     }
     private async void OnDelete(Kind kind)
     {
-        var opt = PzDialogManager.ConfirmOptions("Delete", "Sure to delete?");
-        opt.Mode = Uc.DialogMode.Question;
-        opt.Buttons[0].Text = "Delete";
-        opt.Buttons[0].Styles = ["Danger"];
+        var dialog = PzDialogManager.ConfirmDialog("Delete", "Sure to delete?");
+        dialog.Mode = Uc.DialogMode.Question;
+        dialog.BoxButtons[0].Text = "Delete";
+        dialog.BoxButtons[0].Styles = ["Danger"];
 
-        var delete = await PzDialogManager.ShowDialog(opt);
-
+        var delete = await PzDialogManager.ShowDialog(dialog);
         if (PzDialogManager.IsSureResult(delete))
         {
             _manager.DeleteKind(kind.Id);

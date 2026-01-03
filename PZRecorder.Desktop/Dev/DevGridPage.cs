@@ -28,7 +28,7 @@ internal class DevGridPage : PZPageBase
 
     protected override Control Build()
     {
-        return VStackPanel(Avalonia.Layout.HorizontalAlignment.Left)
+        return VStackPanel(Aligns.Left)
             .Width(300)
             .Grid_IsSharedSizeScope(true)
             .Children(

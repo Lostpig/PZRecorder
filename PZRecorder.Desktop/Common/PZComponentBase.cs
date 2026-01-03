@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Avalonia.Styling;
+using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics.CodeAnalysis;
 
 namespace PZRecorder.Desktop.Common;
@@ -16,6 +17,7 @@ public abstract class PZComponentBase : ComponentBase
         Semi = GlobalInstances.Semi;
         Notification = ServiceProvider.GetRequiredService<PzNotification>();
     }
+    protected static T? TypeConverter<T>(object? obj) => obj is T t ? t : default;
 
     protected PZComponentBase() : base()
     {
