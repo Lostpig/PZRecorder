@@ -2,6 +2,8 @@
 using PZ.RxAvalonia.DataValidations;
 using PZ.RxAvalonia.Extensions;
 using PZ.RxAvalonia.Reactive;
+using System.Reactive;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
 namespace PZRecorder.Desktop.Common;
@@ -58,4 +60,52 @@ public static class ControlExtensions
     {
         return control.SetValidation(Uc.NumericUpDownBase<T>.ValueProperty, validation);
     }
-}
+
+    public static Uc.EnumSelector EnumType(this Uc.EnumSelector control, Type? type)
+    {
+        control.EnumType = type;
+        return control;
+    }
+    public static Uc.EnumSelector Value<T>(this Uc.EnumSelector control, ISubject<T?> subject) where T : Enum
+    {
+        var obv = Observer.Create<object?>(x =>
+        {
+            if (x is T enumValue)
+            {
+                subject.OnNext(enumValue);
+            }
+            else
+            {
+                subject.OnNext(default);
+            }
+        });
+        control._setEx(Uc.EnumSelector.ValueProperty, subject.Select(x => (object?)x), obv);
+        return control;
+    }
+    
+    public static Uc.Pagination CurrentPage(this Uc.Pagination control, ISubject<int> subject)
+    {
+        var nbSubject = new NullableSubject<int>(subject)
+        {
+            DefaultValue = 1
+        };
+
+        control._set(Uc.Pagination.CurrentPageProperty, nbSubject);
+        return control;
+    }
+    public static Uc.Pagination PageSize(this Uc.Pagination control, ISubject<int> subject)
+    {
+        control._set(Uc.Pagination.PageSizeProperty, subject);
+        return control;
+    }
+    public static Uc.Pagination PageCount(this Uc.Pagination control, ISubject<int> subject)
+    {
+        control._set(Uc.Pagination.PageCountProperty, subject);
+        return control;
+    }
+    public static Uc.Pagination TotalCount(this Uc.Pagination control, IObservable<int> obs)
+    {
+        control._set(Uc.Pagination.TotalCountProperty, obs);
+        return control;
+    }
+} 
