@@ -1,8 +1,8 @@
 ﻿using Avalonia.Controls.Templates;
 using PZRecorder.Desktop.Common;
-using PZRecorder.Desktop.Daily;
-using PZRecorder.Desktop.Dev;
-using PZRecorder.Desktop.Record;
+using PZRecorder.Desktop.Modules.Daily;
+using PZRecorder.Desktop.Modules.Dev;
+using PZRecorder.Desktop.Modules.Record;
 using System.Reactive.Subjects;
 
 namespace PZRecorder.Desktop;
@@ -48,24 +48,24 @@ internal class PageLocator : IDataTemplate
     }
     private PageLocator() { }
 
-    private readonly Dictionary<Type, PZPageBase> _views = [];
-    private PZPageBase? _current;
+    private readonly Dictionary<Type, PzPageBase> _views = [];
+    private PzPageBase? _current;
 
     public void Reset()
     {
         _views.Clear();
     }
 
-    public PZPageBase? GetPage(PageRecord pr)
+    public PzPageBase? GetPage(PageRecord pr)
     {
         if (_views.TryGetValue(pr.PageType, out var page))
         {
             return page;
         }
 
-        if (pr.PageType.IsAssignableTo(typeof(PZPageBase)))
+        if (pr.PageType.IsAssignableTo(typeof(PzPageBase)))
         {
-            page = Activator.CreateInstance(pr.PageType) as PZPageBase;
+            page = Activator.CreateInstance(pr.PageType) as PzPageBase;
 
             if (page is not null)
             {

@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Text;
 
-namespace PZRecorder.Desktop.Common;
+namespace PZRecorder.Desktop.Extensions;
 
 internal static class ReactiveExtensions
 {

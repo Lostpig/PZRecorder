@@ -1,10 +1,9 @@
-﻿using Avalonia.Styling;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics.CodeAnalysis;
 
 namespace PZRecorder.Desktop.Common;
 
-public abstract class PZComponentBase : ComponentBase
+public abstract class PzComponentBase : ComponentBase
 {
     protected ServiceProvider ServiceProvider { get; private set; }
     protected SemiHelper Semi { get; private set; }
@@ -19,20 +18,20 @@ public abstract class PZComponentBase : ComponentBase
     }
     protected static T? TypeConverter<T>(object? obj) => obj is T t ? t : default;
 
-    protected PZComponentBase() : base()
+    protected PzComponentBase() : base()
     {
         InjectProperties();
     }
-    protected PZComponentBase(ViewInitializationStrategy s) : base(s)
+    protected PzComponentBase(ViewInitializationStrategy s) : base(s)
     {
         InjectProperties();
     }
 }
 
-public abstract class PZPageBase : PZComponentBase
+public abstract class PzPageBase : PzComponentBase
 {
-    protected PZPageBase() : base() { }
-    protected PZPageBase(ViewInitializationStrategy s) : base(s) { }
+    protected PzPageBase() : base() { }
+    protected PzPageBase(ViewInitializationStrategy s) : base(s) { }
 
     public virtual void OnRouteEnter() { }
     public virtual void OnRouteExit() { }

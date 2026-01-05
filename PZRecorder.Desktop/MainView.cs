@@ -1,12 +1,13 @@
 ﻿using Avalonia.Styling;
 using PZ.RxAvalonia.Reactive;
 using PZRecorder.Desktop.Common;
+using PZRecorder.Desktop.Extensions;
 using System.Reactive.Linq;
 using Ursa.Controls;
 
 namespace PZRecorder.Desktop;
 
-internal class MainView: PZComponentBase
+internal class MainView: PzComponentBase
 {
     private readonly PageRouter _router;
     public MainView(PageRouter router) : base(ViewInitializationStrategy.Lazy)
@@ -53,7 +54,7 @@ internal class MainView: PZComponentBase
     {
         var menu = new NavMenu
         {
-            ExpandWidth = 300,
+            ExpandWidth = 240,
             IsHorizontalCollapsed = false,
             Header = PzText("PZRecorder", "H4")
                 .Align(Aligns.HCenter, Aligns.VCenter)

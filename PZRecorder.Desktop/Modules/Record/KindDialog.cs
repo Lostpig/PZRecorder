@@ -3,11 +3,12 @@ using PZ.RxAvalonia.DataValidations;
 using PZ.RxAvalonia.Extensions;
 using PZRecorder.Core.Tables;
 using PZRecorder.Desktop.Common;
+using PZRecorder.Desktop.Extensions;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Ursa.Common;
 
-namespace PZRecorder.Desktop.Record;
+namespace PZRecorder.Desktop.Modules.Record;
 
 internal class KindDialogModel
 {

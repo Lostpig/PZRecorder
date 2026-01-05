@@ -13,28 +13,6 @@ public class SemiHelper
         _icons = new();
     }
 
-    public static IBrush GetStaticColor(string key, IResourceNode? anchor = null)
-    {
-        anchor ??= Application.Current!;
-        if (anchor.TryGetResource(key, Application.Current!.ActualThemeVariant, out var value))
-        {
-            if (value is IBrush b) return b;
-            if (value is Color c) return new SolidColorBrush(c);
-        }
-
-        return Brushes.Black;
-    }
-    public static object GetStaticResource(string key, IResourceNode? anchor = null)
-    {
-        anchor ??= Application.Current!;
-        if (anchor.TryGetResource(key, Application.Current!.ActualThemeVariant, out var value))
-        {
-            return value ?? AvaloniaProperty.UnsetValue;
-        }
-
-        return AvaloniaProperty.UnsetValue;
-    }
-
     public Geometry GetIconGeometry(string key)
     {
         if (_iconCache.TryGetValue(key, out var icon)) return icon;

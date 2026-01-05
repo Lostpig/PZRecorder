@@ -1,9 +1,10 @@
 ﻿using PZRecorder.Desktop.Common;
+using PZRecorder.Desktop.Extensions;
 using System.Diagnostics;
 
-namespace PZRecorder.Desktop.Dev;
+namespace PZRecorder.Desktop.Modules.Dev;
 
-internal class DevGridPage : PZPageBase
+internal class DevGridPage : PzPageBase
 {
     private Grid BuildGridRow(string text)
     {

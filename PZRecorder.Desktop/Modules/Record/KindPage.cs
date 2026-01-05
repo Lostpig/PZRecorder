@@ -5,11 +5,12 @@ using Microsoft.Extensions.DependencyInjection;
 using PZRecorder.Core.Managers;
 using PZRecorder.Core.Tables;
 using PZRecorder.Desktop.Common;
+using PZRecorder.Desktop.Extensions;
 using System.Reactive.Subjects;
 
-namespace PZRecorder.Desktop.Record;
+namespace PZRecorder.Desktop.Modules.Record;
 
-internal class KindPage : PZPageBase
+internal class KindPage : PzPageBase
 {
     protected override StyleGroup? BuildStyles()
     {

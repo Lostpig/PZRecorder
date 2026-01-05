@@ -2,11 +2,12 @@
 using Avalonia.Styling;
 using Irihi.Avalonia.Shared.Contracts;
 using PZ.RxAvalonia.DataValidations;
+using PZRecorder.Desktop.Extensions;
 using Ursa.Controls;
 
 namespace PZRecorder.Desktop.Common;
 
-public abstract class DialogContentBase<T> : PZComponentBase
+public abstract class DialogContentBase<T> : PzComponentBase
 {
     public string Title { get; set; } = "";
     public DialogMode Mode { get; set; } = DialogMode.None;

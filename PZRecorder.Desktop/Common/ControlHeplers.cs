@@ -2,6 +2,7 @@
 using Avalonia.Layout;
 using Material.Icons;
 using Material.Icons.Avalonia;
+using PZRecorder.Desktop.Extensions;
 using Semi.Avalonia;
 using System.Reactive.Subjects;
 

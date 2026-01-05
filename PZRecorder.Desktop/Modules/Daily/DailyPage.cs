@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace PZRecorder.Desktop.Daily;
+namespace PZRecorder.Desktop.Modules.Daily;
 
-internal class DailyPage : PZPageBase
+internal class DailyPage : PzPageBase
 {
     protected override Control Build()
     {

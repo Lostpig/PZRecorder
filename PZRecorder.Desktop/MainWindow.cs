@@ -20,6 +20,8 @@ public class MainWindow : UrsaWindow
 
         Width = 1280;
         Height = 720;
+        MinHeight = 720;
+        MinWidth = 1280;
     }
 
     public void BuildContent()

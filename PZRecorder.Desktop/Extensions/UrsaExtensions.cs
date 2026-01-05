@@ -1,49 +1,15 @@
-﻿using Avalonia.Layout;
-using PZ.RxAvalonia.DataValidations;
-using PZ.RxAvalonia.Extensions;
+﻿using PZ.RxAvalonia.DataValidations;
 using PZ.RxAvalonia.Reactive;
+using PZ.RxAvalonia.Extensions;
 using System.Reactive;
-using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using PZRecorder.Desktop.Modules.Shared;
+using System.Reactive.Linq;
 
-namespace PZRecorder.Desktop.Common;
+namespace PZRecorder.Desktop.Extensions;
 
-public enum Aligns
+internal static class UrsaExtensions
 {
-    Left, Right, Top, Bottom,
-    HCenter, VCenter,
-    HStretch, VStretch
-}
-public static class ControlExtensions
-{
-    public static T Align<T>(this T control, Aligns ailgn) where T : Control
-    {
-        switch (ailgn)
-        {
-            case Aligns.Left: control.HorizontalAlignment(HorizontalAlignment.Left); break;
-            case Aligns.Right: control.HorizontalAlignment(HorizontalAlignment.Right); break;
-            case Aligns.HCenter: control.HorizontalAlignment(HorizontalAlignment.Center); break;
-            case Aligns.HStretch: control.HorizontalAlignment(HorizontalAlignment.Stretch); break;
-            case Aligns.VCenter: control.VerticalAlignment(VerticalAlignment.Center); break;
-            case Aligns.VStretch: control.VerticalAlignment(VerticalAlignment.Stretch); break;
-            case Aligns.Top: control.VerticalAlignment(VerticalAlignment.Top); break;
-            case Aligns.Bottom: control.VerticalAlignment(VerticalAlignment.Bottom); break;
-        }
-
-        return control;
-    }
-    public static T Align<T>(this T control, params Aligns[] aligns) where T : Control
-    {
-        foreach (var align in aligns) { control.Align(align); }
-        return control;
-    }
-
-    public static Uc.NumericIntUpDown ValueEx(this Uc.NumericIntUpDown control, ISubject<int> subject)
-    {
-        var nbSubject = new NullableSubject<int>(subject);
-        return control._set(Uc.NumericIntUpDown.ValueProperty, nbSubject);
-    }
-
     public static T FormLabel<T>(this T control, object label) where T : Control
     {
         Uc.FormItem.SetLabel(control, label);
@@ -53,6 +19,13 @@ public static class ControlExtensions
     {
         Uc.FormItem.SetIsRequired(control, required);
         return control;
+    }
+
+
+    public static Uc.NumericIntUpDown ValueEx(this Uc.NumericIntUpDown control, ISubject<int> subject)
+    {
+        var nbSubject = new NullableSubject<int>(subject);
+        return control._set(Uc.NumericIntUpDown.ValueProperty, nbSubject);
     }
 
     public static Uc.NumericUpDownBase<T> DataValidation<T>(this Uc.NumericUpDownBase<T> control, IDataValidation<T?> validation)
@@ -82,7 +55,7 @@ public static class ControlExtensions
         control._setEx(Uc.EnumSelector.ValueProperty, subject.Select(x => (object?)x), obv);
         return control;
     }
-    
+
     public static Uc.Pagination CurrentPage(this Uc.Pagination control, ISubject<int> subject)
     {
         var nbSubject = new NullableSubject<int>(subject)
@@ -108,4 +81,11 @@ public static class ControlExtensions
         control._set(Uc.Pagination.TotalCountProperty, obs);
         return control;
     }
-} 
+    public static Uc.Pagination WithModel(this Uc.Pagination control, PagenationModel model)
+    {
+        return control
+            .CurrentPage(model.Page)
+            .PageSize(model.PageSize)
+            .TotalCount(model.TotalCount);
+    }
+}
