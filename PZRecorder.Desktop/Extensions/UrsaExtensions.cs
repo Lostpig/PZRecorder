@@ -27,10 +27,17 @@ internal static class UrsaExtensions
         var nbSubject = new NullableSubject<int>(subject);
         return control._set(Uc.NumericIntUpDown.ValueProperty, nbSubject);
     }
-
     public static Uc.NumericUpDownBase<T> DataValidation<T>(this Uc.NumericUpDownBase<T> control, IDataValidation<T?> validation)
         where T : struct, IComparable<T>
     {
+        return control.SetValidation(Uc.NumericUpDownBase<T>.ValueProperty, validation);
+    }
+    public static Uc.NumericUpDownBase<T> ThanValidation<T>(this Uc.NumericUpDownBase<T> control, ThanValidtion<T> validation)
+        where T : struct, IComparable<T>
+    {
+        var validator = control._getValidator(Uc.NumericUpDownBase<T>.ValueProperty);
+        validation.ThanObs?.Subscribe(_ => validator?.ExcuteCheck());
+
         return control.SetValidation(Uc.NumericUpDownBase<T>.ValueProperty, validation);
     }
 
@@ -87,5 +94,16 @@ internal static class UrsaExtensions
             .CurrentPage(model.Page)
             .PageSize(model.PageSize)
             .TotalCount(model.TotalCount);
+    }
+
+    public static Uc.Rating ValueEx(this Uc.Rating control, ISubject<int> subject)
+    {
+        var obv = Observer.Create<double>(x => subject.OnNext((int)x));
+
+        control._setEx(
+            avap: Uc.Rating.ValueProperty, 
+            obs: subject.Select(n => (double)n),
+            changed: obv);
+        return control;
     }
 }

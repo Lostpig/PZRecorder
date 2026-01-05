@@ -91,10 +91,12 @@ public class RecordManager(SqlHandler db)
 
     public int UpdateRecord(Record record)
     {
+        record.ModifyDate = DateTime.Now;
         return DB.Conn.Update(record);
     }
     public int InsertRecord(Record record)
     {
+        record.ModifyDate = DateTime.Now;
         return DB.Conn.Insert(record);
     }
     public int DeleteRecord(int id)

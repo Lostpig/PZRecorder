@@ -8,7 +8,6 @@ using PZRecorder.Core.Tables;
 using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Extensions;
 using PZRecorder.Desktop.Modules.Shared;
-using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
@@ -92,6 +91,7 @@ internal class RecordPage : PzPageBase
             RecordState.Doing => "Orange",
             RecordState.Complete => "Green",
             RecordState.Giveup => "Pink",
+            _ => "Gray"
         };
         var rightBar = new Border()
             .Col(1)
@@ -107,9 +107,11 @@ internal class RecordPage : PzPageBase
                             .Content(record.State.ToString())
                             .Align(Aligns.HCenter),
                         IconButton(MIcon.Edit, classes: "Primary")
-                            .Theme(StaticResource<ControlTheme>("BorderlessButton")),
+                            .Theme(StaticResource<ControlTheme>("BorderlessButton"))
+                            .OnClick(_ => EditRecord(record)),
                         IconButton(MIcon.Delete, classes: "Danger")
                             .Theme(StaticResource<ControlTheme>("BorderlessButton"))
+                            .OnClick(_ => DeleteRecord(record))
                     )
             );
 
@@ -198,7 +200,8 @@ internal class RecordPage : PzPageBase
                                 .EnumType(typeof(RecordSort))
                                 .Value(Pagenation.Order)
                         )
-                )
+                ),
+                PzButton("Add").OnClick(_ => AddRecord())
             );
     }
     private Grid BuildContent()
@@ -257,7 +260,7 @@ internal class RecordPage : PzPageBase
 
         return [
             Query.Kind.Subscribe(k => UpdateYears(k)),
-            Query.Query.Subscribe(UpdateList),
+            Query.Query.Subscribe(q => UpdateList(q)),
             ..base.WhenActivate()
         ];
     }
@@ -288,10 +291,9 @@ internal class RecordPage : PzPageBase
             && query.Rating == _cahce.Rating
             && query.State == _cahce.State;
     }
-    private void UpdateList(RecordsQuery query)
+    private void UpdateList(RecordsQuery query, bool force = false)
     {
-        Debug.WriteLine("Now State is:" + query.State);
-        if (EqualsQuery(query, _cacheQuery)) return;
+        if (EqualsQuery(query, _cacheQuery) && !force) return;
 
         var records = _manager.QueryRecords(query);
         Pagenation.Update(records);
@@ -306,5 +308,44 @@ internal class RecordPage : PzPageBase
         }
         var years = _manager.GetYears(kind.Id);
         Years.OnNext([null, .. years]);
+    }
+
+    private async void AddRecord()
+    {
+        if (Query.Kind.Value == null)
+        {
+            await PzDialogManager.Alert("Kind not selected!", "Error");
+            return;
+        }
+
+        var res = await PzDialogManager.ShowDialog(new RecordDialog(Query.Kind.Value.Id));
+        if (res != null)
+        {
+            _manager.InsertRecord(res);
+            if (_cacheQuery != null) UpdateList(_cacheQuery, true);
+        }
+    }
+    private async void EditRecord(TbRecord item)
+    {
+        var res = await PzDialogManager.ShowDialog(new RecordDialog(item));
+        if (res != null)
+        {
+            _manager.UpdateRecord(res);
+            if (_cacheQuery != null) UpdateList(_cacheQuery, true);
+        }
+    }
+    private async void DeleteRecord(TbRecord item)
+    {
+        var dialog = PzDialogManager.ConfirmDialog("Delete", "Sure to delete?");
+        dialog.Mode = Uc.DialogMode.Question;
+        dialog.BoxButtons[0].Text = "Delete";
+        dialog.BoxButtons[0].Styles = ["Danger"];
+
+        var delete = await PzDialogManager.ShowDialog(dialog);
+        if (PzDialogManager.IsSureResult(delete))
+        {
+            _manager.DeleteRecord(item.Id);
+            if (_cacheQuery != null) UpdateList(_cacheQuery, true);
+        }
     }
 }

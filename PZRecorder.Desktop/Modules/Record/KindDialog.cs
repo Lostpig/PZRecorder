@@ -22,8 +22,9 @@ internal class KindDialogModel
 
     public IEnumerable<IDisposable> Activate()
     {
-        return [
-                Kind.Subscribe(k => {
+        return 
+        [
+            Kind.Subscribe(k => {
                 KindName.OnNext(k.Name);
                 Order.OnNext(k.OrderNo);
                 StateWishName.OnNext(k.StateWishName);
