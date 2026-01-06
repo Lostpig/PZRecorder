@@ -14,12 +14,12 @@ public enum RecordSort
 
 public record RecordsQuery
 {
-    public int KindId { get; init; }
+    public int KindId { get; init; } = -1;
     public string SearchText { get; init; } = "";
-    public int? Year { get; init; } = null;
-    public int? Month { get; init; } = null;
+    public int Year { get; init; } = -1;
+    public int Month { get; init; } = -1;
     public RecordState? State { get; init; } = null;
-    public int? Rating { get; init; } = null;
+    public int Rating { get; init; } = -1;
 }
 
 public class RecordManager(SqlHandler db)
@@ -66,9 +66,9 @@ public class RecordManager(SqlHandler db)
         string sql = $"SELECT * FROM t_record WHERE kind = {query.KindId}";
 
         if (query.State is not null) sql += $" AND state = {(int)query.State}";
-        if (query.Year is not null) sql += $" AND publish_year = {query.Year}";
-        if (query.Month is not null) sql += $" AND publish_month = {query.Month}";
-        if (query.Rating is not null) sql += $" AND rating = {query.Rating}";
+        if (query.Year >= 0) sql += $" AND publish_year = {query.Year}";
+        if (query.Month >= 0) sql += $" AND publish_month = {query.Month}";
+        if (query.Rating >= 0) sql += $" AND rating = {query.Rating}";
         if (string.IsNullOrWhiteSpace(query.SearchText)) 
             sql += $" AND (name like '%{query.SearchText}%' OR alias like '%{query.SearchText}%')";
 

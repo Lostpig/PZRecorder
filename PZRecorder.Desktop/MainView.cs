@@ -2,23 +2,19 @@
 using PZ.RxAvalonia.Reactive;
 using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Extensions;
+using PZRecorder.Desktop.Modules.Shared;
 using System.Reactive.Linq;
 using Ursa.Controls;
 
 namespace PZRecorder.Desktop;
 
-internal class MainView: PzComponentBase
+internal class MainView: MvuComponent
 {
     private readonly PageRouter _router;
     public MainView(PageRouter router) : base(ViewInitializationStrategy.Lazy)
     {
         _router = router;
         Initialize();
-    }
-
-    protected override IEnumerable<IDisposable> WhenActivate()
-    {
-        return base.WhenActivate();
     }
 
     private NavMenuItem NavItemTemplate(PageRecord p)

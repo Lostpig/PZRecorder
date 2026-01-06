@@ -1,10 +1,11 @@
 ﻿using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Extensions;
+using PZRecorder.Desktop.Modules.Shared;
 using System.Diagnostics;
 
 namespace PZRecorder.Desktop.Modules.Dev;
 
-internal class DevGridPage : PzPageBase
+internal class DevGridPage : MvuPage
 {
     private Grid BuildGridRow(string text)
     {

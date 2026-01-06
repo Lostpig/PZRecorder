@@ -5,20 +5,22 @@ using PZ.RxAvalonia.DataValidations;
 using PZRecorder.Desktop.Extensions;
 using Ursa.Controls;
 
-namespace PZRecorder.Desktop.Common;
+namespace PZRecorder.Desktop.Modules.Shared;
 
-public abstract class DialogContentBase<T> : PzComponentBase
+public abstract class DialogContentBase<T> : MvuComponent
 {
     public string Title { get; set; } = "";
     public DialogMode Mode { get; set; } = DialogMode.None;
-    public abstract T GetResult(DialogResult buttonValue);
+    public abstract PzDialogResult<T> GetResult(DialogResult buttonValue);
     public abstract bool Check(DialogResult buttonValue);
     public abstract DialogButton[] Buttons();
     protected DialogContentBase(ViewInitializationStrategy strategy = ViewInitializationStrategy.Lazy) : base(strategy) { }
 }
+public record PzDialogResult<T>(T Value, DialogResult Result);
+
 public class PzDialog<T> : ComponentBase, IDialogContext
 {
-    private DialogContentBase<T> _content;
+    private readonly DialogContentBase<T> _content;
     public PzDialog(DialogContentBase<T> content) : base(ViewInitializationStrategy.Lazy)
     {
         _content = content;
@@ -105,9 +107,9 @@ public class DialogButton(string text, DialogResult value)
     public string[] Styles { get; set; } = [];
     public DialogResult Value { get; set; } = value;
 }
-public sealed class PzMessageBoxContent : DialogContentBase<DialogResult>
+public sealed class PzMessageBoxContent : DialogContentBase<int>
 {
-    private string _message;
+    private readonly string _message;
     public DialogButton[] BoxButtons;
     public PzMessageBoxContent(string message) : base()
     {
@@ -130,9 +132,9 @@ public sealed class PzMessageBoxContent : DialogContentBase<DialogResult>
     }
     public override DialogButton[] Buttons() => BoxButtons;
 
-    public override DialogResult GetResult(DialogResult buttonValue)
+    public override PzDialogResult<int> GetResult(DialogResult buttonValue)
     {
-        return buttonValue;
+        return new(0, buttonValue);
     }
     override public bool Check(DialogResult buttonValue)
     {
@@ -142,17 +144,17 @@ public sealed class PzMessageBoxContent : DialogContentBase<DialogResult>
 
 public class PzDialogManager
 {
-    public static Task<DialogResult> Confirm(string message, string title)
+    public static Task<PzDialogResult<int>> Confirm(string message, string title)
     {
         var opt = ConfirmDialog(message, title);
         return ShowDialog(opt);
     }
-    public static Task<DialogResult> Alert(string message, string title)
+    public static Task<PzDialogResult<int>> Alert(string message, string title)
     {
         var opt = AlertDialog(message, title);
         return ShowDialog(opt);
     }
-    public static async Task<T?> ShowDialog<T>(DialogContentBase<T> content)
+    public static async Task<PzDialogResult<T>> ShowDialog<T>(DialogContentBase<T> content)
     {
         var semiOpts = new OverlayDialogOptions()
         {
@@ -167,7 +169,9 @@ public class PzDialogManager
         };
 
         var dialog = new PzDialog<T>(content);
-        return await OverlayDialog.ShowCustomModal<T>(dialog, dialog, options: semiOpts);
+        var result = await OverlayDialog.ShowCustomModal<PzDialogResult<T>>(dialog, dialog, options: semiOpts);
+
+        return result!;
     }
 
     public static PzMessageBoxContent ConfirmDialog(string title, string message)

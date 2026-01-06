@@ -1,11 +1,12 @@
-﻿using PZRecorder.Desktop.Common;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using PZRecorder.Desktop.Modules.Shared;
 
 namespace PZRecorder.Desktop.Modules.Daily;
 
-internal class DailyPage : PzPageBase
+internal class DailyPageModel
+{
+
+}
+internal class DailyPage : MvuPage
 {
     protected override Control Build()
     {

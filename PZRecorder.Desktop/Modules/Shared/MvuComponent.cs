@@ -1,9 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using PZRecorder.Desktop.Common;
 using System.Diagnostics.CodeAnalysis;
 
-namespace PZRecorder.Desktop.Common;
+namespace PZRecorder.Desktop.Modules.Shared;
 
-public abstract class PzComponentBase : ComponentBase
+public abstract class MvuComponent : ComponentBase
 {
     protected ServiceProvider ServiceProvider { get; private set; }
     protected SemiHelper Semi { get; private set; }
@@ -18,21 +19,14 @@ public abstract class PzComponentBase : ComponentBase
     }
     protected static T? TypeConverter<T>(object? obj) => obj is T t ? t : default;
 
-    protected PzComponentBase() : base()
-    {
-        InjectProperties();
-    }
-    protected PzComponentBase(ViewInitializationStrategy s) : base(s)
+    protected MvuComponent(ViewInitializationStrategy s = ViewInitializationStrategy.Lazy) : base(s)
     {
         InjectProperties();
     }
 }
 
-public abstract class PzPageBase : PzComponentBase
+public abstract class MvuPage : MvuComponent
 {
-    protected PzPageBase() : base() { }
-    protected PzPageBase(ViewInitializationStrategy s) : base(s) { }
-
     public virtual void OnRouteEnter() { }
     public virtual void OnRouteExit() { }
 }

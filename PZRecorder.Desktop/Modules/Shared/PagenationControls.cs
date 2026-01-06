@@ -1,0 +1,100 @@
+﻿using PZ.RxAvalonia.Reactive;
+using PZRecorder.Desktop.Extensions;
+using System.Diagnostics.CodeAnalysis;
+
+namespace PZRecorder.Desktop.Modules.Shared;
+
+internal interface IPageItemComponent<T>
+{
+    public void UpdateItem(T item);
+}
+
+internal class PagenationControls<TControl, TState> : MvuComponent
+    where TControl : Control, IPageItemComponent<TState>
+{
+    protected MvuPagenationState Pagenation { get; set; } = new();
+    private readonly ReactiveList<TState> _items;
+    private Panel _itemsPanel;
+    private readonly ScrollViewer _container;
+    private Func<TControl>? _itemCreator;
+
+    public PagenationControls(ReactiveList<TState> items) : base()
+    {
+        _items = items;
+        _container = new ScrollViewer();
+        ItemsPanel(VStackPanel(Aligns.Top));
+
+        Initialize();
+    }
+    protected override Control Build()
+    {
+        return new DockPanel()
+            .Children(
+                new Uc.Pagination() { ShowPageSizeSelector = false, ShowQuickJump = true }
+                    .Dock(Dock.Bottom)
+                    .WithState(() => Pagenation)
+                    .OnPageChanged(OnPageChanged),
+                _container.Dock(Dock.Top)
+            );
+    }
+    protected override IEnumerable<IDisposable> WhenActivate()
+    {
+        return
+        [
+            _items.Subscribe(n => UpdateItems(n))
+        ];
+    }
+
+    [MemberNotNull(nameof(_itemsPanel))]
+    public PagenationControls<TControl, TState> ItemsPanel(Panel itemsPanel)
+    {
+        _itemsPanel = itemsPanel;
+        _container.Content = _itemsPanel;
+        return this;
+    }
+    public PagenationControls<TControl, TState> ItemCreator(Func<TControl> creator)
+    {
+        _itemCreator = creator;
+        return this;
+    }
+
+    public void UpdateItems(ChangedArgs<TState> e)
+    {
+        Pagenation = Pagenation with { TotalCount = _items.Count, Page = 1 };
+        RenderItems();
+        UpdateState();
+    }
+    private void OnPageChanged(Uc.ValueChangedEventArgs<int> e)
+    {
+        Pagenation = Pagenation with { Page = e.NewValue ?? 1 };
+        RenderItems();
+    }
+
+    private TControl GetControl(int index)
+    {
+        if (_itemCreator is null) throw new Exception("ItemTemplete not set!");
+
+        if (_itemsPanel.Children.Count > index) return (TControl)_itemsPanel.Children[index]!;
+        var control = _itemCreator();
+        _itemsPanel.Children.Add(control);
+
+        return control;
+    }
+    private void RenderItems()
+    {
+        var pageItems = _items.Take(Pagenation.PageRange);
+        var index = 0;
+        foreach(var item in pageItems)
+        {
+            var control = GetControl(index);
+            control.IsVisible = true;
+            control.UpdateItem(item);
+            index++;
+        }
+
+        for (var i = index; i < _itemsPanel.Children.Count; i++)
+        {
+            _itemsPanel.Children[i].IsVisible = false;
+        }
+    }
+}

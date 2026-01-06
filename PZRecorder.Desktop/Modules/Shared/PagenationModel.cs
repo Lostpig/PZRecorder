@@ -1,4 +1,5 @@
-﻿using PZRecorder.Desktop.Extensions;
+﻿using Avalonia.Animation;
+using PZRecorder.Desktop.Extensions;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
@@ -74,5 +75,24 @@ internal class PagenationModel
         if (newPage <= 0) newPage = 1;
 
         Page.OnNext(newPage);
+    }
+}
+
+internal record MvuPagenationState
+{
+    public int Page { get; init; } = 1;
+    public int TotalCount { get; init; } = 0;
+    public int PageSize { get; init; } = 15;
+    public Range PageRange => ComputeRange();
+    public int PageCount => ComputePageCount();
+
+    public int ComputePageCount()
+    {
+        int n = TotalCount % PageSize;
+        return (TotalCount - n) / PageSize + (n > 0 ? 1 : 0);
+    }
+    public Range ComputeRange()
+    {
+        return new Range(PageSize * (Page - 1), PageSize * Page);
     }
 }

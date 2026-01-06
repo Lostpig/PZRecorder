@@ -5,6 +5,7 @@ using System.Reactive;
 using System.Reactive.Subjects;
 using PZRecorder.Desktop.Modules.Shared;
 using System.Reactive.Linq;
+using Avalonia;
 
 namespace PZRecorder.Desktop.Extensions;
 
@@ -26,6 +27,13 @@ internal static class UrsaExtensions
     {
         var nbSubject = new NullableSubject<int>(subject);
         return control._set(Uc.NumericIntUpDown.ValueProperty, nbSubject);
+    }
+    public static Uc.NumericIntUpDown OnValueChanged(this Uc.NumericIntUpDown control, Action<int?> action)
+    {
+        return control._setEvent(
+            (System.EventHandler<Uc.ValueChangedEventArgs<int>>)((s, e) => action(e.NewValue)),
+            h => control.ValueChanged += h
+        );
     }
     public static Uc.NumericUpDownBase<T> DataValidation<T>(this Uc.NumericUpDownBase<T> control, IDataValidation<T?> validation)
         where T : struct, IComparable<T>
@@ -95,7 +103,27 @@ internal static class UrsaExtensions
             .PageSize(model.PageSize)
             .TotalCount(model.TotalCount);
     }
+    public static Uc.Pagination WithState(this Uc.Pagination control, Func<MvuPagenationState> stateGetter)
+    {
+        control._set(Uc.Pagination.CurrentPageProperty, () => stateGetter().Page);
+        control._set(Uc.Pagination.PageSizeProperty, () => stateGetter().PageSize);
+        control._set(Uc.Pagination.TotalCountProperty, () => stateGetter().TotalCount);
 
+        return control;
+    }
+    public static Uc.Pagination OnPageChanged(this Uc.Pagination control, Action<Uc.ValueChangedEventArgs<int>> action)
+    {
+        return control._setEvent(
+            (System.EventHandler<Uc.ValueChangedEventArgs<int>>)((s, e) => action(e)),
+            h => control.CurrentPageChanged += h
+        );
+    }
+
+    public static Uc.Rating DefaultValue(this Uc.Rating control, Func<int> getter)
+    {
+        control._set(avap: Uc.Rating.DefaultValueProperty, getter: () => getter());
+        return control;
+    }
     public static Uc.Rating ValueEx(this Uc.Rating control, ISubject<int> subject)
     {
         var obv = Observer.Create<double>(x => subject.OnNext((int)x));
@@ -104,6 +132,11 @@ internal static class UrsaExtensions
             avap: Uc.Rating.ValueProperty, 
             obs: subject.Select(n => (double)n),
             changed: obv);
+        return control;
+    }
+    public static Uc.Rating Value(this Uc.Rating control, Func<int> getter)
+    {
+        control._set(avap: Uc.Rating.ValueProperty, getter: () => getter());
         return control;
     }
 }

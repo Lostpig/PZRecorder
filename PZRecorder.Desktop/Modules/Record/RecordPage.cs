@@ -5,160 +5,60 @@ using Microsoft.Extensions.DependencyInjection;
 using PZ.RxAvalonia.Reactive;
 using PZRecorder.Core.Managers;
 using PZRecorder.Core.Tables;
-using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Extensions;
 using PZRecorder.Desktop.Modules.Shared;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
+using System.Reflection;
+
 
 namespace PZRecorder.Desktop.Modules.Record;
 
 using TbRecord = Core.Tables.Record;
 
-internal class QueryModel
+internal class RecordPageModel
 {
-    public BehaviorSubject<Kind?> Kind { get; init; } = new(null);
-    public Subject<string> Search { get; init; } = new();
-    public Subject<int?> Year { get; init; } = new();
-    public Subject<int?> Month { get; init; } = new();
-    public Subject<int?> Rating { get; init; } = new();
-    public Subject<RecordState?> State { get; init; } = new();
-
-    public Subject<RecordsQuery> _query { get; init; } = new();
-    public IObservable<RecordsQuery> Query { get; init; }
-    public QueryModel()
-    {
-        Query = Observable.CombineLatest(
-            Kind, 
-            Search.StartWith(""), 
-            Year.StartWith((int?)null), 
-            Month.StartWith((int?)null), 
-            Rating.StartWith((int?)null), 
-            State.StartWith((RecordState?)null), 
-            (kind, search, year, month, rating, state) =>
-            {
-                if (kind is null) return null;
-                return new RecordsQuery
-                {
-                    KindId = kind.Id,
-                    SearchText = search,
-                    Year = year,
-                    Month = month,
-                    Rating = rating,
-                    State = state
-                };
-            }).WhereNotNull();
-    }
+    public List<Kind> Kinds { get; set; } = [];
+    public RecordsQuery Query { get; set; } = new();
+    public MvuPagenationState Pagenation { get; set; } = new();
+    public ReactiveList<TbRecord> Items { get; init; } = [];
+    public RecordSort Order { get; set; } = RecordSort.ModifyTimeDesc;
+    public int SelectedKind { get; set; } = 0;
 }
 
-internal class RecordPage : PzPageBase
+internal class RecordPage : MvuPage
 {
     #region templete
-    private Border RecordItemTemplete(TbRecord record)
-    {
-        var content = VStackPanel()
-            .Margin(0, 0, 8, 0)
-            .Spacing(8)
-            .TextBlock_TextWrapping(TextWrapping.Wrap)
-            .Children(
-                PzText(record.Name)
-                    .Align(Aligns.VCenter)
-                    .FontSize(20)
-                    .Foreground(StaticColor("SemiColorLink")),
-                PzText(record.Alias)
-                    .Margin(0, -8, 0 ,0)
-                    .Align(Aligns.VCenter)
-                    .Foreground(StaticColor("SemiColorText2")),
-                new DockPanel()
-                    .LastChildFill(false)
-                    .HorizontalSpacing(8)
-                    .Children(
-                        PzText($"{record.Episode} / {record.EpisodeCount}").Dock(Dock.Left),
-                        PzText($"{record.PublishYear}-{record.PublishMonth}").Dock(Dock.Left),
-                        PzText($"{record.ModifyDate:yyyy-MM-dd HH:mm}").Dock(Dock.Right)
-                    ),
-                PzText(record.Remark)
-                    .FontSize(14)
-                    .Foreground(StaticColor("SemiColorText3")),
-                new Uc.Rating() { DefaultValue = record.Rating, Count = 10 }
-                    .Classes("Small")
-                    .IsEnabled(false)
-            );
-
-        var stateColor = record.State switch
-        {
-            RecordState.Wish => "Blue",
-            RecordState.Doing => "Orange",
-            RecordState.Complete => "Green",
-            RecordState.Giveup => "Pink",
-            _ => "Gray"
-        };
-        var rightBar = new Border()
-            .Col(1)
-            .BorderThickness(1, 0, 0, 0)
-            .BorderBrush(StaticColor("SemiColorBorder"))
-            .Child(
-                VStackPanel(Aligns.HCenter, Aligns.VCenter)
-                    .Margin(8)
-                    .Spacing(8)
-                    .Children(
-                        new Uc.DualBadge()
-                            .Classes("ForTheBadge").Classes(stateColor)
-                            .Content(record.State.ToString())
-                            .Align(Aligns.HCenter),
-                        IconButton(MIcon.Edit, classes: "Primary")
-                            .Theme(StaticResource<ControlTheme>("BorderlessButton"))
-                            .OnClick(_ => EditRecord(record)),
-                        IconButton(MIcon.Delete, classes: "Danger")
-                            .Theme(StaticResource<ControlTheme>("BorderlessButton"))
-                            .OnClick(_ => DeleteRecord(record))
-                    )
-            );
-
-        return new Border()
-            .Theme(StaticResource<ControlTheme>("CardBorder"))
-            .Child(
-                PzGrid(cols: "*, 100")
-                .Children(
-                    content.Col(0),
-                    rightBar.Col(1)
-                )
-            );
-    }
     private TabStrip BuildTabs()
     {
         return new TabStrip()
             .Theme(StaticResource<ControlTheme>("ScrollLineTabStrip"))
-            .ItemsSource(Kinds)
+            .ItemsSource(() => Model.Kinds)
             .ItemTemplate<Kind, TabStrip>(k => PzText(k.Name))
-            .SelectedValueEx(Query.Kind);
+            .SelectedIndex(() => Model.SelectedKind)
+            .OnSelectionChanged(OnSelectKind);
     }
-    private DockPanel BuildList()
+    private PagenationControls<RecordItem, TbRecord> BuildList()
     {
-        return new DockPanel()
-            .Children(
-                new Uc.Pagination() { ShowPageSizeSelector = true, ShowQuickJump = true, PageSizeOptions = [10, 15, 20, 30] }
-                    .Dock(Dock.Bottom)
-                    .WithModel(Pagenation),
-                new ScrollViewer().Dock(Dock.Top)
-                    .Content(
-                        new ItemsControl()
-                            .ItemsPanel(
-                                VStackPanel(Aligns.HStretch)
-                                    .Spacing(12)
-                                    .Margin(16, 0)
-                            )
-                            .ItemsSource(Pagenation.PageItems)
-                            .ItemTemplate<TbRecord, ItemsControl>(RecordItemTemplete)
-                    )
-            );
+        var pagedList = new PagenationControls<RecordItem, TbRecord>(Model.Items)
+            .ItemsPanel(
+                VStackPanel(Aligns.HStretch)
+                    .Spacing(12)
+                    .Margin(16, 0)
+            )
+            .ItemCreator(() => new RecordItem(this));
+
+        return pagedList;
     }
     private StackPanel BuildSearchPanel()
     {
         return VStackPanel(Aligns.HStretch, Aligns.VStretch)
             .Spacing(16)
             .Children(
-                PzTextBox(Query.Search).Margin(16, 8).Watermark("Search..."),
+                PzTextBox(() => Model.Query.SearchText)
+                    .OnTextChanged(OnSearchChanged)
+                    .Margin(16, 8)
+                    .Watermark("Search..."),
                 new Border().Theme(StaticResource<ControlTheme>("RadioButtonGroupBorder"))
                 .MaxWidth(284)
                 .Child(
@@ -171,7 +71,8 @@ internal class RecordPage : PzPageBase
                         )
                         .ItemsSource(Enum.GetValues<RecordState>())
                         .SelectionMode(SelectionMode.Single | SelectionMode.Toggle)
-                        .SelectedValueEx(Query.State)
+                        .SelectedValue(() => Model.Query.State)
+                        .OnSelectionChanged(OnStateChanged)
                 ),
                 new Border().Theme(StaticResource<ControlTheme>("CardBorder"))
                 .Child(
@@ -181,24 +82,28 @@ internal class RecordPage : PzPageBase
                         .Children(
                             PzText("Year"),
                             new ComboBox()
-                                .ItemsSource(Years)
-                                .ItemTemplate<int?, ComboBox>(n => PzText(n.HasValue ? n.Value.ToString() : "-"))
-                                .SelectedValueEx(Query.Year),
+                                .ItemsSource(() => Years)
+                                .ItemTemplate<int, ComboBox>(n => PzText(n > 0 ? n.ToString() : "-"))
+                                .SelectedValue(() => Model.Query.Year)
+                                .OnSelectionChanged(OnYearChanged),
                             PzText("Month"),
                             new ComboBox()
-                                .ItemsSource(Monthes)
-                                .ItemTemplate<int?, ComboBox>(n => PzText(n.HasValue ? n.Value.ToString() : "-"))
-                                .SelectedValueEx(Query.Month),
+                                .ItemsSource(Months)
+                                .ItemTemplate<int, ComboBox>(n => PzText(n > 0 ? n.ToString() : "-"))
+                                .SelectedValue(() => Model.Query.Month)
+                                .OnSelectionChanged(OnMonthChanged),
                             PzText("Rating"),
                             new ComboBox()
                                 .ItemsSource(Ratings)
-                                .ItemTemplate<int?, ComboBox>(n => PzText(n.HasValue ? n.Value.ToString() : "-"))
-                                .SelectedValueEx(Query.Rating),
+                                .ItemTemplate<int, ComboBox>(n => PzText(n > 0 ? n.ToString() : "-"))
+                                .SelectedValue(() => Model.Query.Rating)
+                                .OnSelectionChanged(OnRatingChanged),
                             PzText("Order"),
-                            new Uc.EnumSelector()
-                                .Width(240)
-                                .EnumType(typeof(RecordSort))
-                                .Value(Pagenation.Order)
+                            new ComboBox()
+                                .ItemsSource(Enum.GetValues<RecordSort>())
+                                .ItemTemplate<RecordSort, ComboBox>(n => PzText(n.ToString()))
+                                .SelectedValue(() => Model.Order)
+                                .OnSelectionChanged(OnOrderChanged)
                         )
                 ),
                 PzButton("Add").OnClick(_ => AddRecord())
@@ -226,115 +131,164 @@ internal class RecordPage : PzPageBase
             );
     #endregion
 
-    private readonly RecordManager _manager;
-
-    #region datas
-    private readonly QueryModel Query = new();
-    private Subject<List<Kind>> Kinds { get; init; } = new();
-    private OrderedPagenationModel<TbRecord, RecordSort> Pagenation { get; init; } = new(ReocordOrder, RecordSort.ModifyTimeDesc);
-
-    private Subject<List<int?>> Years { get; init; } = new();
-    private static readonly int?[] Monthes = [null, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-    private static readonly int?[] Ratings = [null, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    #region event handlers
+    private void OnSelectKind(SelectionChangedEventArgs e)
+    {
+        if (e.Source is SelectingItemsControl c && c.SelectedValue is Kind k)
+        {
+            Model.Query = Model.Query with { KindId = k.Id };
+            UpdateItems();
+        }
+    }
+    private void OnSearchChanged(TextChangedEventArgs e)
+    {
+        var text = ((TextBox)e.Source!).Text ?? "";
+        Model.Query = Model.Query with { SearchText = text };
+        UpdateItems();
+    }
+    private void OnStateChanged(SelectionChangedEventArgs e)
+    {
+        if (e.Source is ListBox l && l.SelectedValue is RecordState s)
+        {
+            Model.Query = Model.Query with { State = s };
+        }
+        else
+        {
+            Model.Query = Model.Query with { State = null };
+        }
+        UpdateItems();
+    }
+    private void OnYearChanged(SelectionChangedEventArgs e)
+    {
+        if (e.Source is ComboBox c && c.SelectedValue is int x)
+        {
+            Model.Query = Model.Query with { Year = x };
+            UpdateItems();
+        }
+    }
+    private void OnMonthChanged(SelectionChangedEventArgs e)
+    {
+        if (e.Source is ComboBox c && c.SelectedValue is int x)
+        {
+            Model.Query = Model.Query with { Month = x };
+            UpdateItems();
+        }
+    }
+    private void OnRatingChanged(SelectionChangedEventArgs e)
+    {
+        if (e.Source is ComboBox c && c.SelectedValue is int x)
+        {
+            Model.Query = Model.Query with { Rating = x };
+            UpdateItems();
+        }
+    }
+    private void OnOrderChanged(SelectionChangedEventArgs e)
+    {
+        if (e.Source is ComboBox c && c.SelectedValue is RecordSort s)
+        {
+            Model.Order = s;
+            UpdateState();
+        }
+    }
     #endregion
 
-    public RecordPage() : base(ViewInitializationStrategy.Lazy)
+    private readonly RecordManager _manager;
+    protected RecordPageModel Model { get; set; }
+    private int[] Years = [-1];
+    private readonly int[] Months = [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    private readonly int[] Ratings = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+    public RecordPage() : base()
     {
+        Model = new();
         _manager = ServiceProvider.GetRequiredService<RecordManager>();
         Initialize();
     }
     protected override IEnumerable<IDisposable> WhenActivate()
     {
-        var kinds = _manager.GetKinds();
-        Kinds.OnNext(kinds);
+        // TODO: 使用消息事件，在KindPage进行更新后自动更新，不再在每次进入页面时更新
+        var kindId = Model.Query.KindId;
+        Model.Kinds = _manager.GetKinds();
+        UpdateState();
 
-        if (Query.Kind.Value == null)
+        Kind? kind = null;
+        if (kindId > 0)
         {
-            Query.Kind.OnNext(kinds.FirstOrDefault());
+            kind = Model.Kinds.FirstOrDefault(k => k.Id == kindId);
         }
-        else
+        
+        if (kind == null)
         {
-            var k = kinds.FirstOrDefault(k => k.Id == Query.Kind.Value.Id);
-            Query.Kind.OnNext(k);
+            kind = Model.Kinds.FirstOrDefault();
         }
 
-        return [
-            Query.Kind.Subscribe(k => UpdateYears(k)),
-            Query.Query.Subscribe(q => UpdateList(q)),
-            ..base.WhenActivate()
-        ];
+        Model.Query = Model.Query with { KindId = kind?.Id ?? -1 };
+        UpdateItems();
+        return base.WhenActivate();
     }
 
-    private static IOrderedEnumerable<TbRecord> ReocordOrder(IEnumerable<TbRecord> items, RecordSort sort)
-    {
-        return items.OrderBy(x => sort switch
-            {
-                RecordSort.PublishTimeAsc => x.PublishYear * 100 + x.PublishMonth,
-                RecordSort.PublishTimeDesc => -(x.PublishYear * 100 + x.PublishMonth),
-                RecordSort.ModifyTimeAsc => x.ModifyDate.Ticks,
-                RecordSort.ModifyTimeDesc => -x.ModifyDate.Ticks,
-                RecordSort.RatingAsc => x.Rating,
-                RecordSort.RatingDesc => -x.Rating,
-                _ => -(x.PublishYear * 100 + x.PublishMonth),
-            }
-        );
-    }
 
-    private RecordsQuery? _cacheQuery;
-    private static bool EqualsQuery(RecordsQuery query, RecordsQuery? _cahce)
+    private RecordsQuery? _lastQuery;
+    [MemberNotNullWhen(true, nameof(_lastQuery))]
+    private bool EqualQuery(RecordsQuery query)
     {
-        if (_cahce is null) return false;
-        return query.KindId == _cahce.KindId
-            && query.SearchText == _cahce.SearchText
-            && query.Year == _cahce.Year
-            && query.Month == _cahce.Month
-            && query.Rating == _cahce.Rating
-            && query.State == _cahce.State;
-    }
-    private void UpdateList(RecordsQuery query, bool force = false)
-    {
-        if (EqualsQuery(query, _cacheQuery) && !force) return;
+        if (_lastQuery == null) return false;
 
-        var records = _manager.QueryRecords(query);
-        Pagenation.Update(records);
-        _cacheQuery = query;
+        return _lastQuery.KindId == query.KindId
+            && _lastQuery.SearchText == query.SearchText
+            && _lastQuery.Year == query.Year
+            && _lastQuery.Month == query.Month
+            && _lastQuery.State == query.State
+            && _lastQuery.Rating == query.Rating;
     }
-    private void UpdateYears(Kind? kind)
+    private void UpdateItems(bool force = false)
     {
-        if (kind is null)
+        if (Model.Query.KindId < 0) return;
+        if (EqualQuery(Model.Query) && !force) return;
+
+        if (Model.Query.KindId != _lastQuery?.KindId || force)
         {
-            Years.OnNext([null]);
-            return;
+            Years = _manager.GetYears(Model.Query.KindId).ToArray();
         }
-        var years = _manager.GetYears(kind.Id);
-        Years.OnNext([null, .. years]);
+        if (!Years.Contains(Model.Query.Year))
+        {
+            Model.Query = Model.Query with { Year = -1 };
+        }
+
+        var items = _manager.QueryRecords(Model.Query);
+        Model.Items.Clear();
+        Model.Items.AddRange(items);
+        _lastQuery = Model.Query;
+        Model.SelectedKind = Model.Kinds.FindIndex(k => k.Id == Model.Query.KindId);
+
+        UpdateState();
     }
 
-    private async void AddRecord()
+    internal async void AddRecord()
     {
-        if (Query.Kind.Value == null)
+        if (Model.Query.KindId < 0)
         {
             await PzDialogManager.Alert("Kind not selected!", "Error");
             return;
         }
 
-        var res = await PzDialogManager.ShowDialog(new RecordDialog(Query.Kind.Value.Id));
-        if (res != null)
+        var res = await PzDialogManager.ShowDialog(new RecordDialog(Model.Query.KindId));
+        if (PzDialogManager.IsSureResult(res.Result))
         {
-            _manager.InsertRecord(res);
-            if (_cacheQuery != null) UpdateList(_cacheQuery, true);
+            _manager.InsertRecord(res.Value);
+            UpdateItems(true);
         }
     }
-    private async void EditRecord(TbRecord item)
+    internal async void EditRecord(TbRecord item)
     {
         var res = await PzDialogManager.ShowDialog(new RecordDialog(item));
-        if (res != null)
+        if (PzDialogManager.IsSureResult(res.Result))
         {
-            _manager.UpdateRecord(res);
-            if (_cacheQuery != null) UpdateList(_cacheQuery, true);
+            _manager.UpdateRecord(res.Value);
+            UpdateItems(true);
         }
     }
-    private async void DeleteRecord(TbRecord item)
+    internal async void DeleteRecord(TbRecord item)
     {
         var dialog = PzDialogManager.ConfirmDialog("Delete", "Sure to delete?");
         dialog.Mode = Uc.DialogMode.Question;
@@ -342,10 +296,92 @@ internal class RecordPage : PzPageBase
         dialog.BoxButtons[0].Styles = ["Danger"];
 
         var delete = await PzDialogManager.ShowDialog(dialog);
-        if (PzDialogManager.IsSureResult(delete))
+        if (PzDialogManager.IsSureResult(delete.Result))
         {
             _manager.DeleteRecord(item.Id);
-            if (_cacheQuery != null) UpdateList(_cacheQuery, true);
+            UpdateItems(true);
         }
+    }
+}
+
+internal class RecordItem(RecordPage Page) : MvuComponent, IPageItemComponent<TbRecord>
+{
+    protected TbRecord State { get; set; } = new();
+    public void UpdateItem(TbRecord item)
+    {
+        State = item;
+        UpdateState();
+    }
+    protected override Control Build()
+    {
+        var content = VStackPanel()
+            .Margin(0, 0, 8, 0)
+            .Spacing(8)
+            .TextBlock_TextWrapping(TextWrapping.Wrap)
+            .Children(
+                PzText(() => State.Name)
+                    .Align(Aligns.VCenter)
+                    .FontSize(20)
+                    .Foreground(StaticColor("SemiColorLink")),
+                PzText(() => State.Alias)
+                    .Margin(0, -8, 0, 0)
+                    .Align(Aligns.VCenter)
+                    .Foreground(StaticColor("SemiColorText2")),
+                new DockPanel()
+                    .LastChildFill(false)
+                    .HorizontalSpacing(8)
+                    .Children(
+                        PzText(() => $"{State.Episode} / {State.EpisodeCount}").Dock(Dock.Left),
+                        PzText(() => $"{State.PublishYear}-{State.PublishMonth}").Dock(Dock.Left),
+                        PzText(() => $"{State.ModifyDate:yyyy-MM-dd HH:mm}").Dock(Dock.Right)
+                    ),
+                PzText(() => State.Remark)
+                    .FontSize(14)
+                    .Foreground(StaticColor("SemiColorText3")),
+                new Uc.Rating() { Count = 10 }
+                    .DefaultValue(() => State.Rating)
+                    .Classes("Small")
+                    .IsEnabled(false)
+            );
+
+        var stateColor = State.State switch
+        {
+            RecordState.Wish => "Blue",
+            RecordState.Doing => "Orange",
+            RecordState.Complete => "Green",
+            RecordState.Giveup => "Pink",
+            _ => "Gray"
+        };
+        var rightBar = new Border()
+            .Col(1)
+            .BorderThickness(1, 0, 0, 0)
+            .BorderBrush(StaticColor("SemiColorBorder"))
+            .Child(
+                VStackPanel(Aligns.HCenter, Aligns.VCenter)
+                    .Margin(8)
+                    .Spacing(8)
+                    .Children(
+                        new Uc.DualBadge()
+                            .Classes("ForTheBadge").Classes(stateColor)
+                            .Content(() => State.State.ToString())
+                            .Align(Aligns.HCenter),
+                        IconButton(MIcon.Edit, classes: "Primary")
+                            .Theme(StaticResource<ControlTheme>("BorderlessButton"))
+                            .OnClick(_ => Page.EditRecord(State)),
+                        IconButton(MIcon.Delete, classes: "Danger")
+                            .Theme(StaticResource<ControlTheme>("BorderlessButton"))
+                            .OnClick(_ => Page.DeleteRecord(State))
+                    )
+            );
+
+        return new Border()
+            .Theme(StaticResource<ControlTheme>("CardBorder"))
+            .Child(
+                PzGrid(cols: "*, 100")
+                .Children(
+                    content.Col(0),
+                    rightBar.Col(1)
+                )
+            );
     }
 }

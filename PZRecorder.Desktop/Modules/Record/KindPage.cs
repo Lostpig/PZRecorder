@@ -6,11 +6,12 @@ using PZRecorder.Core.Managers;
 using PZRecorder.Core.Tables;
 using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Extensions;
+using PZRecorder.Desktop.Modules.Shared;
 using System.Reactive.Subjects;
 
 namespace PZRecorder.Desktop.Modules.Record;
 
-internal class KindPage : PzPageBase
+internal class KindPage : MvuPage
 {
     protected override StyleGroup? BuildStyles()
     {
@@ -57,7 +58,7 @@ internal class KindPage : PzPageBase
                 .Content(
                     new ItemsControl()
                     .ItemsPanel(VStackPanel(Aligns.HStretch).Spacing(5))
-                    .ItemsSource(Kinds)
+                    .ItemsSource(() => Kinds)
                     .ItemTemplate<Kind, ItemsControl>(KindItemTemplate)
                 )
             );
@@ -90,8 +91,8 @@ internal class KindPage : PzPageBase
             );
 
     private readonly RecordManager _manager;
-    private Subject<List<Kind>> Kinds { get; init; } = new();
-    public KindPage() : base(ViewInitializationStrategy.Lazy)
+    private List<Kind> Kinds { get; set; } = new();
+    public KindPage() : base()
     {
         _manager = ServiceProvider.GetRequiredService<RecordManager>();
         Initialize();
@@ -99,29 +100,30 @@ internal class KindPage : PzPageBase
 
     protected override IEnumerable<IDisposable> WhenActivate()
     {
-        Kinds.OnNext(_manager.GetKinds());
+        UpdateKinds();
         return base.WhenActivate();
     }
 
     private void UpdateKinds()
     {
-        Kinds.OnNext(_manager.GetKinds());
+        Kinds = _manager.GetKinds();
+        UpdateState();
     }
     private async void OnAdd()
     {
         var res = await PzDialogManager.ShowDialog(new KindDialog());
-        if (res != null)
+        if (PzDialogManager.IsSureResult(res.Result))
         {
-            _manager.InsertKind(res);
+            _manager.InsertKind(res.Value);
             UpdateKinds();
         }
     }
     private async void OnEdit(Kind kind)
     {
         var res = await PzDialogManager.ShowDialog(new KindDialog(kind));
-        if (res != null)
+        if (PzDialogManager.IsSureResult(res.Result))
         {
-            _manager.UpdateKind(res);
+            _manager.UpdateKind(res.Value);
             UpdateKinds();
         }
     }
@@ -133,7 +135,7 @@ internal class KindPage : PzPageBase
         dialog.BoxButtons[0].Styles = ["Danger"];
 
         var delete = await PzDialogManager.ShowDialog(dialog);
-        if (PzDialogManager.IsSureResult(delete))
+        if (PzDialogManager.IsSureResult(delete.Result))
         {
             _manager.DeleteKind(kind.Id);
             UpdateKinds();

@@ -1,4 +1,6 @@
-﻿using Avalonia.Layout;
+﻿using Avalonia.Controls.Primitives;
+using Avalonia.Layout;
+using Tmds.DBus.Protocol;
 
 namespace PZRecorder.Desktop.Extensions;
 
@@ -30,5 +32,29 @@ public static class ControlExtensions
     {
         foreach (var align in aligns) { control.Align(align); }
         return control;
+    }
+
+    public static string Text(this TextChangedEventArgs e)
+    {
+        return ((TextBox)e.Source!).Text ?? "";
+    } 
+
+    public static T? ValueObj<T>(this SelectionChangedEventArgs e) where T : class
+    {
+        if (e.Source is SelectingItemsControl c && c.SelectedValue is T t)
+        {
+            return t;
+        }
+
+        return null;
+    }
+    public static T? ValueStruct<T>(this SelectionChangedEventArgs e) where T : struct
+    {
+        if (e.Source is SelectingItemsControl c && c.SelectedValue is T t)
+        {
+            return t;
+        }
+
+        return null;
     }
 } 

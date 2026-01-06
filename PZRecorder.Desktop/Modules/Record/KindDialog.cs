@@ -2,8 +2,8 @@
 using PZ.RxAvalonia.DataValidations;
 using PZ.RxAvalonia.Extensions;
 using PZRecorder.Core.Tables;
-using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Extensions;
+using PZRecorder.Desktop.Modules.Shared;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Ursa.Common;
@@ -42,31 +42,36 @@ internal class KindDialogModel
     }
 }
 
-internal class KindDialog : DialogContentBase<Kind?>
+internal sealed class KindDialog : DialogContentBase<Kind>
 {
-    private static readonly KindDialogModel Model = new();
+    private Kind Model { get; set; }
     private readonly bool _isAdd = false;
-    public KindDialog()
+    public KindDialog() : base()
     {
         _isAdd = true;
         Title = "Add Kind";
-        Model.Kind.OnNext(new Kind());
+        Model = new();
     }
-    public KindDialog(Kind kind)
+    public KindDialog(Kind kind) : base()
     {
         _isAdd = false;
         Title = "Edit Kind";
-        Model.Kind.OnNext(kind);
+        Model = new Kind()
+        {
+            Id = kind.Id,
+            Name = kind.Name,
+            OrderNo = kind.OrderNo,
+            StateCompleteName = kind.StateCompleteName,
+            StateDoingName = kind.StateDoingName,
+            StateGiveupName = kind.StateGiveupName,
+            StateWishName = kind.StateWishName,
+        };
     }
     protected override void OnCreated()
     {
         base.OnCreated();
         Width = 480;
         RegisterDataValidation();
-    }
-    protected override IEnumerable<IDisposable> WhenActivate()
-    {
-        return Model.Activate();
     }
 
     protected override Control Build()
@@ -78,17 +83,28 @@ internal class KindDialog : DialogContentBase<Kind?>
                 new Uc.Form() { LabelPosition = Position.Left, LabelWidth = GridLength.Star }
                 .Align(Aligns.HStretch)
                 .Items(
-                    PzTextBox(Model.KindName)
+                    PzTextBox(() => Model.Name)
+                        .OnTextChanged(e => Model.Name = e.Text())
                         .FormLabel("Name")
                         .FormRequired(true)
                         .Validation(DataValidations.Required())
                         .Validation(DataValidations.MaxLength(30)),
-                    PzNumericInt(Model.Order).FormLabel("Order No"),
+                    PzNumericInt(() => Model.OrderNo)
+                        .OnValueChanged(n => Model.OrderNo = n ?? 0)
+                        .FormLabel("Order No"),
                     new Uc.Divider().Content("Custom State Name"),
-                    PzTextBox(Model.StateWishName).FormLabel("Wish"),
-                    PzTextBox(Model.StateDoingName).FormLabel("Doing"),
-                    PzTextBox(Model.StateCompleteName).FormLabel("Complete"),
-                    PzTextBox(Model.StateGiveupName).FormLabel("Give up")
+                    PzTextBox(() => Model.StateWishName)
+                        .OnTextChanged(e => Model.StateWishName = e.Text())
+                        .FormLabel("Wish"),
+                    PzTextBox(() => Model.StateDoingName)
+                        .OnTextChanged(e => Model.StateDoingName = e.Text())
+                        .FormLabel("Doing"),
+                    PzTextBox(() => Model.StateCompleteName)
+                        .OnTextChanged(e => Model.StateCompleteName = e.Text())
+                        .FormLabel("Complete"),
+                    PzTextBox(() => Model.StateGiveupName)
+                        .OnTextChanged(e => Model.StateGiveupName = e.Text())
+                        .FormLabel("Give up")
                 )
             );
     }
@@ -100,13 +116,9 @@ internal class KindDialog : DialogContentBase<Kind?>
         ];
     }
 
-    public override Kind? GetResult(Uc.DialogResult btnValue)
+    public override PzDialogResult<Kind> GetResult(Uc.DialogResult btnValue)
     {
-        if (PzDialogManager.IsSureResult(btnValue))
-        {
-            return Model.Kind.Value;
-        }
-        return null;
+        return new(Model, btnValue);
     }
     public override bool Check(Uc.DialogResult btnValue)
     {

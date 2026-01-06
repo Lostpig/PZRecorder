@@ -184,4 +184,8 @@ internal static class ControlHeplers
     {
         return new Uc.NumericIntUpDown().ValueEx(subject);
     }
+    public static Uc.NumericIntUpDown PzNumericInt(Func<int?> getter)
+    {
+        return new Uc.NumericIntUpDown()._set(avap: Uc.NumericIntUpDown.ValueProperty, getter: getter);
+    }
 }
