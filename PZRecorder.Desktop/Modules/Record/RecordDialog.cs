@@ -12,7 +12,7 @@ using TbRecord = PZRecorder.Core.Tables.Record;
 
 internal sealed class RecordDialog : DialogContentBase<TbRecord>
 {
-    private readonly TbRecord Model = new();
+    private readonly TbRecord Model;
     private readonly bool _isAdd = false;
     private BehaviorSubject<int> EpisodeCountSub;
     private BehaviorSubject<int> RatingSub;
@@ -77,7 +77,7 @@ internal sealed class RecordDialog : DialogContentBase<TbRecord>
 
     protected override Control Build()
     {
-        var epValid = new ThanValidtion<int>(ThanOperation.LessEqual, Model.Episode, EpisodeCountSub)
+        var epValid = new ThanValidtion<int>(ThanOperation.LessEqual, EpisodeCountSub)
         {
             ErrorMessage = "Episode must less than or equal EpisodeCount"
         };
@@ -143,6 +143,8 @@ internal sealed class RecordDialog : DialogContentBase<TbRecord>
 
     public override PzDialogResult<TbRecord> GetResult(Uc.DialogResult btnValue)
     {
+        Model.PublishYear = PublishDate.Year;
+        Model.PublishMonth = PublishDate.Month;
         return new(Model, btnValue);
     }
     public override bool Check(Uc.DialogResult btnValue)

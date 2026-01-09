@@ -1,7 +1,9 @@
-﻿using Avalonia.Controls.Primitives;
+﻿using Avalonia;
+using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
+using PZ.RxAvalonia.Helpers;
 using PZ.RxAvalonia.Reactive;
 using PZRecorder.Core.Managers;
 using PZRecorder.Core.Tables;
@@ -9,24 +11,22 @@ using PZRecorder.Desktop.Extensions;
 using PZRecorder.Desktop.Modules.Shared;
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Linq;
-using System.Reflection;
-
 
 namespace PZRecorder.Desktop.Modules.Record;
 
 using TbRecord = Core.Tables.Record;
 
-internal class RecordPageModel
+internal sealed class RecordPageModel
 {
     public List<Kind> Kinds { get; set; } = [];
     public RecordsQuery Query { get; set; } = new();
     public MvuPagenationState Pagenation { get; set; } = new();
     public ReactiveList<TbRecord> Items { get; init; } = [];
     public RecordSort Order { get; set; } = RecordSort.ModifyTimeDesc;
-    public int SelectedKind { get; set; } = 0;
+    public Kind? SelectedKind { get; set; } = null;
 }
 
-internal class RecordPage : MvuPage
+internal sealed class RecordPage : MvuPage
 {
     #region templete
     private TabStrip BuildTabs()
@@ -35,7 +35,7 @@ internal class RecordPage : MvuPage
             .Theme(StaticResource<ControlTheme>("ScrollLineTabStrip"))
             .ItemsSource(() => Model.Kinds)
             .ItemTemplate<Kind, TabStrip>(k => PzText(k.Name))
-            .SelectedIndex(() => Model.SelectedKind)
+            .SelectedValue(() => Model.SelectedKind)
             .OnSelectionChanged(OnSelectKind);
     }
     private PagenationControls<RecordItem, TbRecord> BuildList()
@@ -187,13 +187,13 @@ internal class RecordPage : MvuPage
         if (e.Source is ComboBox c && c.SelectedValue is RecordSort s)
         {
             Model.Order = s;
-            UpdateState();
+            SortItems();
         }
     }
     #endregion
 
     private readonly RecordManager _manager;
-    protected RecordPageModel Model { get; set; }
+    private RecordPageModel Model { get; set; }
     private int[] Years = [-1];
     private readonly int[] Months = [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     private readonly int[] Ratings = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -206,29 +206,61 @@ internal class RecordPage : MvuPage
     }
     protected override IEnumerable<IDisposable> WhenActivate()
     {
-        // TODO: 使用消息事件，在KindPage进行更新后自动更新，不再在每次进入页面时更新
         var kindId = Model.Query.KindId;
-        Model.Kinds = _manager.GetKinds();
-        UpdateState();
+        UpdateKinds();
 
-        Kind? kind = null;
-        if (kindId > 0)
+        var kind = Model.Kinds.Find(k => k.Id == kindId);
+        kind ??= Model.Kinds.FirstOrDefault();
+        if (kind?.Id != kindId)
         {
-            kind = Model.Kinds.FirstOrDefault(k => k.Id == kindId);
-        }
-        
-        if (kind == null)
-        {
-            kind = Model.Kinds.FirstOrDefault();
+            Model.Query = Model.Query with { KindId = kind?.Id ?? -1 };
+            UpdateItems();
         }
 
-        Model.Query = Model.Query with { KindId = kind?.Id ?? -1 };
-        UpdateItems();
         return base.WhenActivate();
     }
 
-
+    private bool _updating = false;
     private RecordsQuery? _lastQuery;
+    private void UpdatePage()
+    {
+        _updating = true;
+        UpdateState();
+        _updating = false;
+    }
+    private void UpdateKinds()
+    {
+        static void updateKind(Kind newOne, Kind current)
+        {
+            current.Name = newOne.Name;
+            current.OrderNo = newOne.OrderNo;
+            current.StateWishName = newOne.StateWishName;
+            current.StateDoingName = newOne.StateDoingName;
+            current.StateCompleteName = newOne.StateCompleteName;
+            current.StateGiveupName = newOne.StateGiveupName;
+        }
+
+        var currentKinds = Model.Kinds;
+        var newKinds = _manager.GetKinds();
+
+        List<Kind> kl = new(newKinds.Count);
+        foreach (var nk in newKinds)
+        {
+            var ck = currentKinds.Find(k => k.Id == nk.Id);
+            if (ck == null)
+            {
+                kl.Add(nk);
+            }
+            else
+            {
+                updateKind(nk, ck);
+                kl.Add(ck);
+            }
+        }
+        Model.Kinds = kl;
+
+        UpdatePage();
+    }
     [MemberNotNullWhen(true, nameof(_lastQuery))]
     private bool EqualQuery(RecordsQuery query)
     {
@@ -243,7 +275,7 @@ internal class RecordPage : MvuPage
     }
     private void UpdateItems(bool force = false)
     {
-        if (Model.Query.KindId < 0) return;
+        if (Model.Query.KindId < 0 || _updating) return;
         if (EqualQuery(Model.Query) && !force) return;
 
         if (Model.Query.KindId != _lastQuery?.KindId || force)
@@ -259,9 +291,24 @@ internal class RecordPage : MvuPage
         Model.Items.Clear();
         Model.Items.AddRange(items);
         _lastQuery = Model.Query;
-        Model.SelectedKind = Model.Kinds.FindIndex(k => k.Id == Model.Query.KindId);
+        Model.SelectedKind = Model.Kinds.Find(k => k.Id == Model.Query.KindId);
 
-        UpdateState();
+        UpdatePage();
+    }
+    private void SortItems()
+    {
+        Model.Items.Sort((x, y) =>
+        {
+            return Model.Order switch
+            {
+                RecordSort.PublishTimeAsc => (y.PublishYear * 100 + y.PublishMonth) > (x.PublishYear * 100 + x.PublishMonth) ? 1 : -1,
+                RecordSort.PublishTimeDesc => (y.PublishYear * 100 + y.PublishMonth) < (x.PublishYear * 100 + x.PublishMonth) ? 1 : -1,
+                RecordSort.RatingAsc => y.Rating > x.Rating ? 1 : -1,
+                RecordSort.RatingDesc => y.Rating < y.Rating ? 1 : -1,
+                RecordSort.ModifyTimeAsc => y.ModifyDate > x.ModifyDate ? 1 : -1,
+                RecordSort.ModifyTimeDesc or _ => y.ModifyDate < x.ModifyDate ? 1 : -1,
+            };
+        });
     }
 
     internal async void AddRecord()
@@ -304,9 +351,9 @@ internal class RecordPage : MvuPage
     }
 }
 
-internal class RecordItem(RecordPage Page) : MvuComponent, IPageItemComponent<TbRecord>
+internal sealed class RecordItem(RecordPage Page) : MvuComponent, IPageItemComponent<TbRecord>
 {
-    protected TbRecord State { get; set; } = new();
+    private TbRecord State { get; set; } = new();
     public void UpdateItem(TbRecord item)
     {
         State = item;
@@ -322,11 +369,11 @@ internal class RecordItem(RecordPage Page) : MvuComponent, IPageItemComponent<Tb
                 PzText(() => State.Name)
                     .Align(Aligns.VCenter)
                     .FontSize(20)
-                    .Foreground(StaticColor("SemiColorLink")),
+                    .Foreground(DynamicColors.Get("SemiColorLink")),
                 PzText(() => State.Alias)
                     .Margin(0, -8, 0, 0)
                     .Align(Aligns.VCenter)
-                    .Foreground(StaticColor("SemiColorText2")),
+                    .Foreground(DynamicColors.Get("SemiColorText2")),
                 new DockPanel()
                     .LastChildFill(false)
                     .HorizontalSpacing(8)
@@ -337,7 +384,7 @@ internal class RecordItem(RecordPage Page) : MvuComponent, IPageItemComponent<Tb
                     ),
                 PzText(() => State.Remark)
                     .FontSize(14)
-                    .Foreground(StaticColor("SemiColorText3")),
+                    .Foreground(DynamicColors.Get("SemiColorText3")),
                 new Uc.Rating() { Count = 10 }
                     .DefaultValue(() => State.Rating)
                     .Classes("Small")
@@ -355,7 +402,7 @@ internal class RecordItem(RecordPage Page) : MvuComponent, IPageItemComponent<Tb
         var rightBar = new Border()
             .Col(1)
             .BorderThickness(1, 0, 0, 0)
-            .BorderBrush(StaticColor("SemiColorBorder"))
+            .BorderBrush(DynamicColors.Get("SemiColorBorder"))
             .Child(
                 VStackPanel(Aligns.HCenter, Aligns.VCenter)
                     .Margin(8)

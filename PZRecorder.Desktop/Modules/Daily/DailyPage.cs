@@ -6,7 +6,7 @@ internal class DailyPageModel
 {
 
 }
-internal class DailyPage : MvuPage
+internal sealed class DailyPage : MvuPage
 {
     protected override Control Build()
     {

@@ -103,5 +103,4 @@ public class RecordManager(SqlHandler db)
     {
         return DB.Conn.Delete<Record>(id);
     }
-
 }

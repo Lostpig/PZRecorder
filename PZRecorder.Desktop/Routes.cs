@@ -13,6 +13,7 @@ internal class Routes
         new PageRecord(() => "Records", "SemiIconExcel", typeof(RecordPage)),
         new PageRecord(() => "Kind", "SemiIconExport", typeof(KindPage)),
         new PageRecord(() => "Daily", "SemiIconExport", typeof(DailyPage)),
+        new PageRecord(() => "DailyManager", "SemiIconExport", typeof(DailyManagerPage)),
         new PageRecord(() => "Dev", "SemiIconExport", typeof(DevGridPage)),
     ];
 }

@@ -26,24 +26,9 @@ internal static class ControlHeplers
     public static Grid PzGrid(string? cols = null, string? rows = null)
     {
         var grid = new Grid();
-        if (!string.IsNullOrEmpty(cols))
-        {
-            // have a bug, maybe about lazy evaluation
-            // grid.ColumnDefinitions = [.. GridLength.ParseLengths(cols).Select(x => new ColumnDefinition(x))];
-            grid.ColumnDefinitions = new();
-            grid.ColumnDefinitions.AddRange(
-                    GridLength.ParseLengths(cols).Select(x => new ColumnDefinition(x))
-                );
-        }
-            
-        if (!string.IsNullOrEmpty(rows))
-        {
-            // grid.RowDefinitions = [.. GridLength.ParseLengths(rows).Select(x => new RowDefinition(x))];
-            grid.RowDefinitions = new();
-            grid.RowDefinitions.AddRange(
-                    GridLength.ParseLengths(rows).Select(x => new RowDefinition(x))
-                );
-        }
+
+        if (!string.IsNullOrEmpty(cols)) grid.ColumnDefinitions = new(cols);
+        if (!string.IsNullOrEmpty(rows)) grid.RowDefinitions = new(rows);
 
         return grid;
     }
