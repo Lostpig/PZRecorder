@@ -22,6 +22,7 @@ internal static class Styles
                         .SetterEx(Grid.BackgroundProperty, DynamicColors.Get("SemiColorFill0")),
                 },
                 new Style<Grid>(s => s.Class("ListRow").Child()).Margin(16, 0),
+                new Style<Grid>(s => s.Class("ListHeader").Child()).Margin(16, 0),
                 new Style<TextBlock>().VerticalAlignment(VerticalAlignment.Center),
                 new Style<Button>().Theme(ResourceHelpers.StaticResource("BorderlessButton", Application.Current!, ConvertControlTheme))
             ];

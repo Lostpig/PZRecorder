@@ -38,9 +38,9 @@ internal sealed class RecordPage : MvuPage
             .SelectedValue(() => Model.SelectedKind)
             .OnSelectionChanged(OnSelectKind);
     }
-    private PagenationControls<RecordItem, TbRecord> BuildList()
+    private PagenationList<RecordItem, TbRecord> BuildList()
     {
-        var pagedList = new PagenationControls<RecordItem, TbRecord>(Model.Items)
+        var pagedList = new PagenationList<RecordItem, TbRecord>(Model.Items)
             .ItemsPanel(
                 VStackPanel(Aligns.HStretch)
                     .Spacing(12)
@@ -288,8 +288,7 @@ internal sealed class RecordPage : MvuPage
         }
 
         var items = _manager.QueryRecords(Model.Query);
-        Model.Items.Clear();
-        Model.Items.AddRange(items);
+        Model.Items.ReplaceAll(items);
         _lastQuery = Model.Query;
         Model.SelectedKind = Model.Kinds.Find(k => k.Id == Model.Query.KindId);
 
@@ -351,9 +350,35 @@ internal sealed class RecordPage : MvuPage
     }
 }
 
-internal sealed class RecordItem(RecordPage Page) : MvuComponent, IPageItemComponent<TbRecord>
+internal sealed class RecordItem(RecordPage Page) : MvuComponent, IListItemComponent<TbRecord>
 {
     private TbRecord State { get; set; } = new();
+    private string StatusColor => State.State switch
+    {
+        RecordState.Wish => "Orange",
+        RecordState.Doing => "Blue",
+        RecordState.Complete => "Green",
+        RecordState.Giveup or _ => "Grey",
+    };
+
+    private Uc.DualBadge StatusBagde()
+    {
+        var badge = new Uc.DualBadge()
+            .Classes("ForTheBadge")
+            .Content(() => State.State.ToString())
+            .Align(Aligns.HCenter);
+
+        badge._set<Uc.DualBadge, string>(
+                setter: (c, sc) => {
+                    c.Classes.Clear();
+                    c.Classes.AddRange(["ForTheBadge", sc]);
+                },
+                getter: () => StatusColor
+            );
+
+        return badge;
+    }
+
     public void UpdateItem(TbRecord item)
     {
         State = item;
@@ -391,14 +416,6 @@ internal sealed class RecordItem(RecordPage Page) : MvuComponent, IPageItemCompo
                     .IsEnabled(false)
             );
 
-        var stateColor = State.State switch
-        {
-            RecordState.Wish => "Blue",
-            RecordState.Doing => "Orange",
-            RecordState.Complete => "Green",
-            RecordState.Giveup => "Pink",
-            _ => "Gray"
-        };
         var rightBar = new Border()
             .Col(1)
             .BorderThickness(1, 0, 0, 0)
@@ -408,10 +425,7 @@ internal sealed class RecordItem(RecordPage Page) : MvuComponent, IPageItemCompo
                     .Margin(8)
                     .Spacing(8)
                     .Children(
-                        new Uc.DualBadge()
-                            .Classes("ForTheBadge").Classes(stateColor)
-                            .Content(() => State.State.ToString())
-                            .Align(Aligns.HCenter),
+                        StatusBagde(),
                         IconButton(MIcon.Edit, classes: "Primary")
                             .Theme(StaticResource<ControlTheme>("BorderlessButton"))
                             .OnClick(_ => Page.EditRecord(State)),

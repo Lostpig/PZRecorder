@@ -4,13 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace PZRecorder.Desktop.Modules.Shared;
 
-internal interface IPageItemComponent<T>
-{
-    public void UpdateItem(T item);
-}
-
-internal class PagenationControls<TControl, TState> : MvuComponent
-    where TControl : Control, IPageItemComponent<TState>
+internal class PagenationList<TControl, TState> : MvuComponent
+    where TControl : Control, IListItemComponent<TState>
 {
     protected MvuPagenationState Pagenation { get; set; } = new();
     private readonly ReactiveList<TState> _items;
@@ -18,7 +13,7 @@ internal class PagenationControls<TControl, TState> : MvuComponent
     private readonly ScrollViewer _container;
     private Func<TControl>? _itemCreator;
 
-    public PagenationControls(ReactiveList<TState> items) : base()
+    public PagenationList(ReactiveList<TState> items) : base()
     {
         _items = items;
         _container = new ScrollViewer();
@@ -32,6 +27,7 @@ internal class PagenationControls<TControl, TState> : MvuComponent
             .Children(
                 new Uc.Pagination() { ShowPageSizeSelector = false, ShowQuickJump = true }
                     .Dock(Dock.Bottom)
+                    .Margin(0, 4, 0, 0)
                     .WithState(() => Pagenation)
                     .OnPageChanged(OnPageChanged),
                 _container.Dock(Dock.Top)
@@ -46,13 +42,13 @@ internal class PagenationControls<TControl, TState> : MvuComponent
     }
 
     [MemberNotNull(nameof(_itemsPanel))]
-    public PagenationControls<TControl, TState> ItemsPanel(Panel itemsPanel)
+    public PagenationList<TControl, TState> ItemsPanel(Panel itemsPanel)
     {
         _itemsPanel = itemsPanel;
         _container.Content = _itemsPanel;
         return this;
     }
-    public PagenationControls<TControl, TState> ItemCreator(Func<TControl> creator)
+    public PagenationList<TControl, TState> ItemCreator(Func<TControl> creator)
     {
         _itemCreator = creator;
         return this;
