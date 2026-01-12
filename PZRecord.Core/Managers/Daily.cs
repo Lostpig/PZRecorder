@@ -56,17 +56,21 @@ public class DailyManager(SqlHandler db)
     {
         return DB.Conn.InsertOrReplace(dw);
     }
-    public List<DailyWeek> GetDailyDatas(int? dailyId)
+
+    public IEnumerable<DailyWeek> GetDailyDatas(int dailyId)
+    {
+        return DB.Conn.Table<DailyWeek>().Where(dw => dw.DailyId == dailyId).AsEnumerable();
+    }
+    public IEnumerable<DailyWeek> GetDailyDatas(int dailyId, int year)
     {
         var data = DB.Conn.Table<DailyWeek>();
-        if (dailyId != null)
-        {
-            return data.Where(dw => dw.DailyId == dailyId).ToList();
-        }
-        else
-        {
-            return data.ToList();
-        }
+        var yearFirstDay = new DateOnly(year, 1, 1);
+        var fd = yearFirstDay.DayOfWeek == DayOfWeek.Sunday ? yearFirstDay.DayNumber - 7 : yearFirstDay.DayNumber - (int)yearFirstDay.DayOfWeek;
+        var ld = new DateOnly(year + 1, 1, 1).DayNumber - 1;
+
+        return data
+            .Where(dw => dw.DailyId == dailyId && dw.MondayDay >= fd && dw.MondayDay <= ld)
+            .AsEnumerable();
     }
     public List<DailyWeek> GetDailyWeeks(DateOnly mondayDate, IList<int> dailyIds)
     {

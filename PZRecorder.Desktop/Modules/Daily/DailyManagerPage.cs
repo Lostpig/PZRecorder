@@ -61,7 +61,7 @@ internal sealed class DailyManagerPage : MvuPage
                     .Foreground(StaticColor(statusColor)),
                 HStackPanel(Aligns.HCenter).Col(3).Spacing(10).Children(
                         IconButton(MIcon.ChartBar, classes: "Warning")
-                            .OnClick(_ => { }),
+                            .OnClick(_ => ShowStatistics(item)),
                         IconButton(MIcon.Edit)
                             .OnClick(_ => OnEdit(item)),
                         IconButton(MIcon.Delete, classes: "Danger")
@@ -129,5 +129,9 @@ internal sealed class DailyManagerPage : MvuPage
             _manager.DeleteDaily(item.Id);
             UpdateItems();
         }
+    }
+    private async void ShowStatistics(TbDaily item)
+    {
+        _ = await PzDialogManager.ShowDialog(new StatisticsDialog(item));
     }
 }
