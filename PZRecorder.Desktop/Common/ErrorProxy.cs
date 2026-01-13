@@ -15,17 +15,19 @@ internal class ErrorProxy
         };
     }
 
-    public static string CatchException(Exception ex)
+    public static event Action<string>? OnCatched;
+    public static void CatchException(Exception ex)
     {
         try
         {
             Logger.Instance.Error(ex);
-            return FormatException(ex);
+
+            var msg = FormatException(ex);
+            OnCatched?.Invoke(msg);
         }
         catch
         {
             // DO NOTHING
-            return "";
         }
     }
 }

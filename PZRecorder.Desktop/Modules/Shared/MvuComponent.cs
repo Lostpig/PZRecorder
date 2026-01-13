@@ -1,20 +1,21 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Avalonia;
+using Microsoft.Extensions.DependencyInjection;
 using PZRecorder.Desktop.Common;
+using PZRecorder.Desktop.Localization;
 using System.Diagnostics.CodeAnalysis;
 
 namespace PZRecorder.Desktop.Modules.Shared;
 
 public abstract class MvuComponent : ComponentBase
 {
-    protected ServiceProvider ServiceProvider { get; private set; }
-    protected SemiHelper Semi { get; private set; }
+    protected static ServiceProvider ServiceProvider => GlobalInstances.Services;
+    protected static SemiHelper Semi => GlobalInstances.Semi;
     protected PzNotification Notification { get; private set; }
+    protected static Application App => Application.Current ?? throw new ArgumentNullException("Application not boot!");
 
-    [MemberNotNull(nameof(ServiceProvider), nameof(Semi), nameof(Notification))]
+    [MemberNotNull(nameof(Notification))]
     private void InjectProperties()
     {
-        ServiceProvider = GlobalInstances.Services;
-        Semi = GlobalInstances.Semi;
         Notification = ServiceProvider.GetRequiredService<PzNotification>();
     }
     protected static T? TypeConverter<T>(object? obj) => obj is T t ? t : default;
@@ -27,6 +28,11 @@ public abstract class MvuComponent : ComponentBase
 
 public abstract class MvuPage : MvuComponent
 {
+    protected MvuPage(ViewInitializationStrategy s = ViewInitializationStrategy.Lazy) : base(s)
+    {
+        Translate.LanguageChanged += UpdateState;
+    }
+
     public virtual void OnRouteEnter() { }
     public virtual void OnRouteExit() { }
 }

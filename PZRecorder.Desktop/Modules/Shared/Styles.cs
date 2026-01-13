@@ -21,10 +21,13 @@ internal static class Styles
                     new Style<Grid>(s => s.Class(":pointerover"))
                         .SetterEx(Grid.BackgroundProperty, DynamicColors.Get("SemiColorFill0")),
                 },
-                new Style<Grid>(s => s.Class("ListRow").Child()).Margin(16, 0),
-                new Style<Grid>(s => s.Class("ListHeader").Child()).Margin(16, 0),
-                new Style<TextBlock>().VerticalAlignment(VerticalAlignment.Center),
-                new Style<Button>().Theme(ResourceHelpers.StaticResource("BorderlessButton", Application.Current!, ConvertControlTheme))
+                new Style(s => s.Class("ListRow").Child()).Setter(Control.MarginProperty, new Thickness(16, 0)),
+                new StyleGroup(s => s.Class("ListRow").Descendant())
+                {
+                    new Style<TextBlock>().VerticalAlignment(VerticalAlignment.Center),
+                    new Style<Button>()
+                        .Theme(ResourceHelpers.StaticResource("BorderlessButton", Application.Current!, ConvertControlTheme)),
+                }
             ];
     }
 }

@@ -1,7 +1,9 @@
 ﻿using Avalonia.Controls.Templates;
+using PZRecorder.Desktop.Localization;
 using PZRecorder.Desktop.Modules.Daily;
 using PZRecorder.Desktop.Modules.Dev;
 using PZRecorder.Desktop.Modules.Record;
+using PZRecorder.Desktop.Modules.Settings;
 using PZRecorder.Desktop.Modules.Shared;
 using System.Reactive.Subjects;
 
@@ -10,17 +12,19 @@ namespace PZRecorder.Desktop;
 internal class Routes
 {
     static public readonly PageRecord[] Pages = [
-        new PageRecord(() => "Records", "SemiIconExcel", typeof(RecordPage)),
-        new PageRecord(() => "Kind", "SemiIconExport", typeof(KindPage)),
-        new PageRecord(() => "Daily", "SemiIconExport", typeof(DailyPage)),
-        new PageRecord(() => "DailyManager", "SemiIconExport", typeof(DailyManagerPage)),
-        new PageRecord(() => "Dev", "SemiIconExport", typeof(DevGridPage)),
+        new PageRecord("Record", () => LD.Record, "SemiIconExcel", typeof(RecordPage)),
+        new PageRecord("KindManager", () => LD.KindManager, "SemiIconExport", typeof(KindPage)),
+        new PageRecord("Daily", () => LD.Daily, "SemiIconExport", typeof(DailyPage)),
+        new PageRecord("DailyManager", () => LD.DailyManager, "SemiIconExport", typeof(DailyManagerPage)),
+        new PageRecord("Setting", () => LD.Setting, "SemiIconExport", typeof(SettingsPage)),
+        new PageRecord("Dev", () => "Dev", "SemiIconExport", typeof(DevGridPage)),
     ];
 }
 
-internal class PageRecord(Func<string> PageNameGetter, string icon, Type pageType)
+internal class PageRecord(string key, Func<string> pageNameGetter, string icon, Type pageType)
 {
-    private readonly Func<string> _getter = PageNameGetter;
+    public string Key { get; init; } = key;
+    private readonly Func<string> _getter = pageNameGetter;
     public string Icon { get; init; } = icon;
     public Type PageType { get; init; } = pageType;
     public string PageName => _getter();
@@ -33,6 +37,11 @@ internal class PageRouter
     public PageRouter()
     {
         CurrentPage = new(Routes.Pages[0]);
+    }
+
+    public void RouteTo(PageRecord record)
+    {
+        CurrentPage.OnNext(record);
     }
 }
 
@@ -47,7 +56,6 @@ internal class PageLocator : IDataTemplate
             return _instance;
         }
     }
-    private PageLocator() { }
 
     private readonly Dictionary<Type, MvuPage> _views = [];
     private MvuPage? _current;

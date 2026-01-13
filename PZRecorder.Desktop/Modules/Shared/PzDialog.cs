@@ -142,7 +142,7 @@ public sealed class PzMessageBoxContent : DialogContentBase<int>
     }
 }
 
-public class PzDialogManager
+public static class PzDialogManager
 {
     public static Task<PzDialogResult<int>> Confirm(string message, string title)
     {

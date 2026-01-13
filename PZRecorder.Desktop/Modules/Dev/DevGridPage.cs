@@ -1,4 +1,5 @@
-﻿using PZRecorder.Desktop.Common;
+﻿using Microsoft.Extensions.DependencyInjection;
+using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Extensions;
 using PZRecorder.Desktop.Modules.Shared;
 using System.Diagnostics;
@@ -27,7 +28,6 @@ internal class DevGridPage : MvuPage
 
         return grid;
     }
-
     protected override Control Build()
     {
         return VStackPanel(Aligns.Left)
@@ -37,8 +37,19 @@ internal class DevGridPage : MvuPage
                 BuildGridRow("AAA"),
                 BuildGridRow("XXX_BBB_CCC"),
                 BuildGridRow("FFFFF"),
-                PzButton("Text").OnClick(_ => FireTest())
+                PzButton("Text").OnClick(_ => FireTest()),
+                HStackPanel().Spacing(8).Children(
+                        PzButton("Goto record").OnClick(_ => GotoPage("Record")),
+                        PzButton("Goto daily").OnClick(_ => GotoPage("Daily")),
+                        PzButton("Goto setting").OnClick(_ => GotoPage("Setting"))
+                    )
             );
+    }
+
+    private readonly PageRouter _router;
+    public DevGridPage() : base()
+    {
+        _router = ServiceProvider.GetRequiredService<PageRouter>();
     }
 
     private void FireTest()
@@ -55,6 +66,15 @@ internal class DevGridPage : MvuPage
                     }
                 }
             }
+        }
+    }
+
+    private void GotoPage(string key)
+    {
+        var p = Routes.Pages.FirstOrDefault(p => p.Key == key);
+        if (p != null)
+        {
+            _router.RouteTo(p);
         }
     }
 }

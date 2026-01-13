@@ -4,12 +4,10 @@ using Ursa.Controls;
 
 namespace PZRecorder.Desktop;
 
-public class MainWindow : UrsaWindow
+internal class MainWindow : UrsaWindow
 {
-    PageRouter _router;
     public MainWindow() : base()
     {
-        _router = new();
         var icon = AssetLoader.Open(new Uri($"avares://PZRecorder.Desktop/pz-recorder-icon.ico"));
         Icon = new WindowIcon(icon);
 
@@ -24,20 +22,9 @@ public class MainWindow : UrsaWindow
         MinWidth = 1280;
     }
 
-    public void BuildContent()
+    public void BuildContent(PageRouter router)
     {
-        Content = new MainView(_router);
-    }
-
-    protected void UpdateState()
-    {
-        // foreach (var item in _container.Items)
-        // {
-        //     if (item is TabItem tab)
-        //     {
-        //         tab.Header = ((PageRecord)tab.Content!).PageName;
-        //     }
-        // }
+        Content = new MainView(router);
     }
 
     protected override void OnClosed(EventArgs e)

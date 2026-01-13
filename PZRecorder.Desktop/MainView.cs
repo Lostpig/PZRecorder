@@ -1,7 +1,8 @@
 ﻿using Avalonia.Styling;
-using PZ.RxAvalonia.Reactive;
+using Microsoft.Extensions.DependencyInjection;
 using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Extensions;
+using PZRecorder.Desktop.Localization;
 using PZRecorder.Desktop.Modules.Shared;
 using System.Reactive.Linq;
 using Ursa.Controls;
@@ -14,9 +15,42 @@ internal class MainView: MvuComponent
     public MainView(PageRouter router) : base(ViewInitializationStrategy.Lazy)
     {
         _router = router;
+        ErrorProxy.OnCatched += ErrorProxy_OnCatched;
+        Translate.LanguageChanged += UpdateState;
+
         Initialize();
     }
 
+    private void ErrorProxy_OnCatched(string msg)
+    {
+        Notification.Error(msg);
+    }
+    protected override void OnCreated()
+    {
+        base.OnCreated();
+
+        var varManager = ServiceProvider.GetRequiredService<VariantsManager>();
+        var theme = varManager.GetVariant(VariantFields.Theme);
+
+        App.RequestedThemeVariant = theme switch
+        {
+            "dark" => ThemeVariant.Dark,
+            "light" => ThemeVariant.Light,
+            _ => ThemeVariant.Default,
+        };
+
+        var language = varManager.GetVariant(VariantFields.Language);
+        if (string.IsNullOrWhiteSpace(language)) language = Translate.Default;
+
+        try
+        {
+            Translate.ChangeLanguage(language);
+        }
+        catch (Exception ex)
+        {
+            ErrorProxy.CatchException(ex);
+        }
+    }
     private NavMenuItem NavItemTemplate(PageRecord p)
     {
         var icon = new TwoTonePathIcon()
@@ -32,11 +66,11 @@ internal class MainView: MvuComponent
         icon._set(TwoTonePathIcon.IsActiveProperty, _router.CurrentPage.Select(c => c == p));
         var header = HStackPanel().Spacing(8)
                 .Children(
-                PzText(p.PageName),
+                PzText(() => p.PageName),
                 new Label()
                     .IsVisible(p.Status.Select(s => !string.IsNullOrEmpty(s)))
                     .Content(p.Status)
-                    .Theme(StaticResource("TagLabel", o => (ControlTheme)o!))
+                    .Theme(StaticResource<ControlTheme>("TagLabel"))
             );
 
         return new NavMenuItem()
@@ -62,8 +96,7 @@ internal class MainView: MvuComponent
             menu.Items.Add(NavItemTemplate(p));
         }
 
-        var objSubject = new ObjectSubject<PageRecord>(_router.CurrentPage);
-        menu._set(NavMenu.SelectedItemProperty!, objSubject);
+        BindingRouter(menu);
 
         return new Panel()
             .Children(
@@ -81,6 +114,17 @@ internal class MainView: MvuComponent
             );
     }
 
+    private void BindingRouter(NavMenu menu)
+    {
+        menu.SelectionChanged += Menu_SelectionChanged;
+        _router.CurrentPage.Subscribe(p =>
+        {
+            if (menu.SelectedItem is PageRecord op)
+            {
+                if (op != p) menu.SelectedItem = p;
+            }
+        });
+    }
     private void Menu_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (e.Source is NavMenu menu && menu.SelectedItem is PageRecord p)

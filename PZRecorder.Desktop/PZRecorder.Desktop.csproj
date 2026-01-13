@@ -14,8 +14,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Update="Localization\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <AvaloniaResource Include="pz-recorder-icon.ico" />
   </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.10" />
@@ -38,4 +45,8 @@
     <ProjectReference Include="..\PZRecord.Core\PZRecorder.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PZPKRecorderGenerator\PZPKRecorderGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <AdditionalFiles Include="Localization\languages.json" />
+  </ItemGroup>
 </Project>

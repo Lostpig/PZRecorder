@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PZRecorder.Core;
 using PZRecorder.Core.Managers;
 using PZRecorder.Desktop.Common;
+using PZRecorder.Desktop.Localization;
 using Semi.Avalonia;
 
 namespace PZRecorder.Desktop;
@@ -26,6 +27,7 @@ internal sealed class Program
         ClockInManager clockInManager = new(sqlHandler);
         ProcessMonitorManager processMonitorManager = new(sqlHandler);
         ProcessMonitorService processMonitorService = new(processMonitorManager, dailyManager);
+        VariantsManager variantsManager = new(sqlHandler);
 
         services.AddSingleton(sqlHandler);
         services.AddSingleton(dailyManager);
@@ -33,6 +35,7 @@ internal sealed class Program
         services.AddSingleton(clockInManager);
         services.AddSingleton(processMonitorManager);
         services.AddSingleton(processMonitorService);
+        services.AddSingleton(variantsManager);
     }
     private static SqlHandler OpenDatabase()
     {
@@ -53,6 +56,7 @@ internal sealed class Program
         ServiceCollection services = new();
         // pzrecorder services
         AddPZServices(services);
+        Translate.Initialize();
 
         var app = AppBuilder.Configure<Application>()
             .UsePlatformDetect()
@@ -82,6 +86,8 @@ internal sealed class Program
         };
         var pzNotification = new PzNotification(notificationManager);
         services.AddSingleton(pzNotification);
+        var router = new PageRouter();
+        services.AddSingleton(router);
 
         lifetime.MainWindow = mainWindow;
 
@@ -91,7 +97,7 @@ internal sealed class Program
 #if DEBUG
         lifetime.MainWindow?.AttachDevTools();
 #endif
-        mainWindow.BuildContent();
+        mainWindow.BuildContent(router);
         lifetime.Start(args);
     }
 }
