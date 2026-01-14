@@ -3,7 +3,6 @@ using Avalonia.Layout;
 using Material.Icons;
 using Material.Icons.Avalonia;
 using PZRecorder.Desktop.Extensions;
-using Semi.Avalonia;
 using System.Reactive.Subjects;
 
 namespace PZRecorder.Desktop.Common;
@@ -108,7 +107,7 @@ internal static class ControlHeplers
     }
     public static Button IconButton(MIcon icon, string text, params string[] classes)
     {
-        var tx = new TextBlock().Text(text);
+        var tx = PzText(text).Align(Aligns.VCenter);
         var ic = MaterialIcon(icon);
 
         var btn = new Button()
@@ -121,7 +120,7 @@ internal static class ControlHeplers
     }
     public static Button IconButton(MIcon icon, Func<string> textGetter, params string[] classes)
     {
-        var tx = new TextBlock().Text(textGetter);
+        var tx = PzText(textGetter).Align(Aligns.VCenter);
         var ic = MaterialIcon(icon);
 
         var btn = new Button()
@@ -152,7 +151,7 @@ internal static class ControlHeplers
         return ctrl;
     }
 
-    public static TextBox PzTextBox(ISubject<string> subject)
+    public static TextBox PzTextBox(ISubject<string?> subject)
     {
         return new TextBox().Text(subject);
     }
@@ -172,5 +171,48 @@ internal static class ControlHeplers
     public static Uc.NumericIntUpDown PzNumericInt(Func<int?> getter)
     {
         return new Uc.NumericIntUpDown()._set(avap: Uc.NumericIntUpDown.ValueProperty, getter: getter);
+    }
+
+    public static List<TextBlock> FormatTextBlock(string format, params TextBlock[] args)
+    {
+        var list = new List<TextBlock>();
+        int pos = 0;
+
+        while (true)
+        {
+            if ((uint)pos >= (uint)format.Length)
+            {
+                return list;
+            }
+
+            ReadOnlySpan<char> remainder = format.AsSpan(pos);
+            int leftPos = remainder.IndexOf('{');
+            if (leftPos < 0)
+            {
+                list.Add(PzText(remainder.ToString()));
+                return list;
+            }
+
+            int rightPos = remainder.IndexOf('}');
+            if (rightPos < 0 || rightPos < leftPos)
+            {
+                throw new Exception($"format string error: {format}");
+            }
+
+            var argCountStr = remainder.Slice(leftPos + 1, rightPos - leftPos - 1);
+            if (!int.TryParse(argCountStr, out int argCount))
+            {
+                throw new Exception($"format string error: {format}");
+            }
+            if (argCount >= args.Length || argCount < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(args));
+            }
+
+            list.Add(PzText(remainder[..leftPos].ToString()));
+            list.Add(args[argCount]);
+
+            pos += rightPos + 1;
+        }
     }
 }

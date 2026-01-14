@@ -34,6 +34,18 @@ public static class ControlExtensions
         return control;
     }
 
+    public static TPanel ChildrenEx<TPanel>(this TPanel container,  Func<Control[]> getter)
+        where TPanel : Panel
+    {
+        container._set(static (c, v) =>
+        {
+            c.Children.Clear();
+            foreach (var child in v) c.Children.Add(child);
+        }, getter);
+
+        return container;
+    }
+
     public static string Text(this TextChangedEventArgs e)
     {
         return ((TextBox)e.Source!).Text ?? "";

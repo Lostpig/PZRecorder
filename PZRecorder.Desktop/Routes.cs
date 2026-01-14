@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls.Templates;
 using PZRecorder.Desktop.Localization;
+using PZRecorder.Desktop.Modules.ClockIn;
 using PZRecorder.Desktop.Modules.Daily;
 using PZRecorder.Desktop.Modules.Dev;
 using PZRecorder.Desktop.Modules.Record;
@@ -16,6 +17,7 @@ internal class Routes
         new PageRecord("KindManager", () => LD.KindManager, "SemiIconExport", typeof(KindPage)),
         new PageRecord("Daily", () => LD.Daily, "SemiIconExport", typeof(DailyPage)),
         new PageRecord("DailyManager", () => LD.DailyManager, "SemiIconExport", typeof(DailyManagerPage)),
+        new PageRecord("ClockIn", () => LD.ClockIn, "SemiIconExport", typeof(ClockInPage)),
         new PageRecord("Setting", () => LD.Setting, "SemiIconExport", typeof(SettingsPage)),
         new PageRecord("Dev", () => "Dev", "SemiIconExport", typeof(DevGridPage)),
     ];

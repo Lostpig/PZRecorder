@@ -123,6 +123,9 @@
     "Sort",
     "EditTime",
     "Ascending",
-    "Descending"
+    "Descending",
+    "Save",
+    "AddClockIn",
+    "EditClockIn"
   ]
 }

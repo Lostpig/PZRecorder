@@ -1,0 +1,193 @@
+﻿using Avalonia.Media;
+using Microsoft.Extensions.DependencyInjection;
+using PZRecorder.Core.Managers;
+using PZRecorder.Desktop.Extensions;
+using PZRecorder.Desktop.Modules.Shared;
+
+namespace PZRecorder.Desktop.Modules.ClockIn;
+using TbClockIn = PZRecorder.Core.Tables.ClockIn;
+
+internal class ClockInPage : MvuPage
+{
+    protected override StyleGroup? BuildStyles() => Shared.Styles.ListStyles();
+
+    private StackPanel BuildOperatorBar()
+    {
+        return HStackPanel()
+            .Align(Aligns.HStretch)
+            .Spacing(10)
+            .Children(
+                IconButton(MIcon.Add, () => LD.Add)
+                    .OnClick(_ => OnAdd())
+            );
+    }
+    private DockPanel BuildItemsList()
+    {
+        return new DockPanel()
+            .Children(
+                PzGrid(cols: "100, 150, 1*, 240")
+                .Dock(Dock.Top)
+                .Styles(new Style<TextBlock>().FontWeight(FontWeight.Bold).Margin(16, 0))
+                .Children(
+                    PzText(() => LD.OrderBy).Col(0).TextAlignment(TextAlignment.Left),
+                    PzText(() => LD.Name).Col(1),
+                    PzText(() => LD.State).Col(2),
+                    PzText(() => LD.Action).Col(3).Align(Aligns.HCenter)
+                ),
+                new ScrollViewer()
+                .Dock(Dock.Bottom)
+                .Margin(0, 8, 0, 0)
+                .Content(
+                    new ItemsControl()
+                    .ItemsPanel(VStackPanel(Aligns.HStretch).Spacing(5))
+                    .ItemsSource(() => Items)
+                    .ItemTemplate<ClockInCollection, ItemsControl>(ListItemTemplate)
+                )
+            );
+    }
+
+    private static Control[] GetStatusText(ClockInCollection model)
+    {
+        if (model.LastRecord != null)
+        {
+            var days = model.GetLastDaySince(DateTime.Now);
+            if (days == 0)
+            {
+                return [PzText(LD.ClockInTodayText).Classes("Success")];
+            }
+            else
+            {
+                bool remind = model.CheckRemind(DateTime.Now);
+                if (remind)
+                {
+                    var p1 = FormatTextBlock(LD.ClockInDiffText, PzText(days.ToString()).Classes("Warning"));
+                    var p2 = FormatTextBlock(LD.ClockInRemindText, PzText((days - model.ClockIn.RemindDays).ToString()).Classes("Warning"));
+
+
+                    return [
+                            ..p1,
+                            PzText("("),
+                            ..p2,
+                            PzText(")")
+                        ];
+                }
+                else
+                {
+                    return [.. FormatTextBlock(LD.ClockInDiffText, PzText(days.ToString()).Classes("Success"))];
+                }
+            }
+        }
+        else
+        {
+            return [PzText(LD.ClockInNoRecord).Classes("Secondary")];
+        }
+    }
+    private Grid ListItemTemplate(ClockInCollection item)
+    {
+        var ci = item.ClockIn;
+
+        return PzGrid(cols: "100, 150, 1*, 240")
+            .Classes("ListRow")
+            .Children(
+                PzText(ci.OrderNo.ToString()).Col(0),
+                PzText(ci.Name).Col(1),
+                HStackPanel().Children(GetStatusText(item)).Col(2),
+                HStackPanel(Aligns.HCenter).Col(3).Spacing(10).Children(
+                        IconButton(MIcon.ClockIn, classes: "Success")
+                            .OnClick(_ => OnCheckIn(item)),
+                        IconButton(MIcon.Table, classes: "Warning")
+                            .OnClick(_ => ShowRecords(item)),
+                        IconButton(MIcon.Edit)
+                            .OnClick(_ => OnEdit(item.ClockIn)),
+                        IconButton(MIcon.Delete, classes: "Danger")
+                            .OnClick(_ => OnDelete(item.ClockIn))
+                    )
+            );
+    }
+    protected override Control Build() =>
+        PzGrid(rows: "40, *")
+            .Margin(8)
+            .RowSpacing(8)
+            .Children(
+                BuildOperatorBar().Row(0),
+                BuildItemsList()
+                    .Row(1)
+                    .Align(Aligns.VStretch)
+            );
+
+    private readonly ClockInManager _manager;
+    private List<ClockInCollection> Items { get; set; } = [];
+
+    public ClockInPage() : base()
+    {
+        _manager = ServiceProvider.GetRequiredService<ClockInManager>();
+        Initialize();
+    }
+    protected override IEnumerable<IDisposable> WhenActivate()
+    {
+        UpdateItems();
+        return base.WhenActivate();
+    }
+
+    private static int DaysDiff(DateTime d1, DateTime d2)
+    {
+        return DateOnly.FromDateTime(d1).DayNumber - DateOnly.FromDateTime(d2).DayNumber;
+    }
+
+    private void UpdateItems()
+    {
+        Items = _manager.GetCollections();
+        UpdateState();
+    }
+
+    private void OnCheckIn(ClockInCollection collection)
+    {
+        if (collection.LastRecord != null)
+        {
+            var days = DaysDiff(DateTime.Now, collection.LastRecord.Time);
+            if (days == 0)
+            {
+                Notification.Warning(LD.ClockInTodayText);
+                return;
+            }
+        }
+        _manager.AddRecord(collection.ClockIn.Id);
+        UpdateItems();
+    }
+    private void ShowRecords(ClockInCollection collection)
+    {
+
+    }
+    private async void OnAdd()
+    {
+        var res = await PzDialogManager.ShowDialog(new ClockInDialog());
+        if (PzDialogManager.IsSureResult(res.Result))
+        {
+            _manager.AddClockIn(res.Value);
+            UpdateItems();
+        }
+    }
+    private async void OnEdit(TbClockIn item)
+    {
+        var res = await PzDialogManager.ShowDialog(new ClockInDialog(item));
+        if (PzDialogManager.IsSureResult(res.Result))
+        {
+            _manager.UpdateClockIn(res.Value);
+            UpdateItems();
+        }
+    }
+    private async void OnDelete(TbClockIn item)
+    {
+        var dialog = PzDialogManager.ConfirmDialog("Delete", "Sure to delete?");
+        dialog.Mode = Uc.DialogMode.Question;
+        dialog.BoxButtons[0].Text = "Delete";
+        dialog.BoxButtons[0].Styles = ["Danger"];
+
+        var delete = await PzDialogManager.ShowDialog(dialog);
+        if (PzDialogManager.IsSureResult(delete.Result))
+        {
+            _manager.DeleteClockIn(item.Id);
+            UpdateItems();
+        }
+    }
+}

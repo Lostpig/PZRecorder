@@ -11,9 +11,18 @@ namespace PZRecorder.Desktop.Extensions;
 
 internal static class UrsaExtensions
 {
-    public static T FormLabel<T>(this T control, object label) where T : Control
+    public static T FormLabel<T>(this T control, string label) where T : Control
     {
         Uc.FormItem.SetLabel(control, label);
+        return control;
+    }
+    public static T FormLabel<T>(this T control, Func<string> getter) where T : Control
+    {
+        control._set(static (c, v) =>
+        {
+            Uc.FormItem.SetLabel(c, v);
+        }, getter);
+
         return control;
     }
     public static T FormRequired<T>(this T control, bool required) where T : Control
