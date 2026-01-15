@@ -1,12 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using PZRecorder.Desktop.Common;
+﻿using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Extensions;
 using PZRecorder.Desktop.Modules.Shared;
 using System.Diagnostics;
 
 namespace PZRecorder.Desktop.Modules.Dev;
 
-internal class DevGridPage : MvuPage
+internal class DevGridPage(PageRouter router) : MvuPage()
 {
     private Grid BuildGridRow(string text)
     {
@@ -46,11 +45,7 @@ internal class DevGridPage : MvuPage
             );
     }
 
-    private readonly PageRouter _router;
-    public DevGridPage() : base()
-    {
-        _router = ServiceProvider.GetRequiredService<PageRouter>();
-    }
+    private readonly PageRouter _router = router;
 
     private void FireTest()
     {

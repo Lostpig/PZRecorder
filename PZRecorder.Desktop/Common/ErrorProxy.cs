@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
+﻿namespace PZRecorder.Desktop.Common;
 
-namespace PZRecorder.Desktop.Common;
-
-internal class ErrorProxy
+internal class ErrorProxy(BroadcastManager broadcaster, Logger logger)
 {
     private static string FormatException(Exception ex)
     {
@@ -15,15 +10,17 @@ internal class ErrorProxy
         };
     }
 
-    public static event Action<string>? OnCatched;
-    public static void CatchException(Exception ex)
+    private readonly BroadcastManager _broadcaster = broadcaster;
+    private readonly Logger _logger = logger;
+
+    public void CatchException(Exception ex)
     {
         try
         {
-            Logger.Instance.Error(ex);
+            _logger.Error(ex);
 
             var msg = FormatException(ex);
-            OnCatched?.Invoke(msg);
+            _broadcaster.OnxceptionCatched(msg);
         }
         catch
         {

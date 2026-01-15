@@ -1,5 +1,4 @@
 ﻿using Avalonia.Media;
-using Microsoft.Extensions.DependencyInjection;
 using PZRecorder.Core.Managers;
 using PZRecorder.Desktop.Extensions;
 using PZRecorder.Desktop.Modules.Shared;
@@ -7,7 +6,7 @@ using PZRecorder.Desktop.Modules.Shared;
 namespace PZRecorder.Desktop.Modules.ClockIn;
 using TbClockIn = PZRecorder.Core.Tables.ClockIn;
 
-internal class ClockInPage : MvuPage
+internal class ClockInPage(ClockInManager manager) : MvuPage()
 {
     protected override StyleGroup? BuildStyles() => Shared.Styles.ListStyles();
 
@@ -27,7 +26,7 @@ internal class ClockInPage : MvuPage
             .Children(
                 PzGrid(cols: "100, 150, 1*, 240")
                 .Dock(Dock.Top)
-                .Styles(new Style<TextBlock>().FontWeight(FontWeight.Bold).Margin(16, 0))
+                .Classes("ListRowHeader")
                 .Children(
                     PzText(() => LD.OrderBy).Col(0).TextAlignment(TextAlignment.Left),
                     PzText(() => LD.Name).Col(1),
@@ -45,7 +44,6 @@ internal class ClockInPage : MvuPage
                 )
             );
     }
-
     private static Control[] GetStatusText(ClockInCollection model)
     {
         if (model.LastRecord != null)
@@ -115,14 +113,9 @@ internal class ClockInPage : MvuPage
                     .Align(Aligns.VStretch)
             );
 
-    private readonly ClockInManager _manager;
+    private readonly ClockInManager _manager = manager;
     private List<ClockInCollection> Items { get; set; } = [];
 
-    public ClockInPage() : base()
-    {
-        _manager = ServiceProvider.GetRequiredService<ClockInManager>();
-        Initialize();
-    }
     protected override IEnumerable<IDisposable> WhenActivate()
     {
         UpdateItems();
@@ -154,9 +147,9 @@ internal class ClockInPage : MvuPage
         _manager.AddRecord(collection.ClockIn.Id);
         UpdateItems();
     }
-    private void ShowRecords(ClockInCollection collection)
+    private static async void ShowRecords(ClockInCollection collection)
     {
-
+        _ = await PzDialogManager.ShowDialog(new RecordsDialog(collection));
     }
     private async void OnAdd()
     {

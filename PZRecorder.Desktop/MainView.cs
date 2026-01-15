@@ -12,22 +12,17 @@ namespace PZRecorder.Desktop;
 internal class MainView: MvuComponent
 {
     private readonly PageRouter _router;
-    public MainView(PageRouter router) : base(ViewInitializationStrategy.Lazy)
+    private readonly Translate _translate;
+    private readonly ErrorProxy _errorProxy;
+    public MainView() : base(ViewInitializationStrategy.Lazy)
     {
-        _router = router;
-        ErrorProxy.OnCatched += ErrorProxy_OnCatched;
-        Translate.LanguageChanged += UpdateState;
+        _router = ServiceProvider.GetRequiredService<PageRouter>();
+        _translate = ServiceProvider.GetRequiredService<Translate>();
+        _errorProxy = ServiceProvider.GetRequiredService<ErrorProxy>();
 
-        Initialize();
-    }
-
-    private void ErrorProxy_OnCatched(string msg)
-    {
-        Notification.Error(msg);
-    }
-    protected override void OnCreated()
-    {
-        base.OnCreated();
+        var broadcaster = ServiceProvider.GetRequiredService<BroadcastManager>();
+        broadcaster.ExceptionCatched.Subscribe(ErrorProxy_OnCatched);
+        broadcaster.Broadcast.Subscribe(e => { if (e == BroadcastEvent.LanguageChanged) UpdateState(); });
 
         var varManager = ServiceProvider.GetRequiredService<VariantsManager>();
         var theme = varManager.GetVariant(VariantFields.Theme);
@@ -40,16 +35,23 @@ internal class MainView: MvuComponent
         };
 
         var language = varManager.GetVariant(VariantFields.Language);
-        if (string.IsNullOrWhiteSpace(language)) language = Translate.Default;
+        if (string.IsNullOrWhiteSpace(language)) language = _translate.Default;
 
         try
         {
-            Translate.ChangeLanguage(language);
+            _translate.ChangeLanguage(language);
         }
         catch (Exception ex)
         {
-            ErrorProxy.CatchException(ex);
+            _errorProxy.CatchException(ex);
         }
+
+        Initialize();
+    }
+
+    private void ErrorProxy_OnCatched(string msg)
+    {
+        Notification.Error(msg);
     }
     private NavMenuItem NavItemTemplate(PageRecord p)
     {
@@ -108,7 +110,7 @@ internal class MainView: MvuComponent
                         .Theme(DynamicResource("CardBorder", TypeConverter<ControlTheme>))
                         .Child(menu),
                      new ContentControl().Col(1).Margin(12, 36, 12, 12)
-                        .ContentTemplate(PageLocator.Instance)
+                        .ContentTemplate(GlobalInstances.PageLocator)
                         .Content(_router.CurrentPage)
                 )
             );

@@ -126,6 +126,7 @@
     "Descending",
     "Save",
     "AddClockIn",
-    "EditClockIn"
+    "EditClockIn",
+    "ClockInRecords"
   ]
 }

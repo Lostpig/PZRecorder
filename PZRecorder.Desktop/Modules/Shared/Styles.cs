@@ -27,6 +27,13 @@ internal static class Styles
                     new Style<TextBlock>().VerticalAlignment(VerticalAlignment.Center),
                     new Style<Button>()
                         .Theme(ResourceHelpers.StaticResource("BorderlessButton", Application.Current!, ConvertControlTheme)),
+                },
+                new StyleGroup(s => s.Class("ListRowHeader").Descendant()) 
+                {
+                    new Style<TextBlock>()
+                        .FontWeight(FontWeight.Bold)
+                        .VerticalAlignment(VerticalAlignment.Center)
+                        .Margin(16, 0),
                 }
             ];
     }

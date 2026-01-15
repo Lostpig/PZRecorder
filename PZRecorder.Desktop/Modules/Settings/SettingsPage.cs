@@ -1,5 +1,4 @@
 ﻿using Avalonia.Styling;
-using Microsoft.Extensions.DependencyInjection;
 using PZRecorder.Core.Tables;
 using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Extensions;
@@ -8,7 +7,7 @@ using PZRecorder.Desktop.Modules.Shared;
 
 namespace PZRecorder.Desktop.Modules.Settings;
 
-internal class SettingsPage : MvuPage
+internal sealed class SettingsPage(VariantsManager manager, Translate translate) : MvuPage()
 {
     protected override StyleGroup? BuildStyles() => Shared.Styles.ListStyles();
 
@@ -19,7 +18,7 @@ internal class SettingsPage : MvuPage
             .Children(
                 PzText(() => LD.Language).Cell(0, 0),
                 new ComboBox().Width(200).Cell(1, 0)
-                    .ItemsSource(() => Translate.Languages)
+                    .ItemsSource(() => _translate.Languages)
                     .ItemTemplate<LanguageItem, ComboBox>(l => PzText(l?.Name ?? ""))
                     .SelectedValue(() => CurrentLanguge)
                     .OnSelectionChanged(SelectLanguage),
@@ -110,22 +109,19 @@ internal class SettingsPage : MvuPage
     private LanguageItem? CurrentLanguge { get; set; }
     private string CurrentTheme { get; set; } = "default";
 
-    private readonly VariantsManager _manager;
+    private readonly VariantsManager _manager = manager;
+    private readonly Translate _translate = translate;
 
-    public SettingsPage()
-    {
-        _manager = ServiceProvider.GetRequiredService<VariantsManager>();
-    }
     protected override IEnumerable<IDisposable> WhenActivate()
     {
         Variants = _manager.GetAll();
-        CurrentLanguge = Translate.Current;
+        CurrentLanguge = _translate.Current;
         CurrentTheme = GetThemeName();
         UpdateState();
 
         return base.WhenActivate();
     }
-    private string GetThemeName()
+    private static string GetThemeName()
     {
         if (App.RequestedThemeVariant == ThemeVariant.Dark) return "dark";
         if (App.RequestedThemeVariant == ThemeVariant.Light) return "light";
@@ -143,7 +139,7 @@ internal class SettingsPage : MvuPage
             Task.Run(() =>
             {
                 Thread.Sleep(150);
-                Translate.ChangeLanguage(value.Value);
+                _translate.ChangeLanguage(value.Value);
             });
         }
     }

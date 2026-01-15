@@ -1,5 +1,4 @@
 ﻿using Avalonia.Media;
-using Microsoft.Extensions.DependencyInjection;
 using PZRecorder.Core.Managers;
 using PZRecorder.Desktop.Extensions;
 using PZRecorder.Desktop.Modules.Shared;
@@ -8,7 +7,7 @@ namespace PZRecorder.Desktop.Modules.Daily;
 
 using TbDaily = PZRecorder.Core.Tables.Daily;
 
-internal sealed class DailyManagerPage : MvuPage
+internal sealed class DailyManagerPage(DailyManager manager) : MvuPage()
 {
     protected override StyleGroup? BuildStyles() => Shared.Styles.ListStyles();
 
@@ -80,13 +79,9 @@ internal sealed class DailyManagerPage : MvuPage
                     .Align(Aligns.VStretch)
             );
 
-    private readonly DailyManager _manager;
+    private readonly DailyManager _manager = manager;
     private List<TbDaily> Items { get; set; } = [];
-    public DailyManagerPage() : base()
-    {
-        _manager = ServiceProvider.GetRequiredService<DailyManager>();
-        Initialize();
-    }
+
     protected override IEnumerable<IDisposable> WhenActivate()
     {
         UpdateItems();

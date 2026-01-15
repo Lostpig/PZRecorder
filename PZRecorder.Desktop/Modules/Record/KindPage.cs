@@ -1,6 +1,5 @@
 ﻿using Avalonia.Layout;
 using Avalonia.Media;
-using Microsoft.Extensions.DependencyInjection;
 using PZRecorder.Core.Managers;
 using PZRecorder.Core.Tables;
 using PZRecorder.Desktop.Extensions;
@@ -8,7 +7,7 @@ using PZRecorder.Desktop.Modules.Shared;
 
 namespace PZRecorder.Desktop.Modules.Record;
 
-internal sealed class KindPage : MvuPage
+internal sealed class KindPage(RecordManager manager) : MvuPage()
 {
     protected override StyleGroup? BuildStyles() => Shared.Styles.ListStyles();
 
@@ -71,13 +70,8 @@ internal sealed class KindPage : MvuPage
                     .Align(Aligns.VStretch)
             );
 
-    private readonly RecordManager _manager;
+    private readonly RecordManager _manager = manager;
     private List<Kind> Kinds { get; set; } = new();
-    public KindPage() : base()
-    {
-        _manager = ServiceProvider.GetRequiredService<RecordManager>();
-        Initialize();
-    }
 
     protected override IEnumerable<IDisposable> WhenActivate()
     {

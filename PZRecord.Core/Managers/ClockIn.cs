@@ -1,5 +1,4 @@
-﻿using PZRecorder.Core;
-using PZRecorder.Core.Tables;
+﻿using PZRecorder.Core.Tables;
 
 namespace PZRecorder.Core.Managers;
 

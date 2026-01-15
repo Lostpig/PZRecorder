@@ -26,7 +26,7 @@ internal sealed class RecordPageModel
     public Kind? SelectedKind { get; set; } = null;
 }
 
-internal sealed class RecordPage : MvuPage
+internal sealed class RecordPage(RecordManager manager) : MvuPage()
 {
     #region templete
     private TabStrip BuildTabs()
@@ -192,18 +192,12 @@ internal sealed class RecordPage : MvuPage
     }
     #endregion
 
-    private readonly RecordManager _manager;
-    private RecordPageModel Model { get; set; }
+    private readonly RecordManager _manager = manager;
+    private RecordPageModel Model { get; set; } = new();
     private int[] Years = [-1];
     private readonly int[] Months = [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     private readonly int[] Ratings = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-    public RecordPage() : base()
-    {
-        Model = new();
-        _manager = ServiceProvider.GetRequiredService<RecordManager>();
-        Initialize();
-    }
     protected override IEnumerable<IDisposable> WhenActivate()
     {
         var kindId = Model.Query.KindId;
@@ -352,8 +346,8 @@ internal sealed class RecordPage : MvuPage
 
 internal sealed class RecordItem(RecordPage Page) : MvuComponent, IListItemComponent<TbRecord>
 {
-    private TbRecord State { get; set; } = new();
-    private string StatusColor => State.State switch
+    private TbRecord Model { get; set; } = new();
+    private string StatusColor => Model.State switch
     {
         RecordState.Wish => "Orange",
         RecordState.Doing => "Blue",
@@ -365,7 +359,7 @@ internal sealed class RecordItem(RecordPage Page) : MvuComponent, IListItemCompo
     {
         var badge = new Uc.DualBadge()
             .Classes("ForTheBadge")
-            .Content(() => State.State.ToString())
+            .Content(() => Model.State.ToString())
             .Align(Aligns.HCenter);
 
         badge._set<Uc.DualBadge, string>(
@@ -381,7 +375,7 @@ internal sealed class RecordItem(RecordPage Page) : MvuComponent, IListItemCompo
 
     public void UpdateItem(TbRecord item)
     {
-        State = item;
+        Model = item;
         UpdateState();
     }
     protected override Control Build()
@@ -391,11 +385,11 @@ internal sealed class RecordItem(RecordPage Page) : MvuComponent, IListItemCompo
             .Spacing(8)
             .TextBlock_TextWrapping(TextWrapping.Wrap)
             .Children(
-                PzText(() => State.Name)
+                PzText(() => Model.Name)
                     .Align(Aligns.VCenter)
                     .FontSize(20)
                     .Foreground(DynamicColors.Get("SemiColorLink")),
-                PzText(() => State.Alias)
+                PzText(() => Model.Alias)
                     .Margin(0, -8, 0, 0)
                     .Align(Aligns.VCenter)
                     .Foreground(DynamicColors.Get("SemiColorText2")),
@@ -403,15 +397,15 @@ internal sealed class RecordItem(RecordPage Page) : MvuComponent, IListItemCompo
                     .LastChildFill(false)
                     .HorizontalSpacing(8)
                     .Children(
-                        PzText(() => $"{State.Episode} / {State.EpisodeCount}").Dock(Dock.Left),
-                        PzText(() => $"{State.PublishYear}-{State.PublishMonth}").Dock(Dock.Left),
-                        PzText(() => $"{State.ModifyDate:yyyy-MM-dd HH:mm}").Dock(Dock.Right)
+                        PzText(() => $"{Model.Episode} / {Model.EpisodeCount}").Dock(Dock.Left),
+                        PzText(() => $"{Model.PublishYear}-{Model.PublishMonth}").Dock(Dock.Left),
+                        PzText(() => $"{Model.ModifyDate:yyyy-MM-dd HH:mm}").Dock(Dock.Right)
                     ),
-                PzText(() => State.Remark)
+                PzText(() => Model.Remark)
                     .FontSize(14)
                     .Foreground(DynamicColors.Get("SemiColorText3")),
                 new Uc.Rating() { Count = 10 }
-                    .DefaultValue(() => State.Rating)
+                    .DefaultValue(() => Model.Rating)
                     .Classes("Small")
                     .IsEnabled(false)
             );
@@ -428,10 +422,10 @@ internal sealed class RecordItem(RecordPage Page) : MvuComponent, IListItemCompo
                         StatusBagde(),
                         IconButton(MIcon.Edit, classes: "Primary")
                             .Theme(StaticResource<ControlTheme>("BorderlessButton"))
-                            .OnClick(_ => Page.EditRecord(State)),
+                            .OnClick(_ => Page.EditRecord(Model)),
                         IconButton(MIcon.Delete, classes: "Danger")
                             .Theme(StaticResource<ControlTheme>("BorderlessButton"))
-                            .OnClick(_ => Page.DeleteRecord(State))
+                            .OnClick(_ => Page.DeleteRecord(Model))
                     )
             );
 

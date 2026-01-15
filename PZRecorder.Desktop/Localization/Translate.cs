@@ -26,19 +26,19 @@ internal class LanguageJson
     public string DefaultLanguage { get; set; } = string.Empty;
 }
 
-internal static class Translate
+internal class Translate
 {
-    private static bool _initialized = false;
-    private static List<LanguageItem> _languages = [];
+    private readonly List<LanguageItem> _languages = [];
+    public IReadOnlyList<LanguageItem> Languages => _languages;
+    public string Default { get; private set; } = "zh-CN";
+    public LanguageItem? Current { get; private set; }
+    private BroadcastManager _broadcastManager;
+    private ErrorProxy _errorProxy;
 
-    public static IReadOnlyList<LanguageItem> Languages => _languages;
-    public static string Default { get; private set; } = "zh-CN";
-    public static LanguageItem? Current { get; private set; }
-    public static event Action? LanguageChanged;
-
-    public static void Initialize()
+    public Translate(ErrorProxy errorProxy, BroadcastManager broadcastManager)
     {
-        if (_initialized) return;
+        _broadcastManager = broadcastManager;
+        _errorProxy = errorProxy;
 
         try
         {
@@ -54,15 +54,11 @@ internal static class Translate
         }
         catch (Exception ex)
         {
-            ErrorProxy.CatchException(ex);
-        }
-        finally
-        {
-            _initialized = true;
+            _errorProxy.CatchException(ex);
         }
     }
 
-    public static void ChangeLanguage(string lang)
+    public void ChangeLanguage(string lang)
     {
         if (Current?.Value == lang) return;
         var langItem = _languages.FirstOrDefault(x => x.Value == lang);
@@ -71,24 +67,28 @@ internal static class Translate
         {
             Current = langItem;
             LoadLanguage(langItem);
-            LanguageChanged?.Invoke();
+            _broadcastManager.Publish(BroadcastEvent.LanguageChanged);
         }
         else
         {
-            throw new Exception($"Language {lang} not found!");
+            _errorProxy.CatchException(new Exception($"Language {lang} not found!"));
         }
     }
-    private static void LoadLanguage(LanguageItem lang)
+    private void LoadLanguage(LanguageItem lang)
     {
         string rootPath = AppDomain.CurrentDomain.BaseDirectory;
         string langPath = Path.Join(rootPath, "Localization", $"{lang.Value}.json");
 
         string langJson = File.ReadAllText(langPath, Encoding.UTF8);
         var fields = JsonSerializer.Deserialize<Dictionary<string, string>>(langJson);
-        if (fields != null) {
+        if (fields != null)
+        {
             LocalizeDict.Update(fields);
         }
-        else throw new Exception("Language file load error: language map is null");
+        else
+        {
+            _errorProxy.CatchException(new Exception($"Language file {lang.Value} load error: language map is null"));
+        }
     }
 }
 

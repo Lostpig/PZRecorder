@@ -1,6 +1,7 @@
 ﻿using PZ.RxAvalonia.Reactive;
 using PZRecorder.Desktop.Extensions;
 using System.Diagnostics.CodeAnalysis;
+using System.Reactive.Linq;
 
 namespace PZRecorder.Desktop.Modules.Shared;
 
@@ -8,12 +9,12 @@ internal class PagenationList<TControl, TState> : MvuComponent
     where TControl : Control, IListItemComponent<TState>
 {
     protected MvuPagenationState Pagenation { get; set; } = new();
-    private readonly ReactiveList<TState> _items;
+    private readonly IList<TState> _items;
     private Panel _itemsPanel;
     private readonly ScrollViewer _container;
     private Func<TControl>? _itemCreator;
 
-    public PagenationList(ReactiveList<TState> items) : base()
+    public PagenationList(IList<TState> items) : base()
     {
         _items = items;
         _container = new ScrollViewer();
@@ -21,6 +22,7 @@ internal class PagenationList<TControl, TState> : MvuComponent
 
         Initialize();
     }
+
     protected override Control Build()
     {
         return new DockPanel()
@@ -35,10 +37,13 @@ internal class PagenationList<TControl, TState> : MvuComponent
     }
     protected override IEnumerable<IDisposable> WhenActivate()
     {
-        return
-        [
-            _items.Subscribe(n => UpdateItems(n))
-        ];
+        if (_items is ReactiveList<TState> rxList)
+        {
+            return [rxList.Subscribe(_ => UpdateItems())];
+        }
+
+        UpdateItems();
+        return base.WhenActivate();
     }
 
     [MemberNotNull(nameof(_itemsPanel))]
@@ -54,7 +59,7 @@ internal class PagenationList<TControl, TState> : MvuComponent
         return this;
     }
 
-    public void UpdateItems(ChangedArgs<TState> e)
+    public void UpdateItems()
     {
         Pagenation = Pagenation with { TotalCount = _items.Count, Page = 1 };
         RenderItems();

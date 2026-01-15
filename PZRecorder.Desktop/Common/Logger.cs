@@ -4,16 +4,6 @@ using System.Text;
 namespace PZRecorder.Desktop.Common;
 internal class Logger
 {
-    static private Logger? _instance;
-    static public Logger Instance
-    {
-        get
-        {
-            _instance ??= new();
-            return _instance;
-        }
-    }
-
     public string LogFile { get; set; } = "";
     public void Initialize(string logfile)
     {

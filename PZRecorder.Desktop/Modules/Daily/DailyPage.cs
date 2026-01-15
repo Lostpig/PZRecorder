@@ -2,7 +2,6 @@
 using Avalonia.Input;
 using Avalonia.Styling;
 using Material.Icons.Avalonia;
-using Microsoft.Extensions.DependencyInjection;
 using PZ.RxAvalonia.Reactive;
 using PZRecorder.Core.Common;
 using PZRecorder.Core.Managers;
@@ -24,36 +23,43 @@ internal sealed class DailyPage : MvuPage
     {
         return new Border()
             .Theme(StaticResource<ControlTheme>("CardBorder"))
+            .Padding(8)
             .Child(
                 HStackPanel(Aligns.HCenter, Aligns.VCenter)
                 .Spacing(8)
                 .Children(
                     IconButton(MIcon.ChevronLeft).OnClick(_ => ChangeWeek(-1)),
-                    PzText(() => WeekText),
+                    PzText(() => WeekText).Align(Aligns.VCenter),
                     IconButton(MIcon.ChevronRight).OnClick(_ => ChangeWeek(1))
                 )
             );
+    }
+
+    private StackPanel BuildHeaderCell(int i)
+    {
+        return VStackPanel(Aligns.HStretch, Aligns.VCenter)
+                .Children(
+                    PzText(WeekDayText(i))
+                        .TextAlignment(Avalonia.Media.TextAlignment.Center),
+                    PzText(() => MondayDate.AddDays(i).ToString("MM/dd"))
+                        .TextAlignment(Avalonia.Media.TextAlignment.Center)
+                        .FontSize(12)
+                        .Classes("Tertiary")
+                ).Col(i + 1);
     }
     private Grid BuildHeaderGrid()
     {
         StackPanel[] days = new StackPanel[7];
         for (int i = 0; i < 7; i++)
         {
-            days[i] = VStackPanel(Aligns.HStretch, Aligns.VCenter)
-                .Children(
-                    PzText((i + 1).ToString()).TextAlignment(Avalonia.Media.TextAlignment.Center),
-                    PzText(() => MondayDate.AddDays(i).ToString("MM/dd"))
-                        .TextAlignment(Avalonia.Media.TextAlignment.Center)
-                        .FontSize(12)
-                        .Classes("Tertiary")
-                ).Col(i + 1);
+            days[i] = BuildHeaderCell(i);
         }
 
 
         return PzGrid(cols: "*, 72, 72, 72, 72, 72, 72, 72")
             .Children(
                 children: [
-                    PzText("Name").Col(0).Margin(16, 0),
+                    PzText(() => LD.Name).Col(0).Margin(16, 0),
                     .. days
                 ]
             );
@@ -87,11 +93,11 @@ internal sealed class DailyPage : MvuPage
     private DateOnly MondayDate { get; set; }
     private ReactiveList<DailyWeekModel> Items { get; set; } = [];
     private string WeekText => $"{MondayDate:yyyy/MM/dd} - {MondayDate.AddDays(6):yyyy/MM/dd}";
-    private readonly Border TodayMark = new();
+    private Border TodayMark { get; set; } = new() { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left };
 
-    public DailyPage() : base()
+    public DailyPage(DailyManager manager) : base()
     {
-        _manager = ServiceProvider.GetRequiredService<DailyManager>();
+        _manager = manager;
 
         Today = DateOnly.FromDateTime(DateTime.Today);
         MondayDate = _manager.GetMondayDate(Today);
@@ -100,6 +106,26 @@ internal sealed class DailyPage : MvuPage
     {
         UpdateWeeks();
         return base.WhenActivate();
+    }
+    protected override void OnBeforeReload()
+    {
+        base.OnBeforeReload();
+        TodayMark = new() { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left };
+    }
+
+    private static string WeekDayText(int i)
+    {
+        return i switch
+        {
+            0 => LD.Mon,
+            1 => LD.Tue,
+            2 => LD.Wed,
+            3 => LD.Thu,
+            4 => LD.Fri,
+            5 => LD.Sat,
+            6 => LD.Sun,
+            _ => ""
+        };
     }
 
     private void ChangeWeek(int change)

@@ -19,8 +19,10 @@ internal sealed class Program
     [STAThread]
     public static void Main(string[] args) => BuildAvaloniaApp(args);
 
-    private static void AddPZServices(ServiceCollection services)
+    private static ServiceProvider CreatePZServices()
     {
+        ServiceCollection services = new();
+
         SqlHandler sqlHandler = OpenDatabase();
         DailyManager dailyManager = new(sqlHandler);
         RecordManager recordManager = new(sqlHandler);
@@ -28,7 +30,6 @@ internal sealed class Program
         ProcessMonitorManager processMonitorManager = new(sqlHandler);
         ProcessMonitorService processMonitorService = new(processMonitorManager, dailyManager);
         VariantsManager variantsManager = new(sqlHandler);
-
         services.AddSingleton(sqlHandler);
         services.AddSingleton(dailyManager);
         services.AddSingleton(recordManager);
@@ -36,6 +37,19 @@ internal sealed class Program
         services.AddSingleton(processMonitorManager);
         services.AddSingleton(processMonitorService);
         services.AddSingleton(variantsManager);
+
+        Logger logger = new();
+        BroadcastManager broadcaster = new();
+        ErrorProxy errorProxy = new(broadcaster, logger);
+        Translate translate = new(errorProxy, broadcaster);
+        PageRouter router = new();
+        services.AddSingleton(logger);
+        services.AddSingleton(broadcaster);
+        services.AddSingleton(errorProxy);
+        services.AddSingleton(translate);
+        services.AddSingleton(router);
+
+        return services.BuildServiceProvider();
     }
     private static SqlHandler OpenDatabase()
     {
@@ -53,15 +67,9 @@ internal sealed class Program
     public static void BuildAvaloniaApp(string[] args)
     {
         var lifetime = new ClassicDesktopStyleApplicationLifetime { Args = args, ShutdownMode = ShutdownMode.OnLastWindowClose };
-        ServiceCollection services = new();
-        // pzrecorder services
-        AddPZServices(services);
-        Translate.Initialize();
-
         var app = AppBuilder.Configure<Application>()
             .UsePlatformDetect()
             .WithInterFont()
-            // .UseServiceProvider(serviceProvider)
             .LogToTrace()
             .AfterSetup(b =>
             {
@@ -79,25 +87,19 @@ internal sealed class Program
         //     //app.UseManagedSystemDialogs();
         // }
 
-        var mainWindow = new MainWindow();
-        var notificationManager = new WindowNotificationManager(mainWindow)
-        {
-            MaxItems = 3
-        };
-        var pzNotification = new PzNotification(notificationManager);
-        services.AddSingleton(pzNotification);
-        var router = new PageRouter();
-        services.AddSingleton(router);
+        var serviceProvider = CreatePZServices();
+        PageLocator pageLocator = new(serviceProvider);
+        MainWindow mainWindow = new(serviceProvider);
 
-        lifetime.MainWindow = mainWindow;
-
-        var serviceProvider = services.BuildServiceProvider();
         GlobalInstances.SetMainWindow(mainWindow);
         GlobalInstances.SetServiceProvider(serviceProvider);
+        GlobalInstances.SetPageLocator(pageLocator);
+
+        lifetime.MainWindow = mainWindow;
 #if DEBUG
         lifetime.MainWindow?.AttachDevTools();
 #endif
-        mainWindow.BuildContent(router);
+        mainWindow.BuildContent();
         lifetime.Start(args);
     }
 }
