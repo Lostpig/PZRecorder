@@ -3,9 +3,34 @@ using Avalonia.Layout;
 using Material.Icons;
 using Material.Icons.Avalonia;
 using PZRecorder.Desktop.Extensions;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Subjects;
 
 namespace PZRecorder.Desktop.Common;
+
+internal record TextSegment
+{
+    [MemberNotNullWhen(true, nameof(Getter))]
+    public bool IsFuncSegment { get; init; }
+    public Func<string>? Getter { get; init; }
+    public string Text { get; init; }
+    public string[] Classes { get; init; }
+
+    public TextSegment(Func<string> getter, params string[] classes)
+    {
+        Getter = getter;
+        Classes = classes;
+        Text = "";
+        IsFuncSegment = true;
+    }
+    public TextSegment(string text, params string[] classes)
+    {
+        Getter = null;
+        Classes = classes;
+        Text = text;
+        IsFuncSegment = false;
+    }
+}
 
 internal static class ControlHeplers
 {
@@ -173,7 +198,7 @@ internal static class ControlHeplers
         return new Uc.NumericIntUpDown()._set(avap: Uc.NumericIntUpDown.ValueProperty, getter: getter);
     }
 
-    public static List<TextBlock> FormatTextBlock(string format, params TextBlock[] args)
+    public static List<TextBlock> FormatTextBlock(string format, params TextSegment[] args)
     {
         var list = new List<TextBlock>();
         int pos = 0;
@@ -210,7 +235,9 @@ internal static class ControlHeplers
             }
 
             list.Add(PzText(remainder[..leftPos].ToString()));
-            list.Add(args[argCount]);
+            var segment = args[argCount];
+            if (segment.IsFuncSegment) list.Add(PzText(segment.Getter, segment.Classes));
+            else list.Add(PzText(segment.Text, segment.Classes));
 
             pos += rightPos + 1;
         }

@@ -1,4 +1,4 @@
-{
+﻿{
   "Title": "PZrecorder",
   "Record": "记录",
   "Daily": "日常",
@@ -6,7 +6,6 @@
   "KindManager": "分类管理",
   "Name": "名称",
   "Add": "添加",
-  "Save": "保存",
   "Delete": "删除",
   "Cancel": "取消",
   "OK": "确定",
@@ -60,14 +59,12 @@
   "ClockInRemindText": "已超期 {0} 天",
   "RemindDays": "超期提醒天数",
   "ApartDays": "间隔(天)",
-
   "Warning": "警告",
   "Alert": "提醒",
   "Error": "错误",
   "Message": "消息",
   "Info": "信息",
   "SureToDelete": "确定要删除吗？",
-
   "Monday": "星期一",
   "Tuesday": "星期二",
   "Wednesday": "星期三",
@@ -82,16 +79,13 @@
   "Fri": "五",
   "Sat": "六",
   "Sun": "日",
-
   "All": "全部",
   "Wish": "计划",
   "Doing": "进行",
   "Complete": "完成",
   "Giveup": "搁置",
   "CustomStateName": "自定义状态文本",
-
   "OrderBy": "排序",
-
   "MaxCharacters": "最多{0}个字符",
   "NoKindsError": "没有设置分类，请先在分类管理中添加分类！",
   "NoData": "暂无数据！",
@@ -99,7 +93,6 @@
   "ImportSuccess": "导入成功！",
   "OpenFolder": "打开文件夹",
   "ImportConfirmMessage": "导入数据会覆盖当前数据库，确认要导入吗？",
-
   "ProcessWatcher": "进程监视",
   "ProcessName": "进程名称",
   "ProcessNameIsExists": "该进程名已存在",
@@ -118,5 +111,31 @@
   "Sort": "排序",
   "EditTime": "编辑时间",
   "Ascending": "升序",
-  "Descending": "降序"
+  "Descending": "降序",
+  "Save": "保存",
+  "AddClockIn": "添加打卡",
+  "EditClockIn": "编辑打卡",
+  "ClockInRecords": "打卡记录",
+  "BaseInfo": "基础信息",
+  "EposideValidtionMsg": "完成章节不能超过总章节数！",
+  "InvalidMsg": "验证失败！",
+  "RequiredInvalidMsg": "该项为必须项！",
+  "MaxLengthInvalidMsg": "最大长度不能超过 {0} 个字符！",
+  "MinLengthInvalidMsg": "最小长度不能小于 {0} 个字符！",
+  "MaxValueInvalidMsg": "值不能大于 {0}",
+  "MinValueInvalidMsg": "值不能小于 {0}",
+  "AddDaily": "添加日常",
+  "EditDaily": "编辑日常",
+  "Jan": "一月",
+  "Feb": "二月",
+  "Mar": "三月",
+  "Apr": "四月",
+  "May": "五月",
+  "Jun": "六月",
+  "Jul": "七月",
+  "Aug": "八月",
+  "Sep": "九月",
+  "Oct": "十月",
+  "Nov": "十一月",
+  "Dec": "十二月"
 }

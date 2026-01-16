@@ -15,13 +15,13 @@ internal sealed class KindDialog : DialogContentBase<Kind>
     public KindDialog() : base()
     {
         _isAdd = true;
-        Title = "Add Kind";
+        Title = LD.AddKind;
         Model = new();
     }
     public KindDialog(Kind kind) : base()
     {
         _isAdd = false;
-        Title = "Edit Kind";
+        Title = LD.EditKind;
         Model = new Kind()
         {
             Id = kind.Id,
@@ -51,30 +51,30 @@ internal sealed class KindDialog : DialogContentBase<Kind>
                 .Items(
                     PzTextBox(() => Model.Name)
                         .OnTextChanged(e => Model.Name = e.Text())
-                        .FormLabel("Name")
+                        .FormLabel(() => LD.Name)
                         .FormRequired(true)
                         .Validation(DataValidations.Required())
                         .Validation(DataValidations.MaxLength(30)),
                     PzNumericInt(() => Model.OrderNo)
                         .OnValueChanged(n => Model.OrderNo = n ?? 0)
-                        .FormLabel("Order No")
+                        .FormLabel(() => LD.OrderBy)
                         .DataValidation(DataValidations.MaxValue(99999)),
-                    new Uc.Divider().Content("Custom State Name"),
+                    new Uc.Divider().Content(() => LD.CustomStateName),
                     PzTextBox(() => Model.StateWishName)
                         .OnTextChanged(e => Model.StateWishName = e.Text())
-                        .FormLabel("Wish")
+                        .FormLabel(() => LD.Wish)
                         .Validation(DataValidations.MaxLength(8)),
                     PzTextBox(() => Model.StateDoingName)
                         .OnTextChanged(e => Model.StateDoingName = e.Text())
-                        .FormLabel("Doing")
+                        .FormLabel(() => LD.Doing)
                         .Validation(DataValidations.MaxLength(8)),
                     PzTextBox(() => Model.StateCompleteName)
                         .OnTextChanged(e => Model.StateCompleteName = e.Text())
-                        .FormLabel("Complete")
+                        .FormLabel(() => LD.Complete)
                         .Validation(DataValidations.MaxLength(8)),
                     PzTextBox(() => Model.StateGiveupName)
                         .OnTextChanged(e => Model.StateGiveupName = e.Text())
-                        .FormLabel("Give up")
+                        .FormLabel(() => LD.Giveup)
                         .Validation(DataValidations.MaxLength(8))
                 )
             );
@@ -82,8 +82,8 @@ internal sealed class KindDialog : DialogContentBase<Kind>
     public override DialogButton[] Buttons()
     {
         return [
-            new DialogButton(_isAdd ? "Add" : "Save", Uc.DialogResult.OK) { Validation = true },
-            new DialogButton("Cancel", Uc.DialogResult.Cancel) { Styles = ["Tertiary"] }
+            new DialogButton(_isAdd ? LD.Add : LD.Save, Uc.DialogResult.OK) { Validation = true },
+            new DialogButton(LD.Cancel, Uc.DialogResult.Cancel) { Styles = ["Tertiary"] }
         ];
     }
 

@@ -56,13 +56,18 @@ internal class StatisticsDialog : DialogContentBase<TbDaily>
     static private StatisticsModel? _model;
     static private StatisticsModel Model => _model ??= new StatisticsModel();
 
+    protected override StyleGroup? BuildStyles() => 
+    [
+        new Style<TextBlock>(s => s.Class("Infomation")).Foreground(StaticColor("SemiColorInformation"))
+    ];
+
     private Border BuildYearBar()
     {
         return new Border()
             .Theme(StaticResource<ControlTheme>("CardBorder"))
             .Child(
-                HStackPanel(Aligns.HStretch, Aligns.VCenter)
-                .Spacing(8)
+                HStackPanel(Aligns.HCenter, Aligns.VCenter)
+                .Spacing(16)
                 .Children(
                     IconButton(MIcon.ChevronLeft).OnClick(_ => ChangeYear(-1)),
                     PzText(() => $"{Model.Year}"),
@@ -72,7 +77,7 @@ internal class StatisticsDialog : DialogContentBase<TbDaily>
     }
     protected override Control Build()
     {
-        return PzGrid(rows: "auto, auto, auto, 70, auto, auto")
+        return PzGrid(rows: "auto, auto, 70, auto, auto")
             .RowSpacing(8)
             .Children(
                 VStackPanel(Aligns.Left).Row(0)
@@ -84,31 +89,31 @@ internal class StatisticsDialog : DialogContentBase<TbDaily>
                     ),
                 VStackPanel(Aligns.Left).Row(1)
                     .Children(
-                        HStackPanel().Spacing(4).Children(
-                            PzText("First Date: "),
-                            PzText(() => Model.FirstDate.ToString("yyyy-MM-dd")).Foreground(TextColor)
+                        HStackPanel().Children(
+                            [..FormatTextBlock(LD.StatisticTextDate, 
+                                new(() => $"{Model.FirstDate:yyyy-MM-dd}", ["Infomation"]),
+                                new(() => $"{Model.LatestDate:yyyy-MM-dd}", ["Infomation"])
+                            )]
                         ),
-                        HStackPanel().Spacing(4).Children(
-                            PzText("Latest Date: "),
-                            PzText(() => Model.LatestDate.ToString("yyyy-MM-dd")).Foreground(TextColor)
+                        HStackPanel().Children(
+                            [..FormatTextBlock(LD.StatisticTextCount,
+                                new(() => $"{Model.TotalDays}", ["Infomation"]),
+                                new(() => $"{Model.CompleteDays}", ["Infomation"]),
+                                new(() => $"{Model.PercentText}%", ["Infomation"])
+                            )]
                         )
                     ),
-                HStackPanel(Aligns.Left).Row(2)
-                    .Spacing(4)
+                BuildYearBar().Row(2),
+                HStackPanel(Aligns.Left).Row(3)
                     .Children(
-                        PzText("Complete percent: "),
-                        PzText(() => $"{Model.PercentText}%").Foreground(TextColor),
-                        PzText(() => $"({Model.CompleteDays} / {Model.TotalDays})").Foreground(TextColor)
+                        [..FormatTextBlock(LD.StatisticTextYear,
+                            new(() => $"{Model.Year}", ["Infomation"]),
+                            new(() => $"{Model.CompleteOfYear}", ["Infomation"]),
+                            new(() => $"{Model.TotalOfYear}", ["Infomation"]),
+                            new(() => $"{Model.PercentTextYear}%", ["Infomation"])
+                        )]
                     ),
-                BuildYearBar().Row(3),
-                HStackPanel(Aligns.Left).Row(4)
-                    .Spacing(4)
-                    .Children(
-                        PzText(() => $"In year {Model.Year} complete percent:"),
-                        PzText(() => $"{Model.PercentTextYear}%").Foreground(TextColor),
-                        PzText(() => $"({Model.CompleteOfYear} / {Model.TotalOfYear})").Foreground(TextColor)
-                    ),
-                DataPanel.Row(5)
+                DataPanel.Row(4)
             );
     }
 
@@ -116,7 +121,6 @@ internal class StatisticsDialog : DialogContentBase<TbDaily>
     private IBrush EmptyColor {  get; init; }
     private IBrush CompleteColor { get; init; }
     private IBrush GiveupColor { get; init; }
-    private IBrush TextColor { get; init; }
     private StackPanel DataPanel { get; set; }
 
     private readonly DailyManager _manager;
@@ -125,7 +129,7 @@ internal class StatisticsDialog : DialogContentBase<TbDaily>
     {
         _manager = ServiceProvider.GetRequiredService<DailyManager>();
         Width = 560;
-        Title = "Statistics";
+        Title = LD.Statistic;
 
         Model.Year = DateTime.Now.Year;
         Daily = daily;
@@ -133,7 +137,6 @@ internal class StatisticsDialog : DialogContentBase<TbDaily>
         EmptyColor = StaticColor("SemiColorTertiaryLight");
         CompleteColor = StaticColor("SemiColorSuccess");
         GiveupColor = StaticColor("SemiColorDanger");
-        TextColor = StaticColor("SemiColorInformation");
 
         DataPanel = InitDataPanel();
         InitSumData();
@@ -143,7 +146,38 @@ internal class StatisticsDialog : DialogContentBase<TbDaily>
         UpdateYearData();
         return base.WhenActivate();
     }
-    private static readonly string[] MonthText = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    private static string MonthText(int i)
+    {
+        return i switch
+        {
+            0 => LD.Jan,
+            1 => LD.Feb,
+            2 => LD.Mar,
+            3 => LD.Apr,
+            4 => LD.May,
+            5 => LD.Jun,
+            6 => LD.Jul,
+            7 => LD.Aug,
+            8 => LD.Sep,
+            9 => LD.Oct,
+            10 => LD.Nov,
+            11 => LD.Dec,
+            _ => ""
+        };
+    }
+    private static string WeekDayText(DayOfWeek dow)
+    {
+        return dow switch {
+            DayOfWeek.Monday => LD.Monday,
+            DayOfWeek.Tuesday => LD.Tuesday,
+            DayOfWeek.Wednesday => LD.Wednesday,
+            DayOfWeek.Thursday => LD.Thursday,
+            DayOfWeek.Friday => LD.Friday,
+            DayOfWeek.Saturday => LD.Saturday,
+            DayOfWeek.Sunday => LD.Sunday,
+            _ => ""
+        };
+    }
 
     private StackPanel InitDataPanel()
     {
@@ -151,7 +185,7 @@ internal class StatisticsDialog : DialogContentBase<TbDaily>
         for (int m = 0; m < Model.Days.Length; m++)
         {
             var month = Model.Days[m];
-            var monthTitle = PzText(MonthText[m]).FontSize(12).Col(0);
+            var monthTitle = PzText(MonthText(m)).FontSize(12).Col(0);
             var monthPanel = HStackPanel().Col(1).Spacing(4);
 
             for (int d = 0; d < month.Length; d++)
@@ -160,7 +194,6 @@ internal class StatisticsDialog : DialogContentBase<TbDaily>
                     new Border() { Width = 12, Height = 12 }
                         .CornerRadius(2)
                         .Background(EmptyColor)
-                        .ToolTip($"{m + 1}-{d + 1}")
                 );
             }
 
@@ -250,7 +283,17 @@ internal class StatisticsDialog : DialogContentBase<TbDaily>
             {
                 if (monthPanel.Children[d] is Border b)
                 {
-                    var value = Model.Days[i][d];
+                    if (d == 28 && i == 1 && !isLeapYear) // 2-29
+                    {
+                        b.IsVisible = false;
+                        continue;
+                    }
+                    else
+                    {
+                        b.IsVisible = true;
+                    }
+
+                        var value = Model.Days[i][d];
                     var color = value switch
                     {
                         1 => CompleteColor,
@@ -258,12 +301,9 @@ internal class StatisticsDialog : DialogContentBase<TbDaily>
                         _ => EmptyColor,
                     };
 
+                    DateOnly date = new(Model.Year, i + 1, d + 1);
                     b.Background(color);
-
-                    if (d == 28 && i == 1) // 2-29
-                    {
-                        b.IsVisible = isLeapYear;
-                    }
+                    b.ToolTip($"{date:yyyy-MM-dd} {WeekDayText(date.DayOfWeek)}");
                 }
             }
         }
@@ -278,7 +318,7 @@ internal class StatisticsDialog : DialogContentBase<TbDaily>
     {
         return
         [
-            new Shared.DialogButton("Close", DialogResult.None)
+            new Shared.DialogButton(LD.Close, DialogResult.None)
         ];
     }
     public override bool Check(DialogResult buttonValue)

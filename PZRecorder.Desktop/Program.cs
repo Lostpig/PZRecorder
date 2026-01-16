@@ -94,6 +94,7 @@ internal sealed class Program
         GlobalInstances.SetMainWindow(mainWindow);
         GlobalInstances.SetServiceProvider(serviceProvider);
         GlobalInstances.SetPageLocator(pageLocator);
+        ValidtionMessags.SetValidtionMessags();
 
         lifetime.MainWindow = mainWindow;
 #if DEBUG

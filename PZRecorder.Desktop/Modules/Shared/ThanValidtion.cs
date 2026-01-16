@@ -9,7 +9,7 @@ enum ThanOperation
     Less, LessEqual,
 }
 
-internal class ThanValidtion<T> : IDataValidation<T?> where T : struct, IComparable<T>
+internal class ThanValidtion<T> : ValidationBase, IDataValidation<T?> where T : struct, IComparable<T>
 {
     public ThanOperation Operation { get; init; }
     public IObservable<T>? ThanObs { get; init; }
@@ -24,7 +24,7 @@ internal class ThanValidtion<T> : IDataValidation<T?> where T : struct, ICompara
     }
     public ThanValidtion(ThanOperation opt, BehaviorSubject<T> sub) : this(opt, sub.Value, sub) { }
 
-    public string ErrorMessage { get; set; } = "Field value not valid!";
+    public string ErrorMessage => _msgGetter is null ? LD.InvalidMsg : _msgGetter(this);
 
     public bool IsValid(T? v)
     {

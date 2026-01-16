@@ -10,7 +10,7 @@ namespace PZRecorder.Desktop.Modules.Shared;
 public abstract class DialogContentBase<T> : MvuComponent
 {
     public string Title { get; set; } = "";
-    public DialogMode Mode { get; set; } = DialogMode.None;
+    public MIcon Icon { get; set; } = MIcon.Dialogue;
     public abstract PzDialogResult<T> GetResult(DialogResult buttonValue);
     public abstract bool Check(DialogResult buttonValue);
     public abstract DialogButton[] Buttons();
@@ -40,20 +40,10 @@ public class PzDialog<T> : ComponentBase, IDialogContext
 
     protected StackPanel BuildHeader()
     {
-        var modeIcon = _content.Mode switch
-        {
-            DialogMode.Info => MaterialIcon(MIcon.Info).Foreground(StaticColor("SemiColorInformation")),
-            DialogMode.Warning => MaterialIcon(MIcon.AlertCircle).Foreground(StaticColor("SemiColorWarning")),
-            DialogMode.Error => MaterialIcon(MIcon.Alert).Foreground(StaticColor("SemiColorDanger")),
-            DialogMode.Success => MaterialIcon(MIcon.CheckCircle).Foreground(StaticColor("SemiColorSuccess")),
-            DialogMode.Question => MaterialIcon(MIcon.HelpCircle).Foreground(StaticColor("SemiColorPrimary")),
-            _ => MaterialIcon(MIcon.Dialogue).Foreground(StaticColor("SemiColorPrimary"))
-        };
-
         return HStackPanel(Aligns.Left)
             .Spacing(8)
             .Children(
-                modeIcon,
+                MaterialIcon(_content.Icon),
                 PzText(_content.Title, "H5")
                     .Theme(StaticResource<ControlTheme>("TitleTextBlock"))
             );
@@ -118,7 +108,7 @@ public sealed class PzMessageBoxContent : DialogContentBase<int>
         MaxWidth = 600;
 
         BoxButtons = [
-            new ("OK", DialogResult.OK),
+            new (LD.OK, DialogResult.OK),
         ];
 
         Initialize();
@@ -179,7 +169,7 @@ public static class PzDialogManager
         return new PzMessageBoxContent(message)
         {
             Title = title,
-            Mode = DialogMode.Info,
+            Icon = MIcon.Info,
             BoxButtons = [
                 new("OK", DialogResult.OK),
                 new("Cancel", DialogResult.Cancel) { Styles = ["Tertiary"] },
@@ -191,7 +181,22 @@ public static class PzDialogManager
         return new PzMessageBoxContent(message)
         {
             Title = title,
-            Mode = DialogMode.Info,
+            Icon = MIcon.Alert,
+        };
+    }
+    public static PzMessageBoxContent DeleteConfirmDialog(string? title = null, string? message = null)
+    {
+        title ??= LD.Delete;
+        message ??= LD.SureToDelete;
+
+        return new PzMessageBoxContent(message)
+        {
+            Title = title,
+            Icon = MIcon.Alert,
+            BoxButtons = [
+                new(LD.Delete, DialogResult.OK){ Styles = ["Danger"] },
+                new(LD.Cancel, DialogResult.Cancel) { Styles = ["Tertiary"] },
+            ]
         };
     }
 

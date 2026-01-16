@@ -1,4 +1,5 @@
 ﻿using Avalonia.Interactivity;
+using Avalonia.Styling;
 using PZ.RxAvalonia.DataValidations;
 using PZ.RxAvalonia.Extensions;
 using PZRecorder.Desktop.Extensions;
@@ -27,7 +28,7 @@ internal sealed class DailyDialog : DialogContentBase<TbDaily>
     public DailyDialog() : base()
     {
         _isAdd = true;
-        Title = "Add Daily";
+        Title = LD.AddDaily;
         Model = new();
 
         StartDate = DateOnly.FromDayNumber(Model.StartDay).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
@@ -36,7 +37,7 @@ internal sealed class DailyDialog : DialogContentBase<TbDaily>
     public DailyDialog(TbDaily item) : base()
     {
         _isAdd = false;
-        Title = "Edit Daily";
+        Title = LD.EditDaily;
         Model = new()
         {
             Id = item.Id,
@@ -70,37 +71,38 @@ internal sealed class DailyDialog : DialogContentBase<TbDaily>
                 .Items(
                     PzTextBox(() => Model.Name)
                         .OnTextChanged(e => Model.Name = e.Text())
-                        .FormLabel("Name")
+                        .FormLabel(() => LD.Name)
                         .FormRequired(true)
                         .Validation(DataValidations.Required())
                         .Validation(DataValidations.MaxLength(10)),
                     PzTextBox(() => Model.Alias)
                         .OnTextChanged(e => Model.Alias = e.Text())
-                        .FormLabel("Alias")
+                        .FormLabel(() => LD.Alias)
                         .Validation(DataValidations.MaxLength(30)),
                     PzTextBox(() => Model.Remark)
                         .OnTextChanged(e => Model.Remark = e.Text())
-                        .FormLabel("Remark")
+                        .FormLabel(() => LD.Remark)
                         .Classes("TextArea")
                         .Validation(DataValidations.MaxLength(500)),
                     PzNumericInt(() => Model.OrderNo)
                         .OnValueChanged(n => Model.OrderNo = n ?? 0)
-                        .FormLabel("Order No")
+                        .FormLabel(() => LD.OrderBy)
                         .DataValidation(DataValidations.MaxValue(99999)),
-                    new Uc.Divider().Content("Status"),
+                    new Uc.Divider().Content(() => LD.State),
                     new ToggleSwitch()
+                        .Theme(StaticResource<ControlTheme>("SimpleToggleSwitch"))
                         .IsChecked(() => Enabled)
                         .OnIsCheckedChanged(e => Enabled = GetChecked(e))
-                        .FormLabel("Enabled"),
+                        .FormLabel(() => LD.Enabled),
                     new DatePicker()
-                        .FormLabel("Start Date")
+                        .FormLabel(() => LD.StartTime)
                         .SelectedDate(() => StartDate)
                         .OnSelectedDateChanged(e =>
                         {
                             if (e.NewDate.HasValue) StartDate = e.NewDate.Value.DateTime;
                         }),
                     new DatePicker()
-                        .FormLabel("End Date")
+                        .FormLabel(() => LD.EndTime)
                         .SelectedDate(() => EndDate)
                         .OnSelectedDateChanged(e =>
                         {
@@ -112,8 +114,8 @@ internal sealed class DailyDialog : DialogContentBase<TbDaily>
     public override DialogButton[] Buttons()
     {
         return [
-            new DialogButton(_isAdd ? "Add" : "Save", Uc.DialogResult.OK) { Validation = true },
-            new DialogButton("Cancel", Uc.DialogResult.Cancel) { Styles = ["Tertiary"] }
+            new DialogButton(_isAdd ? LD.Add : LD.Save, Uc.DialogResult.OK) { Validation = true },
+            new DialogButton(LD.Cancel, Uc.DialogResult.Cancel) { Styles = ["Tertiary"] }
         ];
     }
     private static bool GetChecked(RoutedEventArgs e)

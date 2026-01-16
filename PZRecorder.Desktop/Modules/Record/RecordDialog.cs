@@ -12,29 +12,32 @@ using TbRecord = PZRecorder.Core.Tables.Record;
 
 internal sealed class RecordDialog : DialogContentBase<TbRecord>
 {
+    private readonly Kind _parentKind;
     private readonly TbRecord Model;
     private readonly bool _isAdd = false;
     private BehaviorSubject<int> EpisodeCountSub;
     private BehaviorSubject<int> RatingSub;
     private DateTime PublishDate;
 
-    public RecordDialog(int KindId) : base()
+    public RecordDialog(Kind parentKind) : base()
     {
         _isAdd = true;
-        Title = "Add Record";
+        Title = LD.AddRecord;
+        _parentKind = parentKind;
         Model = new TbRecord()
         {
-            Kind = KindId,
+            Kind = parentKind.Id,
             PublishYear = 2000,
             PublishMonth = 1,
         };
 
         InitMembers();
     }
-    public RecordDialog(TbRecord record) : base()
+    public RecordDialog(TbRecord record, Kind parentKind) : base()
     {
         _isAdd = false;
-        Title = "Edit Record";
+        Title = LD.EditRecord;
+        _parentKind = parentKind;
         Model = new TbRecord()
         {
             Id = record.Id,
@@ -74,13 +77,10 @@ internal sealed class RecordDialog : DialogContentBase<TbRecord>
         ];
     }
 
-
     protected override Control Build()
     {
-        var epValid = new ThanValidtion<int>(ThanOperation.LessEqual, EpisodeCountSub)
-        {
-            ErrorMessage = "Episode must less than or equal EpisodeCount"
-        };
+        var epValid = new ThanValidtion<int>(ThanOperation.LessEqual, EpisodeCountSub);
+        epValid.CustomMessage<ThanValidtion<int>>(v => LD.EposideValidtionMsg);
 
         return VStackPanel()
             .Align(Aligns.HStretch)
@@ -89,16 +89,16 @@ internal sealed class RecordDialog : DialogContentBase<TbRecord>
                 new Uc.Form() { LabelPosition = Position.Left, LabelWidth = GridLength.Star }
                 .Align(Aligns.HStretch)
                 .Items(
-                    new Uc.Divider().Content("Base"),
-                    PzTextBox(() => Model.Name).FormLabel("Name")
+                    new Uc.Divider().Content(() => LD.BaseInfo),
+                    PzTextBox(() => Model.Name).FormLabel(() => LD.Name)
                         .OnTextChanged(e => Model.Name = e.Text())
                         .FormRequired(true)
                         .Validation(DataValidations.Required())
                         .Validation(DataValidations.MaxLength(30)),
-                    PzTextBox(() => Model.Alias).FormLabel("Alias")
+                    PzTextBox(() => Model.Alias).FormLabel(() => LD.Alias)
                         .OnTextChanged(e => Model.Alias = e.Text())
                         .Validation(DataValidations.MaxLength(30)),
-                    PzTextBox(() => Model.Remark).FormLabel("Remark")
+                    PzTextBox(() => Model.Remark).FormLabel(() => LD.Remark)
                         .OnTextChanged(e => Model.Remark = e.Text())
                         .Classes("TextArea")
                         .Validation(DataValidations.MaxLength(140)),
@@ -107,28 +107,30 @@ internal sealed class RecordDialog : DialogContentBase<TbRecord>
                             Model.EpisodeCount = n ?? 1;
                             EpisodeCountSub.OnNext(n ?? 1);
                         })
-                        .FormLabel("EpisodeCount")
+                        .FormLabel(() => LD.EpisodeCount)
                         .DataValidation(DataValidations.MinValue(1)),
-                    new DatePicker().FormLabel("Publish Date")
+                    new DatePicker().FormLabel(() => LD.PublishDate)
                         .DayVisible(false)
                         .SelectedDate(() => PublishDate)
                         .OnSelectedDateChanged(e =>
                         {
                             if (e.NewDate.HasValue) PublishDate = e.NewDate.Value.DateTime;
                         }),
-                    new Uc.Divider().Content("States"),
+                    new Uc.Divider().Content(() => LD.State),
                     new ComboBox()
-                        .FormLabel("State")
+                        .FormLabel(() => LD.State)
                         .ItemsSource(Enum.GetValues<RecordState>())
+                        .ItemTemplate<RecordState, ComboBox>(s => PzText(GetStateText(s)))
                         .SelectedValue(() => Model.State)
                         .OnSelectionChanged(e => Model.State = e.ValueStruct<RecordState>() ?? RecordState.Wish),
                     PzNumericInt(() => Model.Episode)
                         .OnValueChanged(n => Model.Episode = n ?? 0)
-                        .FormLabel("Episode")
+                        .FormLabel(() => LD.Episode)
                         .DataValidation(DataValidations.MinValue(0))
                         .ThanValidation(epValid),
-                    new Uc.Divider().Content("Rating"),
+                    new Uc.Divider().Content(() => LD.Rating),
                     new Uc.Rating() { AllowHalf = false, Count = 10 }
+                        .DefaultValue(() => Model.Rating)
                         .ValueEx(RatingSub)
                 )
             );
@@ -136,9 +138,22 @@ internal sealed class RecordDialog : DialogContentBase<TbRecord>
     public override DialogButton[] Buttons()
     {
         return [
-            new DialogButton(_isAdd ? "Add" : "Save", Uc.DialogResult.OK) { Validation = true },
-            new DialogButton("Cancel", Uc.DialogResult.Cancel) { Styles = ["Tertiary"] }
+            new DialogButton(_isAdd ? LD.Add : LD.Save, Uc.DialogResult.OK) { Validation = true },
+            new DialogButton(LD.Cancel, Uc.DialogResult.Cancel) { Styles = ["Tertiary"] }
         ];
+    }
+    private string GetStateText(RecordState state)
+    {
+        var kind = _parentKind;
+
+        return state switch
+        {
+            RecordState.Wish => string.IsNullOrEmpty(kind?.StateWishName) ? LD.Wish : kind.StateWishName,
+            RecordState.Doing => string.IsNullOrEmpty(kind?.StateDoingName) ? LD.Doing : kind.StateDoingName,
+            RecordState.Complete => string.IsNullOrEmpty(kind?.StateCompleteName) ? LD.Complete : kind.StateCompleteName,
+            RecordState.Giveup => string.IsNullOrEmpty(kind?.StateGiveupName) ? LD.Giveup : kind.StateGiveupName,
+            _ => "-"
+        };
     }
 
     public override PzDialogResult<TbRecord> GetResult(Uc.DialogResult btnValue)

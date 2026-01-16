@@ -58,8 +58,8 @@ internal class ClockInPage(ClockInManager manager) : MvuPage()
                 bool remind = model.CheckRemind(DateTime.Now);
                 if (remind)
                 {
-                    var p1 = FormatTextBlock(LD.ClockInDiffText, PzText(days.ToString()).Classes("Warning"));
-                    var p2 = FormatTextBlock(LD.ClockInRemindText, PzText((days - model.ClockIn.RemindDays).ToString()).Classes("Warning"));
+                    var p1 = FormatTextBlock(LD.ClockInDiffText, new Common.TextSegment($"{days}", ["Warning"]));
+                    var p2 = FormatTextBlock(LD.ClockInRemindText, new Common.TextSegment($"{days - model.ClockIn.RemindDays}", ["Warning"]));
 
 
                     return [
@@ -71,7 +71,7 @@ internal class ClockInPage(ClockInManager manager) : MvuPage()
                 }
                 else
                 {
-                    return [.. FormatTextBlock(LD.ClockInDiffText, PzText(days.ToString()).Classes("Success"))];
+                    return [.. FormatTextBlock(LD.ClockInDiffText, new Common.TextSegment($"{days}", ["Success"]))];
                 }
             }
         }
@@ -171,11 +171,7 @@ internal class ClockInPage(ClockInManager manager) : MvuPage()
     }
     private async void OnDelete(TbClockIn item)
     {
-        var dialog = PzDialogManager.ConfirmDialog("Delete", "Sure to delete?");
-        dialog.Mode = Uc.DialogMode.Question;
-        dialog.BoxButtons[0].Text = "Delete";
-        dialog.BoxButtons[0].Styles = ["Danger"];
-
+        var dialog = PzDialogManager.DeleteConfirmDialog();
         var delete = await PzDialogManager.ShowDialog(dialog);
         if (PzDialogManager.IsSureResult(delete.Result))
         {

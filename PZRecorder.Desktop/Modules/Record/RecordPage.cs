@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Templates;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
@@ -58,7 +59,7 @@ internal sealed class RecordPage(RecordManager manager) : MvuPage()
                 PzTextBox(() => Model.Query.SearchText)
                     .OnTextChanged(OnSearchChanged)
                     .Margin(16, 8)
-                    .Watermark("Search..."),
+                    .Watermark(() => LD.Search),
                 new Border().Theme(StaticResource<ControlTheme>("RadioButtonGroupBorder"))
                 .MaxWidth(284)
                 .Child(
@@ -70,6 +71,7 @@ internal sealed class RecordPage(RecordManager manager) : MvuPage()
                                 .ItemsAlignment(WrapPanelItemsAlignment.Start)
                         )
                         .ItemsSource(Enum.GetValues<RecordState>())
+                        .ItemTemplate(new FuncDataTemplete<RecordState, TextBlock>((s) => PzText(() => GetStateText(s)), this))
                         .SelectionMode(SelectionMode.Single | SelectionMode.Toggle)
                         .SelectedValue(() => Model.Query.State)
                         .OnSelectionChanged(OnStateChanged)
@@ -80,33 +82,33 @@ internal sealed class RecordPage(RecordManager manager) : MvuPage()
                         .Styles(new Style<ComboBox>().Width(240))
                         .Spacing(8)
                         .Children(
-                            PzText("Year"),
+                            PzText(() => LD.Year),
                             new ComboBox()
                                 .ItemsSource(() => Years)
                                 .ItemTemplate<int, ComboBox>(n => PzText(n > 0 ? n.ToString() : "-"))
                                 .SelectedValue(() => Model.Query.Year)
                                 .OnSelectionChanged(OnYearChanged),
-                            PzText("Month"),
+                            PzText(() => LD.Month),
                             new ComboBox()
                                 .ItemsSource(Months)
                                 .ItemTemplate<int, ComboBox>(n => PzText(n > 0 ? n.ToString() : "-"))
                                 .SelectedValue(() => Model.Query.Month)
                                 .OnSelectionChanged(OnMonthChanged),
-                            PzText("Rating"),
+                            PzText(() => LD.Rating),
                             new ComboBox()
                                 .ItemsSource(Ratings)
-                                .ItemTemplate<int, ComboBox>(n => PzText(n > 0 ? n.ToString() : "-"))
+                                .ItemTemplate<int, ComboBox>(n => PzText(n >= 0 ? n.ToString() : "-"))
                                 .SelectedValue(() => Model.Query.Rating)
                                 .OnSelectionChanged(OnRatingChanged),
-                            PzText("Order"),
+                            PzText(() => LD.OrderBy),
                             new ComboBox()
                                 .ItemsSource(Enum.GetValues<RecordSort>())
-                                .ItemTemplate<RecordSort, ComboBox>(n => PzText(n.ToString()))
+                                .ItemTemplate(new FuncDataTemplete<RecordSort, TextBlock>((s) => PzText(() => GetSortText(s)), this))
                                 .SelectedValue(() => Model.Order)
                                 .OnSelectionChanged(OnOrderChanged)
                         )
                 ),
-                PzButton("Add").OnClick(_ => AddRecord())
+                IconButton(MIcon.Add, () => LD.Add).OnClick(_ => AddRecord())
             );
     }
     private Grid BuildContent()
@@ -282,9 +284,11 @@ internal sealed class RecordPage(RecordManager manager) : MvuPage()
         }
 
         var items = _manager.QueryRecords(Model.Query);
-        Model.Items.ReplaceAll(items);
-        _lastQuery = Model.Query;
         Model.SelectedKind = Model.Kinds.Find(k => k.Id == Model.Query.KindId);
+
+        Model.Items.ReplaceAll(items);
+        SortItems();
+        _lastQuery = Model.Query;
 
         UpdatePage();
     }
@@ -292,27 +296,62 @@ internal sealed class RecordPage(RecordManager manager) : MvuPage()
     {
         Model.Items.Sort((x, y) =>
         {
-            return Model.Order switch
+            var res = Model.Order switch
             {
-                RecordSort.PublishTimeAsc => (y.PublishYear * 100 + y.PublishMonth) > (x.PublishYear * 100 + x.PublishMonth) ? 1 : -1,
-                RecordSort.PublishTimeDesc => (y.PublishYear * 100 + y.PublishMonth) < (x.PublishYear * 100 + x.PublishMonth) ? 1 : -1,
-                RecordSort.RatingAsc => y.Rating > x.Rating ? 1 : -1,
-                RecordSort.RatingDesc => y.Rating < y.Rating ? 1 : -1,
-                RecordSort.ModifyTimeAsc => y.ModifyDate > x.ModifyDate ? 1 : -1,
-                RecordSort.ModifyTimeDesc or _ => y.ModifyDate < x.ModifyDate ? 1 : -1,
+                RecordSort.PublishTimeAsc => (x.PublishYear * 100 + x.PublishMonth) - (y.PublishYear * 100 + y.PublishMonth),
+                RecordSort.PublishTimeDesc => (y.PublishYear * 100 + y.PublishMonth) - (x.PublishYear * 100 + x.PublishMonth),
+                RecordSort.RatingAsc => x.Rating - y.Rating,
+                RecordSort.RatingDesc => y.Rating - x.Rating,
+                RecordSort.ModifyTimeAsc => (x.ModifyDate - y.ModifyDate).Seconds,
+                RecordSort.ModifyTimeDesc or _ => (y.ModifyDate - x.ModifyDate).Seconds,
             };
+            return res;
         });
+    }
+
+    internal string GetStateText(RecordState state)
+    {
+        var kind = Model.SelectedKind;
+
+        return state switch
+        {
+            RecordState.Wish => string.IsNullOrEmpty(kind?.StateWishName) ? LD.Wish : kind.StateWishName,
+            RecordState.Doing => string.IsNullOrEmpty(kind?.StateDoingName) ? LD.Doing : kind.StateDoingName,
+            RecordState.Complete => string.IsNullOrEmpty(kind?.StateCompleteName) ? LD.Complete : kind.StateCompleteName,
+            RecordState.Giveup => string.IsNullOrEmpty(kind?.StateGiveupName) ? LD.Giveup : kind.StateGiveupName,
+            _ => "-"
+        };
+    }
+    private string GetSortText(RecordSort sort)
+    {
+        return sort switch
+        {
+            RecordSort.ModifyTimeAsc => $"{LD.EditTime}({LD.Ascending})",
+            RecordSort.ModifyTimeDesc => $"{LD.EditTime}({LD.Descending})",
+            RecordSort.PublishTimeAsc => $"{LD.PublishDate}({LD.Ascending})",
+            RecordSort.PublishTimeDesc => $"{LD.PublishDate}({LD.Descending})",
+            RecordSort.RatingAsc => $"{LD.Rating}({LD.Ascending})",
+            RecordSort.RatingDesc => $"{LD.Rating}({LD.Descending})",
+            _ => "-"
+        };
     }
 
     internal async void AddRecord()
     {
         if (Model.Query.KindId < 0)
         {
-            await PzDialogManager.Alert("Kind not selected!", "Error");
+            Notification.Error("Kind not selected!", "Error");
             return;
         }
 
-        var res = await PzDialogManager.ShowDialog(new RecordDialog(Model.Query.KindId));
+        var kind = Model.Kinds.Find(k => k.Id == Model.Query.KindId);
+        if (kind == null)
+        {
+            Notification.Error("Kind not found!", "Error");
+            return;
+        }
+
+        var res = await PzDialogManager.ShowDialog(new RecordDialog(kind));
         if (PzDialogManager.IsSureResult(res.Result))
         {
             _manager.InsertRecord(res.Value);
@@ -321,7 +360,14 @@ internal sealed class RecordPage(RecordManager manager) : MvuPage()
     }
     internal async void EditRecord(TbRecord item)
     {
-        var res = await PzDialogManager.ShowDialog(new RecordDialog(item));
+        var kind = Model.Kinds.Find(k => k.Id == item.Kind);
+        if (kind == null)
+        {
+            Notification.Error("Kind not found!", "Error");
+            return;
+        }
+
+        var res = await PzDialogManager.ShowDialog(new RecordDialog(item, kind));
         if (PzDialogManager.IsSureResult(res.Result))
         {
             _manager.UpdateRecord(res.Value);
@@ -330,11 +376,7 @@ internal sealed class RecordPage(RecordManager manager) : MvuPage()
     }
     internal async void DeleteRecord(TbRecord item)
     {
-        var dialog = PzDialogManager.ConfirmDialog("Delete", "Sure to delete?");
-        dialog.Mode = Uc.DialogMode.Question;
-        dialog.BoxButtons[0].Text = "Delete";
-        dialog.BoxButtons[0].Styles = ["Danger"];
-
+        var dialog = PzDialogManager.DeleteConfirmDialog();
         var delete = await PzDialogManager.ShowDialog(dialog);
         if (PzDialogManager.IsSureResult(delete.Result))
         {
@@ -359,7 +401,7 @@ internal sealed class RecordItem(RecordPage Page) : MvuComponent, IListItemCompo
     {
         var badge = new Uc.DualBadge()
             .Classes("ForTheBadge")
-            .Content(() => Model.State.ToString())
+            .Content(() => Page.GetStateText(Model.State))
             .Align(Aligns.HCenter);
 
         badge._set<Uc.DualBadge, string>(
@@ -406,6 +448,7 @@ internal sealed class RecordItem(RecordPage Page) : MvuComponent, IListItemCompo
                     .Foreground(DynamicColors.Get("SemiColorText3")),
                 new Uc.Rating() { Count = 10 }
                     .DefaultValue(() => Model.Rating)
+                    .Value(() => Model.Rating)
                     .Classes("Small")
                     .IsEnabled(false)
             );

@@ -3,9 +3,7 @@ using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using PZRecorder.Desktop.Common;
 using System.Diagnostics;
-using System.Reactive;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Reflection;
 using Ursa.Controls;
 

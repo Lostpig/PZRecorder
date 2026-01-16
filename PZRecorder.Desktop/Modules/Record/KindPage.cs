@@ -1,4 +1,5 @@
-﻿using Avalonia.Layout;
+﻿using Avalonia.Controls;
+using Avalonia.Layout;
 using Avalonia.Media;
 using PZRecorder.Core.Managers;
 using PZRecorder.Core.Tables;
@@ -17,7 +18,7 @@ internal sealed class KindPage(RecordManager manager) : MvuPage()
             .Align(Aligns.HStretch)
             .Spacing(10)
             .Children(
-                IconButton(MIcon.Add, "Add")
+                IconButton(MIcon.Add, () => LD.Add)
                     .OnClick(_ => OnAdd())
             );
     }
@@ -29,9 +30,9 @@ internal sealed class KindPage(RecordManager manager) : MvuPage()
                 .Dock(Dock.Top)
                 .Styles(new Style<TextBlock>().FontWeight(FontWeight.Bold).Margin(16, 0))
                 .Children(
-                    PzText("Order").Col(0).TextAlignment(TextAlignment.Left),
-                    PzText("Name").Col(1),
-                    PzText("Operators").Col(2).Align(Aligns.HCenter)
+                    PzText(() => LD.OrderBy).Col(0).TextAlignment(TextAlignment.Left),
+                    PzText(() => LD.Name).Col(1),
+                    PzText(() => LD.Action).Col(2).Align(Aligns.HCenter)
                 ),
                 new ScrollViewer()
                 .Dock(Dock.Bottom)
@@ -104,11 +105,7 @@ internal sealed class KindPage(RecordManager manager) : MvuPage()
     }
     private async void OnDelete(Kind kind)
     {
-        var dialog = PzDialogManager.ConfirmDialog("Delete", "Sure to delete?");
-        dialog.Mode = Uc.DialogMode.Question;
-        dialog.BoxButtons[0].Text = "Delete";
-        dialog.BoxButtons[0].Styles = ["Danger"];
-
+        var dialog = PzDialogManager.DeleteConfirmDialog();
         var delete = await PzDialogManager.ShowDialog(dialog);
         if (PzDialogManager.IsSureResult(delete.Result))
         {

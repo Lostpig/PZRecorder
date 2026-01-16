@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "DesktopLang": {
+      "commandName": "Project",
+      "commandLineArgs": "--languageFile=../../../../PZRecorder.Desktop/Localization/languages.json"
+    },
+    "Default": {
+      "commandName": "Project"
+    }
+  }
+}
