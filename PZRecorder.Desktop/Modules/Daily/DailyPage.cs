@@ -6,8 +6,10 @@ using PZ.RxAvalonia.Reactive;
 using PZRecorder.Core.Common;
 using PZRecorder.Core.Managers;
 using PZRecorder.Core.Tables;
+using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Extensions;
 using PZRecorder.Desktop.Modules.Shared;
+using System.Reactive.Linq;
 
 namespace PZRecorder.Desktop.Modules.Daily;
 using TbDaily = PZRecorder.Core.Tables.Daily;
@@ -89,15 +91,17 @@ internal sealed class DailyPage : MvuPage
     }
 
     private readonly DailyManager _manager;
+    private readonly BroadcastManager _broadcast;
     private DateOnly Today { get; set; }
     private DateOnly MondayDate { get; set; }
     private ReactiveList<DailyWeekModel> Items { get; set; } = [];
     private string WeekText => $"{MondayDate:yyyy/MM/dd} - {MondayDate.AddDays(6):yyyy/MM/dd}";
     private Border TodayMark { get; set; } = new() { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left };
 
-    public DailyPage(DailyManager manager) : base()
+    public DailyPage(DailyManager manager, BroadcastManager broadcast) : base()
     {
         _manager = manager;
+        _broadcast = broadcast;
 
         Today = DateOnly.FromDateTime(DateTime.Today);
         MondayDate = _manager.GetMondayDate(Today);
@@ -105,7 +109,10 @@ internal sealed class DailyPage : MvuPage
     protected override IEnumerable<IDisposable> WhenActivate()
     {
         UpdateWeeks();
-        return base.WhenActivate();
+        return [
+                _broadcast.Broadcast.Where(e => e == BroadcastEvent.DailyRecorded)
+                .Subscribe(_ => UpdateWeeks())
+            ];
     }
     protected override void OnBeforeReload()
     {
@@ -167,7 +174,6 @@ internal sealed class DailyPage : MvuPage
         TodayMark.Margin = new Thickness(left, 60, 0, 0);
         TodayMark.Opacity = 1;
     }
-
     public void ItemUpdated(DailyWeek dw)
     {
         _manager.WriteDailyWeek(dw);

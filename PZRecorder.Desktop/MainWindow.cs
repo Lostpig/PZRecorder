@@ -1,7 +1,9 @@
 ﻿using Avalonia.Platform;
 using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
+using PZRecorder.Core.Managers;
 using PZRecorder.Desktop.Common;
+using PZRecorder.Desktop.Modules.Shared;
 using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Reflection;
@@ -13,6 +15,7 @@ internal class MainWindow : UrsaWindow
 {
     private readonly VariantsManager variantsManager;
     private readonly BroadcastManager broadcaster;
+    private readonly BackgroundService backgroundService;
 
     public MainWindow(IServiceProvider serviceProvider) : base()
     {
@@ -39,6 +42,9 @@ internal class MainWindow : UrsaWindow
             .FromEventPattern<EventHandler<PixelPointEventArgs>, PixelPointEventArgs>(h => PositionChanged += h, h => PositionChanged -= h)
             .Throttle(TimeSpan.FromSeconds(0.3))
             .Subscribe(e => OnPositionChanged(e.EventArgs));
+
+        var monitorService = serviceProvider.GetRequiredService<ProcessMonitorService>();
+        backgroundService = new(broadcaster, monitorService);
     }
 
     protected override void OnOpened(EventArgs e)
@@ -101,6 +107,8 @@ internal class MainWindow : UrsaWindow
     protected override void OnClosed(EventArgs e)
     {
         base.OnClosed(e);
+
+        backgroundService.Dispose();
         Environment.Exit(0);
     }
 }

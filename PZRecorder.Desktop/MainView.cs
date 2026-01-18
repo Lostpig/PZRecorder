@@ -1,5 +1,7 @@
 ﻿using Avalonia.Styling;
+using Material.Icons.Avalonia;
 using Microsoft.Extensions.DependencyInjection;
+using PZRecorder.Core.Managers;
 using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Extensions;
 using PZRecorder.Desktop.Localization;
@@ -14,15 +16,17 @@ internal class MainView: MvuComponent
     private readonly PageRouter _router;
     private readonly Translate _translate;
     private readonly ErrorProxy _errorProxy;
+    private readonly ClockInManager _clockIn;
     public MainView() : base(ViewInitializationStrategy.Lazy)
     {
         _router = ServiceProvider.GetRequiredService<PageRouter>();
         _translate = ServiceProvider.GetRequiredService<Translate>();
         _errorProxy = ServiceProvider.GetRequiredService<ErrorProxy>();
+        _clockIn = ServiceProvider.GetRequiredService<ClockInManager>();
 
         var broadcaster = ServiceProvider.GetRequiredService<BroadcastManager>();
         broadcaster.ExceptionCatched.Subscribe(ErrorProxy_OnCatched);
-        broadcaster.Broadcast.Subscribe(e => { if (e == BroadcastEvent.LanguageChanged) UpdateState(); });
+        broadcaster.Broadcast.Subscribe(OnBroadCast);
 
         var varManager = ServiceProvider.GetRequiredService<VariantsManager>();
         var theme = varManager.GetVariant(VariantFields.Theme);
@@ -46,39 +50,49 @@ internal class MainView: MvuComponent
             _errorProxy.CatchException(ex);
         }
 
+        CheckRemindState();
         Initialize();
     }
 
+    private void OnBroadCast(BroadcastEvent e)
+    {
+        if (e == BroadcastEvent.LanguageChanged) UpdateState();
+        else if (e == BroadcastEvent.RemindStateChanged || e == BroadcastEvent.DateChanged)
+        {
+            CheckRemindState();
+        }
+    }
     private void ErrorProxy_OnCatched(string msg)
     {
         Notification.Error(msg);
     }
+    private void CheckRemindState()
+    {
+        var remindCount = _clockIn.CheckReminds();
+        if (remindCount > 0)
+        {
+            PageRouter.GetPageRecord("ClockIn")?.Status.OnNext(remindCount.ToString());
+        }
+    }
+
     private NavMenuItem NavItemTemplate(PageRecord p)
     {
-        var icon = new TwoTonePathIcon()
-        {
-            Width = 16,
-            Height = 16,
-            Data = GlobalInstances.Semi.GetIconGeometry(p.Icon),
-            Foreground = StaticColor("SemiGrey5"),
-            StrokeBrush = StaticColor("SemiGrey5"),
-            ActiveForeground = StaticColor("SemiBlue5"),
-            ActiveStrokeBrush = StaticColor("SemiBlue5"),
-        };
-        icon._set(TwoTonePathIcon.IsActiveProperty, _router.CurrentPage.Select(c => c == p));
+        var micon = MaterialIcon(p.Icon, 16).BindClass(_router.CurrentPage.Select(c => c == p), "Active");
         var header = HStackPanel().Spacing(8)
                 .Children(
                 PzText(() => p.PageName),
                 new Label()
                     .IsVisible(p.Status.Select(s => !string.IsNullOrEmpty(s)))
                     .Content(p.Status)
+                    .Classes("Ghost")
+                    .Classes("Orange")
                     .Theme(StaticResource<ControlTheme>("TagLabel"))
             );
 
         return new NavMenuItem()
         {
             Header = header,
-            Icon = icon,
+            Icon = micon,
             DataContext = p
         };
     }
@@ -93,6 +107,10 @@ internal class MainView: MvuComponent
                 .Margin(8, 32, 8, 8)
                 .Theme(StaticResource<ControlTheme>("TitleTextBlock"))
         };
+        menu.Styles(
+            new Style<MaterialIcon>().Foreground(StaticColor("SemiGrey5")),
+            new Style<MaterialIcon>(s => s.Class("Active")).Foreground(StaticColor("SemiBlue5"))
+        );
         foreach (var p in Routes.Pages)
         {
             menu.Items.Add(NavItemTemplate(p));

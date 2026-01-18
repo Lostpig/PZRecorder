@@ -1,12 +1,13 @@
 ﻿using Avalonia.Media;
 using PZRecorder.Core.Managers;
+using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Extensions;
 using PZRecorder.Desktop.Modules.Shared;
 
 namespace PZRecorder.Desktop.Modules.ClockIn;
 using TbClockIn = PZRecorder.Core.Tables.ClockIn;
 
-internal class ClockInPage(ClockInManager manager) : MvuPage()
+internal class ClockInPage(ClockInManager _manager, BroadcastManager _broadcast) : MvuPage()
 {
     protected override StyleGroup? BuildStyles() => Shared.Styles.ListStyles();
 
@@ -113,7 +114,6 @@ internal class ClockInPage(ClockInManager manager) : MvuPage()
                     .Align(Aligns.VStretch)
             );
 
-    private readonly ClockInManager _manager = manager;
     private List<ClockInCollection> Items { get; set; } = [];
 
     protected override IEnumerable<IDisposable> WhenActivate()
@@ -158,6 +158,7 @@ internal class ClockInPage(ClockInManager manager) : MvuPage()
         {
             _manager.AddClockIn(res.Value);
             UpdateItems();
+            _broadcast.Publish(BroadcastEvent.RemindStateChanged);
         }
     }
     private async void OnEdit(TbClockIn item)
@@ -167,6 +168,7 @@ internal class ClockInPage(ClockInManager manager) : MvuPage()
         {
             _manager.UpdateClockIn(res.Value);
             UpdateItems();
+            _broadcast.Publish(BroadcastEvent.RemindStateChanged);
         }
     }
     private async void OnDelete(TbClockIn item)
@@ -177,6 +179,7 @@ internal class ClockInPage(ClockInManager manager) : MvuPage()
         {
             _manager.DeleteClockIn(item.Id);
             UpdateItems();
+            _broadcast.Publish(BroadcastEvent.RemindStateChanged);
         }
     }
 }

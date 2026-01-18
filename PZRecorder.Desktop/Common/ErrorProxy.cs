@@ -20,7 +20,7 @@ internal class ErrorProxy(BroadcastManager broadcaster, Logger logger)
             _logger.Error(ex);
 
             var msg = FormatException(ex);
-            _broadcaster.OnxceptionCatched(msg);
+            _broadcaster.OnExceptionCatched(msg);
         }
         catch
         {

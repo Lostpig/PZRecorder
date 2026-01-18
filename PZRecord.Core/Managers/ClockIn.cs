@@ -125,12 +125,12 @@ public class ClockInManager(SqlHandler db)
         }).OrderBy(i => i.ClockIn.OrderNo).ToList();
     }
 
-    public bool CheckReminds()
+    public int CheckReminds()
     {
         var list = GetCollections();
         var today = DateTime.Now;
 
-        bool remind = list.Any(m => m.CheckRemind(today));
-        return remind;
+        var reminds = list.Where(m => m.CheckRemind(today)).Count();
+        return reminds;
     }
 }

@@ -1,12 +1,11 @@
 ﻿using PZRecorder.Core.Tables;
 using System.Diagnostics;
-using TrdTimer = System.Threading.Timer;
 
 namespace PZRecorder.Core.Managers;
 
 public enum ProcessStatus { Started, Exited, None }
 public record MonitorRecord(ProcessWatch Watch, DateTime StartTime, DateTime EndTime);
-public record ProcessChangedArgs(ProcessWatch Watch, ProcessStatus Status);
+public record ProcessChangedArgs(ProcessWatch Watch, bool IsRunning, DateTime StartTime);
 public class ProcessMonitor
 {
     public ProcessWatch Watch { get; init; }
@@ -38,29 +37,15 @@ public class ProcessMonitor
         return ProcessStatus.None;
     }
 }
-public sealed class ProcessMonitorService(ProcessMonitorManager pwManager, DailyManager dManager) : IDisposable
+public sealed class ProcessMonitorService(ProcessMonitorManager pmManager, DailyManager dManager)
 {
-    TrdTimer? _timer;
-    readonly List<ProcessMonitor> _items = new();
-    readonly ProcessMonitorManager _pwManager = pwManager;
+    readonly List<ProcessMonitor> _items = [];
+    readonly ProcessMonitorManager _pmManager = pmManager;
     readonly DailyManager _dManager = dManager;
     public event Action<ProcessChangedArgs>? OnProcessChanged;
     public event Action<MonitorRecord>? OnProcessRecorded;
 
-    public void Start(uint second)
-    {
-        _timer?.Dispose();
-
-        uint timerInterval = second * 1000;
-        _timer = new TrdTimer(ExcuteWatch, null, timerInterval, timerInterval);
-    }
-    public void Stop()
-    {
-        _timer?.Dispose();
-        _timer = null;
-    }
-
-    private void ExcuteWatch(object? _)
+    public void ExcuteWatch()
     {
         lock (_items)
         {
@@ -71,7 +56,7 @@ public sealed class ProcessMonitorService(ProcessMonitorManager pwManager, Daily
                     var status = item.CheckProcess();
                     if (status == ProcessStatus.Started || status == ProcessStatus.Exited)
                     {
-                        OnProcessChanged?.Invoke(new(item.Watch, status));
+                        OnProcessChanged?.Invoke(new(item.Watch, item.Runing, item.StartTime));
                     }
                     if (status == ProcessStatus.Exited)
                     {
@@ -105,7 +90,7 @@ public sealed class ProcessMonitorService(ProcessMonitorManager pwManager, Daily
             StartTime = startTimeSeconds,
             EndTime = exitTimeSeconds
         };
-        _pwManager.InsertRecord(record);
+        _pmManager.InsertRecord(record);
 
         if (mreocrd.Watch.BindingDaily)
         {
@@ -117,6 +102,11 @@ public sealed class ProcessMonitorService(ProcessMonitorManager pwManager, Daily
         }
     }
 
+    public void UpdateWatches()
+    {
+        var watches = _pmManager.GetAllWatches();
+        UpdateWatches(watches);
+    }
     public void UpdateWatches(List<ProcessWatch> watches)
     {
         lock (_items)
@@ -137,11 +127,6 @@ public sealed class ProcessMonitorService(ProcessMonitorManager pwManager, Daily
         {
             return _items.Where(i => i.Runing).ToList();
         }
-    }
-    public void Dispose()
-    {
-        _items.Clear();
-        _timer?.Dispose();
     }
 }
 

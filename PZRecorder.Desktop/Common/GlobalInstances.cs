@@ -16,7 +16,8 @@ internal static class GlobalInstances
 
         var notificationManager = new WindowNotificationManager(mainWindow)
         {
-            MaxItems = 3
+            MaxItems = 3,
+            Position = NotificationPosition.BottomRight
         };
         _notification = new PzNotification(notificationManager);
     }

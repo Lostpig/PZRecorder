@@ -1,13 +1,12 @@
 ﻿using Avalonia.Controls.Templates;
 using Microsoft.Extensions.DependencyInjection;
-using PZRecorder.Desktop.Localization;
 using PZRecorder.Desktop.Modules.ClockIn;
 using PZRecorder.Desktop.Modules.Daily;
 using PZRecorder.Desktop.Modules.Dev;
+using PZRecorder.Desktop.Modules.Monitor;
 using PZRecorder.Desktop.Modules.Record;
 using PZRecorder.Desktop.Modules.Settings;
 using PZRecorder.Desktop.Modules.Shared;
-using System;
 using System.Reactive.Subjects;
 
 namespace PZRecorder.Desktop;
@@ -15,21 +14,22 @@ namespace PZRecorder.Desktop;
 internal class Routes
 {
     static public readonly PageRecord[] Pages = [
-        new PageRecord("Record", () => LD.Record, "SemiIconExcel", typeof(RecordPage)),
-        new PageRecord("KindManager", () => LD.KindManager, "SemiIconExport", typeof(KindPage)),
-        new PageRecord("Daily", () => LD.Daily, "SemiIconExport", typeof(DailyPage)),
-        new PageRecord("DailyManager", () => LD.DailyManager, "SemiIconExport", typeof(DailyManagerPage)),
-        new PageRecord("ClockIn", () => LD.ClockIn, "SemiIconExport", typeof(ClockInPage)),
-        new PageRecord("Setting", () => LD.Setting, "SemiIconExport", typeof(SettingsPage)),
-        new PageRecord("Dev", () => "Dev", "SemiIconExport", typeof(DevGridPage)),
+        new PageRecord("Record", () => LD.Record, MIcon.Record, typeof(RecordPage)),
+        new PageRecord("KindManager", () => LD.KindManager, MIcon.Class, typeof(KindPage)),
+        new PageRecord("Daily", () => LD.Daily, MIcon.Calendar, typeof(DailyPage)),
+        new PageRecord("DailyManager", () => LD.DailyManager, MIcon.CalendarAccount, typeof(DailyManagerPage)),
+        new PageRecord("Monitor", () => LD.ProcessWatcher, MIcon.Monitor, typeof(MonitorPage)),
+        new PageRecord("ClockIn", () => LD.ClockIn, MIcon.ClockIn, typeof(ClockInPage)),
+        new PageRecord("Setting", () => LD.Setting, MIcon.Settings, typeof(SettingsPage)),
+        new PageRecord("Dev", () => "Dev", MIcon.DeveloperBoard, typeof(DevGridPage)),
     ];
 }
 
-internal class PageRecord(string key, Func<string> pageNameGetter, string icon, Type pageType)
+internal class PageRecord(string key, Func<string> pageNameGetter, MIcon icon, Type pageType)
 {
     public string Key { get; init; } = key;
     private readonly Func<string> _getter = pageNameGetter;
-    public string Icon { get; init; } = icon;
+    public MIcon Icon { get; init; } = icon;
     public Type PageType { get; init; } = pageType;
     public string PageName => _getter();
     public BehaviorSubject<string> Status { get; set; } = new("");
@@ -43,9 +43,21 @@ internal class PageRouter
         CurrentPage = new(Routes.Pages[0]);
     }
 
+    public static PageRecord? GetPageRecord(string pageName)
+    {
+        return Routes.Pages.FirstOrDefault(p => p.Key == pageName);
+    }
     public void RouteTo(PageRecord record)
     {
         CurrentPage.OnNext(record);
+    }
+    public void RouteTo(string pageName)
+    {
+        var p = GetPageRecord(pageName);
+        if (p != null)
+        {
+            RouteTo(p);
+        }
     }
 }
 

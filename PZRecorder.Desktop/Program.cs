@@ -1,9 +1,9 @@
 ﻿using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Controls.Notifications;
 using Material.Icons.Avalonia;
 using Microsoft.Extensions.DependencyInjection;
 using PZRecorder.Core;
+using PZRecorder.Core.Data;
 using PZRecorder.Core.Managers;
 using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Localization;
@@ -30,6 +30,9 @@ internal sealed class Program
         ProcessMonitorManager processMonitorManager = new(sqlHandler);
         ProcessMonitorService processMonitorService = new(processMonitorManager, dailyManager);
         VariantsManager variantsManager = new(sqlHandler);
+        ImportManager importManager = new(sqlHandler);
+        ExportManager exportManager = new(sqlHandler);
+
         services.AddSingleton(sqlHandler);
         services.AddSingleton(dailyManager);
         services.AddSingleton(recordManager);
@@ -37,6 +40,8 @@ internal sealed class Program
         services.AddSingleton(processMonitorManager);
         services.AddSingleton(processMonitorService);
         services.AddSingleton(variantsManager);
+        services.AddSingleton(importManager);
+        services.AddSingleton(exportManager);
 
         Logger logger = new();
         BroadcastManager broadcaster = new();

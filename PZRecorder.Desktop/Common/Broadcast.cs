@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using PZRecorder.Core.Managers;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
 namespace PZRecorder.Desktop.Common;
@@ -10,8 +11,9 @@ internal enum BroadcastEvent
     WindowActivated,
     DateChanged,
     RemindStateChanged,
-    ProcessMonitor,
-    ProcessStateChanged,
+    DailyRecorded,
+    DataImported,
+    TimerTick
 }
 
 internal sealed class BroadcastManager
@@ -22,6 +24,10 @@ internal sealed class BroadcastManager
 
     private readonly Subject<string> _exceptionCatched = new();
     public IObservable<string> ExceptionCatched => _exceptionCatched;
-    public void OnxceptionCatched(string message) => _exceptionCatched.OnNext(message);
+    public void OnExceptionCatched(string message) => _exceptionCatched.OnNext(message);
 
+
+    private readonly Subject<ProcessChangedArgs> _processChanged = new();
+    public IObservable<ProcessChangedArgs> ProcessChanged => _processChanged;
+    public void OnProcessChanged(ProcessChangedArgs e) => _processChanged.OnNext(e);
 }

@@ -134,14 +134,16 @@ public sealed class PzMessageBoxContent : DialogContentBase<int>
 
 public static class PzDialogManager
 {
-    public static Task<PzDialogResult<int>> Confirm(string message, string title)
+    public static Task<PzDialogResult<int>> Confirm(string message, string? title = null)
     {
-        var opt = ConfirmDialog(message, title);
+        title ??= LD.Warning;
+        var opt = ConfirmDialog(title, message);
         return ShowDialog(opt);
     }
-    public static Task<PzDialogResult<int>> Alert(string message, string title)
+    public static Task<PzDialogResult<int>> Alert(string message, string? title = null)
     {
-        var opt = AlertDialog(message, title);
+        title ??= LD.Alert;
+        var opt = AlertDialog(title, message);
         return ShowDialog(opt);
     }
     public static async Task<PzDialogResult<T>> ShowDialog<T>(DialogContentBase<T> content)

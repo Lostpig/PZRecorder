@@ -1,13 +1,10 @@
-﻿using Avalonia;
-using Avalonia.Controls.Primitives;
-using Avalonia.Controls.Templates;
+﻿using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 using Avalonia.Styling;
-using Microsoft.Extensions.DependencyInjection;
-using PZ.RxAvalonia.Helpers;
 using PZ.RxAvalonia.Reactive;
 using PZRecorder.Core.Managers;
 using PZRecorder.Core.Tables;
+using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Extensions;
 using PZRecorder.Desktop.Modules.Shared;
 using System.Diagnostics.CodeAnalysis;
@@ -27,7 +24,7 @@ internal sealed class RecordPageModel
     public Kind? SelectedKind { get; set; } = null;
 }
 
-internal sealed class RecordPage(RecordManager manager) : MvuPage()
+internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broadcast) : MvuPage()
 {
     #region templete
     private TabStrip BuildTabs()
@@ -194,12 +191,20 @@ internal sealed class RecordPage(RecordManager manager) : MvuPage()
     }
     #endregion
 
-    private readonly RecordManager _manager = manager;
     private RecordPageModel Model { get; set; } = new();
     private int[] Years = [-1];
     private readonly int[] Months = [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     private readonly int[] Ratings = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
+    protected override void OnCreated()
+    {
+        base.OnCreated();
+        _broadcast.Broadcast.Where(e => e == BroadcastEvent.DataImported)
+            .Subscribe(_ =>
+            {
+                _lastQuery = null;
+            });
+    }
     protected override IEnumerable<IDisposable> WhenActivate()
     {
         var kindId = Model.Query.KindId;
@@ -322,7 +327,7 @@ internal sealed class RecordPage(RecordManager manager) : MvuPage()
             _ => "-"
         };
     }
-    private string GetSortText(RecordSort sort)
+    private static string GetSortText(RecordSort sort)
     {
         return sort switch
         {

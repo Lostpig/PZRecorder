@@ -1,4 +1,5 @@
-﻿using PZ.RxAvalonia.Reactive;
+﻿using Avalonia.Threading;
+using PZ.RxAvalonia.Reactive;
 using PZRecorder.Desktop.Extensions;
 using System.Diagnostics.CodeAnalysis;
 
@@ -24,7 +25,7 @@ internal class CachedList<TControl, TState> : ContentControl
         ItemsPanel(VStackPanel(Aligns.Top));
 
         Content = _container;
-        _items.Subscribe(_ => RenderItems());
+        _items.Subscribe(_ => UpdateItems());
     }
 
     [MemberNotNull(nameof(_itemsPanel))]
@@ -49,6 +50,18 @@ internal class CachedList<TControl, TState> : ContentControl
         _itemsPanel.Children.Add(control);
 
         return control;
+    }
+
+    private void UpdateItems()
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            RenderItems();
+        }
+        else
+        {
+            Dispatcher.UIThread.Post(RenderItems, DispatcherPriority.Normal);
+        }
     }
     private void RenderItems()
     {
