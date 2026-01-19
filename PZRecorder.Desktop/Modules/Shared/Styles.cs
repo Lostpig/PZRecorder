@@ -17,7 +17,9 @@ internal static class Styles
         return [
                 new StyleGroup(s => s.Class("ListRow"))
                 {
-                    new Style<Grid>().Setter(Grid.BackgroundProperty, Brushes.Transparent),
+                    new Style<Grid>(s => s.Class("ListRow"))
+                        .Background(Brushes.Transparent)
+                        .Height(50),
                     new Style<Grid>(s => s.Class(":pointerover"))
                         .SetterEx(Grid.BackgroundProperty, DynamicColors.Get("SemiColorFill0")),
                 },
@@ -28,7 +30,8 @@ internal static class Styles
                     new Style<Button>()
                         .Theme(ResourceHelpers.StaticResource("BorderlessButton", Application.Current!, ConvertControlTheme)),
                 },
-                new StyleGroup(s => s.Class("ListRowHeader").Descendant()) 
+                new Style<Grid>(s => s.Class("ListRowHeader")).Height(50).Margin(0, 0, 0, 8),
+                new StyleGroup(s => s.Class("ListRowHeader").Descendant())
                 {
                     new Style<TextBlock>()
                         .FontWeight(FontWeight.Bold)

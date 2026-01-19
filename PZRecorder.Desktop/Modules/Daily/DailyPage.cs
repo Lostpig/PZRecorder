@@ -81,7 +81,7 @@ internal sealed class DailyPage : MvuPage
                 TodayMark
                     .Width(72)
                     .Background(DynamicColors.Get("SemiColorBorder")),
-                PzGrid(rows: "60, 50, *")
+                PzGrid(rows: "60, auto, *")
                     .Children(
                         BuildWeekBar().Row(0),
                         BuildHeaderGrid().Row(1).Margin(0, 8, 0, 4),
@@ -209,7 +209,7 @@ internal class DailyWeekItem : MvuComponent, IListItemComponent<DailyWeekModel>
         for(int i = 0; i < Days.Length; i++)
         {
             var d = Days[i];
-            var btn = IconButton(MIcon.BookmarkOutline)
+            var btn = IconButton(MIcon.BookmarkOutline, 32)
                 .OnPointerReleased(e => OnDayStateChanged(e, d))
                 .Col(i + 1);
             Buttons.Add(d, btn);

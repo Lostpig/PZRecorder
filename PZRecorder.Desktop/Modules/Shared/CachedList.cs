@@ -22,7 +22,7 @@ internal class CachedList<TControl, TState> : ContentControl
     {
         _items = items;
         _container = new ScrollViewer();
-        ItemsPanel(VStackPanel(Aligns.Top));
+        ItemsPanel(VStackPanel(Aligns.Top).Spacing(5));
 
         Content = _container;
         _items.Subscribe(_ => UpdateItems());

@@ -34,7 +34,7 @@ internal class MonitorPage(ProcessMonitorManager _manager, ProcessMonitorService
                         PzText(() => LD.OrderBy).Col(0).TextAlignment(TextAlignment.Left),
                         PzText(() => LD.Name).Col(1),
                         PzText(() => LD.State).Col(2),
-                        PzText(() => LD.Enabled).Col(3),
+                        PzText(() => LD.Enabled).Col(3).Align(Aligns.HCenter),
                         PzText(() => LD.Action).Col(4).Align(Aligns.HCenter)
                     ),
                 new CachedList<MonitorItem, ProcessWatchWithState>(Items)
@@ -133,7 +133,7 @@ internal class MonitorPage(ProcessMonitorManager _manager, ProcessMonitorService
     }
     public async void ShowRecords(ProcessWatch item)
     {
-        // _ = await PzDialogManager.ShowDialog(new StatisticsDialog(item));
+        _ = await PzDialogManager.ShowDialog(new RecordsDialog(item, _manager));
     }
 }
 
@@ -149,7 +149,6 @@ public class ProcessWatchWithState(ProcessWatch watch)
 internal class MonitorItem(MonitorPage _parentPage) : MvuComponent, IListItemComponent<ProcessWatchWithState>
 {
     private ProcessWatchWithState Model { get; set; } = new(new());
-
 
     public void UpdateItem(ProcessWatchWithState item)
     {
@@ -169,7 +168,7 @@ internal class MonitorItem(MonitorPage _parentPage) : MvuComponent, IListItemCom
                     .Align(Aligns.HCenter)
                     .Foreground(() => Model.Watch.Enabled ? StaticColor("SemiColorSuccessActive") : StaticColor("SemiColorDangerActive")),
                 HStackPanel(Aligns.HCenter).Col(4).Spacing(10).Children(
-                        IconButton(MIcon.Table, classes: "Warning")
+                        IconButton(MIcon.ViewList, classes: "Warning")
                             .OnClick(_ => _parentPage.ShowRecords(Model.Watch)),
                         IconButton(MIcon.Edit)
                             .OnClick(_ => _parentPage.OnEdit(Model.Watch)),

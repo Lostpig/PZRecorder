@@ -27,7 +27,7 @@ internal sealed class DailyManagerPage(DailyManager manager) : MvuPage()
             .Children(
                 PzGrid(cols: "100, *, 100, 200")
                 .Dock(Dock.Top)
-                .Styles(new Style<TextBlock>().FontWeight(FontWeight.Bold).Margin(16, 0))
+                .Classes("ListRowHeader")
                 .Children(
                     PzText(() => LD.OrderBy).Col(0).TextAlignment(TextAlignment.Left),
                     PzText(() => LD.Name).Col(1),
@@ -36,7 +36,6 @@ internal sealed class DailyManagerPage(DailyManager manager) : MvuPage()
                 ),
                 new ScrollViewer()
                 .Dock(Dock.Bottom)
-                .Margin(0, 8, 0, 0)
                 .Content(
                     new ItemsControl()
                     .ItemsPanel(VStackPanel(Aligns.HStretch).Spacing(5))

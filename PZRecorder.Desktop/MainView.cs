@@ -7,6 +7,7 @@ using PZRecorder.Desktop.Extensions;
 using PZRecorder.Desktop.Localization;
 using PZRecorder.Desktop.Modules.Shared;
 using System.Reactive.Linq;
+using System.Reflection;
 using Ursa.Controls;
 
 namespace PZRecorder.Desktop;
@@ -71,12 +72,17 @@ internal class MainView: MvuComponent
         var remindCount = _clockIn.CheckReminds();
         if (remindCount > 0)
         {
-            PageRouter.GetPageRecord("ClockIn")?.Status.OnNext(remindCount.ToString());
+            PageRouter.GetNavItem("ClockIn")?.Status.OnNext(remindCount.ToString());
         }
     }
 
-    private NavMenuItem NavItemTemplate(PageRecord p)
+    private NavMenuItem NavItemTemplate(NavItem p)
     {
+        if (p.IsSeparator)
+        {
+            return new NavMenuItem() { IsSeparator = true };
+        }
+
         var micon = MaterialIcon(p.Icon, 16).BindClass(_router.CurrentPage.Select(c => c == p), "Active");
         var header = HStackPanel().Spacing(8)
                 .Children(
@@ -98,14 +104,24 @@ internal class MainView: MvuComponent
     }
     protected override Control Build()
     {
+        var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3);
+#if DEBUG
+        version += " (Debug)";
+#endif
+
         var menu = new NavMenu
         {
             ExpandWidth = 240,
             IsHorizontalCollapsed = false,
-            Header = PzText("PZRecorder", "H4")
-                .Align(Aligns.HCenter, Aligns.VCenter)
-                .Margin(8, 32, 8, 8)
-                .Theme(StaticResource<ControlTheme>("TitleTextBlock"))
+            Header = VStackPanel(Aligns.HCenter)
+                .Margin(8, 32, 8, 24)
+                .Children(
+                    PzText("PZRecorder", "H4")
+                        .Theme(StaticResource<ControlTheme>("TitleTextBlock"))
+                        .Align(Aligns.HCenter),
+                    PzText(version, "Tertiary")
+                        .Align(Aligns.HCenter)
+                )
         };
         menu.Styles(
             new Style<MaterialIcon>().Foreground(StaticColor("SemiGrey5")),
@@ -139,15 +155,15 @@ internal class MainView: MvuComponent
         menu.SelectionChanged += Menu_SelectionChanged;
         _router.CurrentPage.Subscribe(p =>
         {
-            if (menu.SelectedItem is PageRecord op)
+            if (menu.SelectedItem is NavItem si)
             {
-                if (op != p) menu.SelectedItem = p;
+                if (si != p) menu.SelectedItem = p;
             }
         });
     }
     private void Menu_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (e.Source is NavMenu menu && menu.SelectedItem is PageRecord p)
+        if (e.Source is NavMenu menu && menu.SelectedItem is NavItem p)
         {
             _router.CurrentPage.OnNext(p);
         }

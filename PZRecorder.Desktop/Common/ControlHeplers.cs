@@ -116,7 +116,7 @@ internal static class ControlHeplers
 
         return btn;
     }
-    public static Button IconButton(MIcon icon, params string[] classes)
+    public static Button IconButton(MIcon icon, int size = 24, params string[] classes)
     {
         var btn = new Button()
         {
@@ -124,16 +124,16 @@ internal static class ControlHeplers
             CornerRadius = new CornerRadius(100),
             Width = 40,
             Height = 40,
-            Content = MaterialIcon(icon),
+            Content = MaterialIcon(icon, size),
         };
         foreach (var c in classes) btn.Classes.Add(c);
 
         return btn;
     }
-    public static Button IconButton(MIcon icon, string text, params string[] classes)
+    public static Button IconButton(MIcon icon, string text, int size = 24, params string[] classes)
     {
         var tx = PzText(text).Align(Aligns.VCenter);
-        var ic = MaterialIcon(icon);
+        var ic = MaterialIcon(icon, size);
 
         var btn = new Button()
         {
@@ -143,10 +143,10 @@ internal static class ControlHeplers
 
         return btn;
     }
-    public static Button IconButton(MIcon icon, Func<string> textGetter, params string[] classes)
+    public static Button IconButton(MIcon icon, Func<string> textGetter, int size = 24, params string[] classes)
     {
         var tx = PzText(textGetter).Align(Aligns.VCenter);
-        var ic = MaterialIcon(icon);
+        var ic = MaterialIcon(icon, size);
 
         var btn = new Button()
         {

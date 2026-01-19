@@ -36,7 +36,6 @@ internal class ClockInPage(ClockInManager _manager, BroadcastManager _broadcast)
                 ),
                 new ScrollViewer()
                 .Dock(Dock.Bottom)
-                .Margin(0, 8, 0, 0)
                 .Content(
                     new ItemsControl()
                     .ItemsPanel(VStackPanel(Aligns.HStretch).Spacing(5))
@@ -92,9 +91,9 @@ internal class ClockInPage(ClockInManager _manager, BroadcastManager _broadcast)
                 PzText(ci.Name).Col(1),
                 HStackPanel().Children(GetStatusText(item)).Col(2),
                 HStackPanel(Aligns.HCenter).Col(3).Spacing(10).Children(
-                        IconButton(MIcon.ClockIn, classes: "Success")
+                        IconButton(MIcon.CalendarCheck, classes: "Success")
                             .OnClick(_ => OnCheckIn(item)),
-                        IconButton(MIcon.Table, classes: "Warning")
+                        IconButton(MIcon.ViewList, classes: "Warning")
                             .OnClick(_ => ShowRecords(item)),
                         IconButton(MIcon.Edit)
                             .OnClick(_ => OnEdit(item.ClockIn)),

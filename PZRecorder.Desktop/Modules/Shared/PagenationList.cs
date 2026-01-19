@@ -18,7 +18,7 @@ internal class PagenationList<TControl, TState> : MvuComponent
     {
         _items = items;
         _container = new ScrollViewer();
-        ItemsPanel(VStackPanel(Aligns.Top));
+        ItemsPanel(VStackPanel(Aligns.Top).Spacing(5));
 
         Initialize();
     }

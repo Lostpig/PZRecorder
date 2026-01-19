@@ -58,10 +58,10 @@ internal sealed class SettingsPage(VariantsManager manager, Translate translate,
                     HStackPanel()
                         .Spacing(8)
                         .Children(
-                            PzButton(() => $"{LD.Import} Json").OnClick(_ => ImportJson()),
-                            PzButton(() => $"{LD.Export} Json").OnClick(_ => ExportJson()),
-                            PzButton(() => $"{LD.Import} DB").OnClick(_ => ImportDB()),
-                            PzButton(() => $"{LD.Export} DB").OnClick(_ => ExportDB())
+                            IconButton(MIcon.FileImport,() => $"{LD.Import} Json").OnClick(_ => ImportJson()),
+                            IconButton(MIcon.FileExport,() => $"{LD.Export} Json").OnClick(_ => ExportJson()),
+                            IconButton(MIcon.DatabaseImport,() => $"{LD.Import} DB").OnClick(_ => ImportDB()),
+                            IconButton(MIcon.DatabaseExport,() => $"{LD.Export} DB").OnClick(_ => ExportDB())
                         )
                 )
             );
@@ -89,7 +89,6 @@ internal sealed class SettingsPage(VariantsManager manager, Translate translate,
     {
         return PzGrid(cols: "150, *")
             .Classes("ListRow")
-            .Height(32)
             .Children(
                 PzText(item.Key).Col(0),
                 PzText(item.Value).Col(1)
@@ -226,6 +225,7 @@ internal sealed class SettingsPage(VariantsManager manager, Translate translate,
         var file = await GlobalInstances.MainWindow.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = LD.Export,
+            SuggestedFileName = $"pzrecorder-{DateTime.Now:yyyyMMddHHmmss}.json",
             DefaultExtension = "json",
         });
 
@@ -248,6 +248,7 @@ internal sealed class SettingsPage(VariantsManager manager, Translate translate,
         var file = await GlobalInstances.MainWindow.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = LD.Export,
+            SuggestedFileName = $"pzrecorder-{DateTime.Now:yyyyMMddHHmmss}.db",
             DefaultExtension = "db",
         });
 

@@ -22,7 +22,7 @@ internal static class Utility
     public static string FormatTimeSpan(TimeSpan time)
     {
         int hours = time.Hours + time.Days * 24;
-        return $"{hours}:{time.Minutes:d2}:{time.Seconds:d2}";
+        return $"{hours:d2}:{time.Minutes:d2}:{time.Seconds:d2}";
     }
     public static string FormatDuration(TimeSpan duration)
     {

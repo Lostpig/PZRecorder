@@ -22,11 +22,6 @@ internal class MainWindow : UrsaWindow
         var icon = AssetLoader.Open(new Uri($"avares://PZRecorder.Desktop/pz-recorder-icon.ico"));
         Icon = new WindowIcon(icon);
 
-        Title = "PZRecorder Desktop V" + Assembly.GetExecutingAssembly().GetName().Version?.ToString();
-#if DEBUG
-        Title += " (Debug)";
-#endif
-
         MinHeight = 720;
         MinWidth = 1280;
 
@@ -55,25 +50,28 @@ internal class MainWindow : UrsaWindow
     private void ApplyVariants()
     {
         var size = variantsManager.GetVariant("window_size");
-        if (size != null)
+        if (!string.IsNullOrWhiteSpace(size))
         {
             string[] sz = size.Split(',');
-            Width = double.Parse(sz[0]);
-            Height = double.Parse(sz[1]);
+            if (sz.Length == 2)
+            {
+                Width = double.TryParse(sz[0], out var w) ? w : 1280;
+                Height = double.TryParse(sz[1], out var h) ? h : 720;
+            }
         }
 
         var position = variantsManager.GetVariant("window_position");
-        if (position != null)
+        if (string.IsNullOrWhiteSpace(position))
         {
             string[] ps = position.Split(',');
-            int x = int.Parse(ps[0]);
-            int y = int.Parse(ps[1]);
-
-            Position = new(x, y);
+            if (ps.Length == 2 && int.TryParse(ps[0], out var x) && int.TryParse(ps[1], out var y))
+            {
+                Position = new(x, y);
+            }
         }
 
         string? maximize = variantsManager.GetVariant("window_maximize");
-        if (maximize is not null && maximize == "1")
+        if (maximize == "1")
         {
             WindowState = WindowState.Maximized;
         }

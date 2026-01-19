@@ -12,7 +12,7 @@ internal class RecordsDialog : DialogContentBase<ClockInCollection>
     protected override StyleGroup? BuildStyles() => Shared.Styles.ListStyles();
     protected override Control Build()
     {
-        return PzGrid(rows: "50, 40, *")
+        return PzGrid(rows: "50, auto, *")
             .Children(
                 HStackPanel().Row(0)
                     .Spacing(8)
@@ -68,7 +68,6 @@ internal class ClockInRecordItem(ClockInCollection Collection) : MvuComponent, I
     protected override Control Build()
     {
         return PzGrid(cols: "90, *, 120")
-            .Height(40)
             .Classes("ListRow")
             .Children(
                 PzText(() => Index.ToString()).Col(0),

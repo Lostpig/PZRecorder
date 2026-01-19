@@ -13,47 +13,56 @@ namespace PZRecorder.Desktop;
 
 internal class Routes
 {
-    static public readonly PageRecord[] Pages = [
-        new PageRecord("Record", () => LD.Record, MIcon.Record, typeof(RecordPage)),
-        new PageRecord("KindManager", () => LD.KindManager, MIcon.Class, typeof(KindPage)),
-        new PageRecord("Daily", () => LD.Daily, MIcon.Calendar, typeof(DailyPage)),
-        new PageRecord("DailyManager", () => LD.DailyManager, MIcon.CalendarAccount, typeof(DailyManagerPage)),
-        new PageRecord("Monitor", () => LD.ProcessWatcher, MIcon.Monitor, typeof(MonitorPage)),
-        new PageRecord("ClockIn", () => LD.ClockIn, MIcon.ClockIn, typeof(ClockInPage)),
-        new PageRecord("Setting", () => LD.Setting, MIcon.Settings, typeof(SettingsPage)),
-        new PageRecord("Dev", () => "Dev", MIcon.DeveloperBoard, typeof(DevGridPage)),
+    static public readonly NavItem[] Pages = [
+        new("Record", () => LD.Record, MIcon.StarBoxMultiple, typeof(RecordPage)),
+        new("KindManager", () => LD.KindManager, MIcon.Class, typeof(KindPage)),
+        NavItem.Separator,
+        new("Daily", () => LD.Daily, MIcon.CalendarMultiselect, typeof(DailyPage)),
+        new("DailyManager", () => LD.DailyManager, MIcon.CalendarEdit, typeof(DailyManagerPage)),
+        new("Monitor", () => LD.ProcessWatcher, MIcon.Monitor, typeof(MonitorPage)),
+        NavItem.Separator,
+        new("ClockIn", () => LD.ClockIn, MIcon.TextBoxCheckOutline, typeof(ClockInPage)),
+        NavItem.Separator,
+        new("Setting", () => LD.Setting, MIcon.Settings, typeof(SettingsPage)),
+#if DEBUG
+        new("Dev", () => "Dev", MIcon.DeveloperBoard, typeof(DevGridPage)),
+#endif
     ];
 }
 
-internal class PageRecord(string key, Func<string> pageNameGetter, MIcon icon, Type pageType)
+internal class NavItem(string key, Func<string> pageNameGetter, MIcon icon, Type pageType)
 {
+    public bool IsSeparator { get; init; } = key == "Separator";
     public string Key { get; init; } = key;
     private readonly Func<string> _getter = pageNameGetter;
     public MIcon Icon { get; init; } = icon;
     public Type PageType { get; init; } = pageType;
     public string PageName => _getter();
-    public BehaviorSubject<string> Status { get; set; } = new("");
+    public BehaviorSubject<string> Status { get; init; } = new("");
+
+    public static NavItem Separator = new("Separator", () => "", MIcon.Block, null);
 }
+
 internal class PageRouter
 {
-    public readonly BehaviorSubject<PageRecord> CurrentPage;
+    public readonly BehaviorSubject<NavItem> CurrentPage;
 
     public PageRouter()
     {
         CurrentPage = new(Routes.Pages[0]);
     }
 
-    public static PageRecord? GetPageRecord(string pageName)
+    public static NavItem? GetNavItem(string pageName)
     {
         return Routes.Pages.FirstOrDefault(p => p.Key == pageName);
     }
-    public void RouteTo(PageRecord record)
+    public void RouteTo(NavItem record)
     {
         CurrentPage.OnNext(record);
     }
     public void RouteTo(string pageName)
     {
-        var p = GetPageRecord(pageName);
+        var p = GetNavItem(pageName);
         if (p != null)
         {
             RouteTo(p);
@@ -76,7 +85,7 @@ internal class PageLocator : IDataTemplate
     {
         _views.Clear();
     }
-    public MvuPage? GetPage(PageRecord pr)
+    public MvuPage? GetPage(NavItem pr)
     {
         if (_views.TryGetValue(pr.PageType, out var page))
         {
@@ -98,8 +107,8 @@ internal class PageLocator : IDataTemplate
     }
     public Control Build(object? param)
     {
-        if (_current != null) _current.OnRouteExit();
-        if (param is PageRecord pr)
+        _current?.OnRouteExit();
+        if (param is NavItem pr)
         {
             var page = GetPage(pr);
             if (page is not null)
@@ -114,6 +123,6 @@ internal class PageLocator : IDataTemplate
         return new TextBlock() { Text = "create page param error." };
     }
 
-    public bool Match(object? data) => data is PageRecord;
+    public bool Match(object? data) => data is NavItem;
 
 }
