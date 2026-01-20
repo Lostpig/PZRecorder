@@ -36,7 +36,6 @@ internal sealed class DailyPage : MvuPage
                 )
             );
     }
-
     private StackPanel BuildHeaderCell(int i)
     {
         return VStackPanel(Aligns.HStretch, Aligns.VCenter)
@@ -78,9 +77,12 @@ internal sealed class DailyPage : MvuPage
     protected override Control Build()
     {
         return new Panel().Children(
-                TodayMark
+                new Border()
+                    .Align(Aligns.Right)
                     .Width(72)
-                    .Background(DynamicColors.Get("SemiColorBorder")),
+                    .Background(DynamicColors.Get("SemiColorBorder"))
+                    .Margin(() => TodayMarkMargin)
+                    .IsVisible(() => TodayMarkVisible),
                 PzGrid(rows: "60, auto, *")
                     .Children(
                         BuildWeekBar().Row(0),
@@ -96,30 +98,29 @@ internal sealed class DailyPage : MvuPage
     private DateOnly MondayDate { get; set; }
     private ReactiveList<DailyWeekModel> Items { get; set; } = [];
     private string WeekText => $"{MondayDate:yyyy/MM/dd} - {MondayDate.AddDays(6):yyyy/MM/dd}";
-    private Border TodayMark { get; set; } = new() { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left };
+    private Thickness TodayMarkMargin { get; set; } = new(0, 0, 0, 0);
+    private bool TodayMarkVisible { get; set; } = false;
 
     public DailyPage(DailyManager manager, BroadcastManager broadcast) : base()
     {
         _manager = manager;
         _broadcast = broadcast;
 
-        Today = DateOnly.FromDateTime(DateTime.Today);
+        UpdateToday();
         MondayDate = _manager.GetMondayDate(Today);
     }
     protected override IEnumerable<IDisposable> WhenActivate()
     {
+        UpdateToday();
         UpdateWeeks();
         return [
-                _broadcast.Broadcast.Where(e => e == BroadcastEvent.DailyRecorded)
-                .Subscribe(_ => UpdateWeeks())
+                _broadcast.Broadcast.Where(e => e == BroadcastEvent.DateChanged || e == BroadcastEvent.DailyRecorded)
+                    .Subscribe(_ => {
+                        UpdateToday();
+                        UpdateWeeks();
+                    })
             ];
     }
-    protected override void OnBeforeReload()
-    {
-        base.OnBeforeReload();
-        TodayMark = new() { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left };
-    }
-
     private static string WeekDayText(int i)
     {
         return i switch
@@ -135,6 +136,16 @@ internal sealed class DailyPage : MvuPage
         };
     }
 
+    private void UpdateToday()
+    {
+        var td = DateOnly.FromDateTime(DateTime.Today);
+        if (td == Today) return;
+
+        Today = td;
+        var n = Today.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)Today.DayOfWeek;
+        var right = 72 * (7 - n);
+        TodayMarkMargin = new Thickness(0, 60, right, 0);
+    }
     private void ChangeWeek(int change)
     {
         if (change > 0) MondayDate = MondayDate.AddDays(7);
@@ -158,21 +169,9 @@ internal sealed class DailyPage : MvuPage
             return new DailyWeekModel(d, dw);
         });
         Items.ReplaceAll(models);
-        UpdateState();
-        ComputeTodayMarkPosition();
-    }
-    private void ComputeTodayMarkPosition()
-    {
-        if (Today < MondayDate || Today > MondayDate.AddDays(6))
-        {
-            TodayMark.Opacity = 0;
-            return;
-        }
+        TodayMarkVisible = Today >= MondayDate && Today <= MondayDate.AddDays(6);
 
-        var n = Today.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)Today.DayOfWeek;
-        var left = this.Bounds.Width - 72 * (8 - n);
-        TodayMark.Margin = new Thickness(left, 60, 0, 0);
-        TodayMark.Opacity = 1;
+        UpdateState();
     }
     public void ItemUpdated(DailyWeek dw)
     {

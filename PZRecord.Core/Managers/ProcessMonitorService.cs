@@ -62,7 +62,6 @@ public sealed class ProcessMonitorService(ProcessMonitorManager pmManager, Daily
                     {
                         var mr = new MonitorRecord(item.Watch, item.StartTime, DateTime.Now);
                         AddProcessRecord(mr);
-                        OnProcessRecorded?.Invoke(mr);
                     }
                 }
             }
@@ -94,10 +93,11 @@ public sealed class ProcessMonitorService(ProcessMonitorManager pmManager, Daily
 
         if (mreocrd.Watch.BindingDaily)
         {
-            TimeSpan duration = mreocrd.StartTime - mreocrd.EndTime;
+            TimeSpan duration = mreocrd.EndTime - mreocrd.StartTime;
             if (duration.TotalMinutes >= mreocrd.Watch.DailyDuration)
             {
-                _dManager.UpdateDailyWeekByWatcher(mreocrd.Watch.DailyId, date);
+                var writed = _dManager.UpdateDailyWeekByWatcher(mreocrd.Watch.DailyId, date);
+                if (writed) OnProcessRecorded?.Invoke(mreocrd);
             }
         }
     }

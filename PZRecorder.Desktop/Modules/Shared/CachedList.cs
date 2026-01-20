@@ -10,7 +10,7 @@ internal interface IListItemComponent<T>
     public void UpdateItem(T item);
 }
 
-internal class CachedList<TControl, TState> : ContentControl
+internal class CachedList<TControl, TState> : ComponentBase
     where TControl : Control, IListItemComponent<TState>
 {
     private readonly ReactiveList<TState> _items;
@@ -18,14 +18,24 @@ internal class CachedList<TControl, TState> : ContentControl
     private readonly ScrollViewer _container;
     private Func<TControl>? _itemCreator;
 
-    public CachedList(ReactiveList<TState> items) : base()
+    public CachedList(ReactiveList<TState> items) : base(ViewInitializationStrategy.Lazy)
     {
         _items = items;
         _container = new ScrollViewer();
         ItemsPanel(VStackPanel(Aligns.Top).Spacing(5));
 
-        Content = _container;
-        _items.Subscribe(_ => UpdateItems());
+        Initialize();
+    }
+    protected override Control Build()
+    {
+        return _container;
+    }
+    protected override IEnumerable<IDisposable> WhenActivate()
+    {
+        UpdateItems();
+        return [
+            _items.Subscribe(_ => UpdateItems())
+        ];
     }
 
     [MemberNotNull(nameof(_itemsPanel))]

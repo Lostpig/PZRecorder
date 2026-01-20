@@ -5,7 +5,7 @@ using System.Reactive.Linq;
 
 namespace PZRecorder.Desktop.Modules.Shared;
 
-internal class PagenationList<TControl, TState> : MvuComponent
+internal class PagenationList<TControl, TState> : ComponentBase
     where TControl : Control, IListItemComponent<TState>
 {
     protected MvuPagenationState Pagenation { get; set; } = new();
@@ -14,7 +14,7 @@ internal class PagenationList<TControl, TState> : MvuComponent
     private readonly ScrollViewer _container;
     private Func<TControl>? _itemCreator;
 
-    public PagenationList(IList<TState> items) : base()
+    public PagenationList(IList<TState> items) : base(ViewInitializationStrategy.Lazy)
     {
         _items = items;
         _container = new ScrollViewer();
@@ -37,12 +37,12 @@ internal class PagenationList<TControl, TState> : MvuComponent
     }
     protected override IEnumerable<IDisposable> WhenActivate()
     {
+        UpdateItems();
         if (_items is ReactiveList<TState> rxList)
         {
             return [rxList.Subscribe(_ => UpdateItems())];
         }
 
-        UpdateItems();
         return base.WhenActivate();
     }
 

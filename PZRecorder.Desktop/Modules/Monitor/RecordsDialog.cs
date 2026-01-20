@@ -53,7 +53,7 @@ internal class RecordsDialog : DialogContentBase<ProcessWatch>
                         {
                             if (e.NewDate.HasValue) UpdateDate(e.NewDate.Value.DateTime);
                         }),
-                    IconButton(MIcon.ChevronRight).Col(2).OnClick(_ => ChangeMonth(-1))
+                    IconButton(MIcon.ChevronRight).Col(2).OnClick(_ => ChangeMonth(1))
                 )
             );
     }

@@ -77,6 +77,7 @@ internal class MonitorPage(ProcessMonitorManager _manager, ProcessMonitorService
         {
             p.IsRunning = e.IsRunning;
             p.StartTime = e.IsRunning ? e.StartTime : null;
+            Items.ForceNext(ChangedType.ReplaceAll, 0, Items.Count);
         }
     }
     private void UpdateItems()

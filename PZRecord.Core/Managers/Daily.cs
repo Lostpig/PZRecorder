@@ -86,10 +86,10 @@ public class DailyManager(SqlHandler db)
         return DB.Conn.Find<DailyWeek>(id);
     }
 
-    public void UpdateDailyWeekByWatcher(int dailyId, DateOnly day)
+    public bool UpdateDailyWeekByWatcher(int dailyId, DateOnly day)
     {
         var daily = GetDaily(dailyId);
-        if (daily == null || daily.State != EnableState.Enabled) return;
+        if (daily == null || daily.State != EnableState.Enabled) return false;
 
         var mondayDate = GetMondayDate(day);
         var dailyweek = GetDailyWeek(mondayDate, dailyId);
@@ -99,9 +99,10 @@ public class DailyManager(SqlHandler db)
             dailyweek.Init(daily.Id, mondayDate);
         }
 
-        if (dailyweek[day.DayOfWeek] == 1) return;
+        if (dailyweek[day.DayOfWeek] == 1) return false;
 
         dailyweek[day.DayOfWeek] = 1;
         WriteDailyWeek(dailyweek);
+        return true;
     }
 }

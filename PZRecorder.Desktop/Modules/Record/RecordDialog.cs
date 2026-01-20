@@ -94,10 +94,10 @@ internal sealed class RecordDialog : DialogContentBase<TbRecord>
                         .OnTextChanged(e => Model.Name = e.Text())
                         .FormRequired(true)
                         .Validation(DataValidations.Required())
-                        .Validation(DataValidations.MaxLength(30)),
+                        .Validation(DataValidations.MaxLength(50)),
                     PzTextBox(() => Model.Alias).FormLabel(() => LD.Alias)
                         .OnTextChanged(e => Model.Alias = e.Text())
-                        .Validation(DataValidations.MaxLength(30)),
+                        .Validation(DataValidations.MaxLength(50)),
                     PzTextBox(() => Model.Remark).FormLabel(() => LD.Remark)
                         .OnTextChanged(e => Model.Remark = e.Text())
                         .Classes("TextArea")
