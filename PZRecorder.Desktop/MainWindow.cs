@@ -21,6 +21,7 @@ internal class MainWindow : UrsaWindow
     {
         var icon = AssetLoader.Open(new Uri($"avares://PZRecorder.Desktop/pz-recorder-icon.ico"));
         Icon = new WindowIcon(icon);
+        Title = "PZRecorder";
 
         MinHeight = 720;
         MinWidth = 1280;

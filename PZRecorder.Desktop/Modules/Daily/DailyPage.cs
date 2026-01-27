@@ -177,6 +177,10 @@ internal sealed class DailyPage : MvuPage
     {
         _manager.WriteDailyWeek(dw);
     }
+    public async void ShowStatistics(TbDaily item)
+    {
+        _ = await PzDialogManager.ShowDialog(new StatisticsDialog(item));
+    }
 }
 
 internal class DailyWeekItem : MvuComponent, IListItemComponent<DailyWeekModel>
@@ -186,12 +190,14 @@ internal class DailyWeekItem : MvuComponent, IListItemComponent<DailyWeekModel>
 
     protected override Control Build()
     {
-        return PzGrid(cols: "*, 72, 72, 72, 72, 72, 72, 72")
+        return PzGrid(cols: "72, *, 72, 72, 72, 72, 72, 72, 72")
             .Height(60)
             .Classes("ListRow")
             .Children(
                 children: [
-                    PzText(() => Model.Daily.Name).Col(0),
+                    IconButton(MIcon.ChartBar, classes: "Warning").Col(0)
+                        .OnClick(_ => ShowStatistics()),
+                    PzText(() => Model.Daily.Name).Col(1),
                     .. Buttons.Values
                 ]
             );
@@ -210,7 +216,7 @@ internal class DailyWeekItem : MvuComponent, IListItemComponent<DailyWeekModel>
             var d = Days[i];
             var btn = IconButton(MIcon.BookmarkOutline, 32)
                 .OnPointerReleased(e => OnDayStateChanged(e, d))
-                .Col(i + 1);
+                .Col(i + 2);
             Buttons.Add(d, btn);
         }
 
@@ -236,6 +242,10 @@ internal class DailyWeekItem : MvuComponent, IListItemComponent<DailyWeekModel>
 
         _parent.ItemUpdated(Model.WeekData);
         UpdateButtonState(d);
+    }
+    private void ShowStatistics()
+    {
+        _parent.ShowStatistics(Model.Daily);
     }
     private MaterialIcon GetIcon(int dayState)
     {

@@ -38,7 +38,7 @@ internal class Logger
 
     public void Error(Exception ex)
     {
-        string exceptionLog = $"\r\n[{DateTime.Now:yyyy-MM-dd HH:mm:ss.ff}] {ex.ToString()}\r\n";
+        string exceptionLog = $"\r\n[{DateTime.Now:yyyy-MM-dd HH:mm:ss.ff}] {ex}\r\n";
         Log(exceptionLog);
     }
 }

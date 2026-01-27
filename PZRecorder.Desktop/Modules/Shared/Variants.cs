@@ -1,7 +1,7 @@
 ﻿using PZRecorder.Core;
 using PZRecorder.Core.Tables;
 
-namespace PZRecorder.Desktop.Common;
+namespace PZRecorder.Desktop.Modules.Shared;
 
 internal static class VariantFields 
 {

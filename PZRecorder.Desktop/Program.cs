@@ -7,6 +7,7 @@ using PZRecorder.Core.Data;
 using PZRecorder.Core.Managers;
 using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Localization;
+using PZRecorder.Desktop.Modules.Shared;
 using Semi.Avalonia;
 
 namespace PZRecorder.Desktop;

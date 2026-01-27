@@ -29,9 +29,6 @@ internal static class GlobalInstances
         _serviceProvider = serviceProvider;
     }
 
-    private static SemiHelper? _semiHelper;
-    public static SemiHelper Semi => _semiHelper ??= new SemiHelper();
-
     private static PageLocator? _pageLocator;
     public static PageLocator PageLocator => _pageLocator ?? throw new InvalidOperationException("Not set PageLocator!");
     public static void SetPageLocator(PageLocator pageLocator)

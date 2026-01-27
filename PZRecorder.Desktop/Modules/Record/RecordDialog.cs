@@ -100,6 +100,7 @@ internal sealed class RecordDialog : DialogContentBase<TbRecord>
                         .Validation(DataValidations.MaxLength(50)),
                     PzTextBox(() => Model.Remark).FormLabel(() => LD.Remark)
                         .OnTextChanged(e => Model.Remark = e.Text())
+                        .MaxHeight(160)
                         .Classes("TextArea")
                         .Validation(DataValidations.MaxLength(140)),
                     PzNumericInt(() => Model.EpisodeCount)

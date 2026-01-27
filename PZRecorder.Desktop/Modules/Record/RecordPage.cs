@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Styling;
 using PZ.RxAvalonia.Reactive;
@@ -7,7 +8,6 @@ using PZRecorder.Core.Tables;
 using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Extensions;
 using PZRecorder.Desktop.Modules.Shared;
-using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Linq;
 
 namespace PZRecorder.Desktop.Modules.Record;
@@ -53,8 +53,9 @@ internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broad
         return VStackPanel(Aligns.HStretch, Aligns.VStretch)
             .Spacing(16)
             .Children(
-                PzTextBox(() => Model.Query.SearchText)
+                PzTextBox(() => SearchText)
                     .OnTextChanged(OnSearchChanged)
+                    .OnKeyDown(OnSearchKeyDown)
                     .Margin(16, 8)
                     .Watermark(() => LD.Search),
                 new Border().Theme(StaticResource<ControlTheme>("RadioButtonGroupBorder"))
@@ -135,50 +136,57 @@ internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broad
     {
         if (e.Source is SelectingItemsControl c && c.SelectedValue is Kind k)
         {
-            Model.Query = Model.Query with { KindId = k.Id };
-            UpdateItems();
+            Model.Query.KindId = k.Id;
+            ExcuteQuery();
         }
     }
     private void OnSearchChanged(TextChangedEventArgs e)
     {
         var text = ((TextBox)e.Source!).Text ?? "";
-        Model.Query = Model.Query with { SearchText = text };
-        UpdateItems();
+        SearchText = text;
+    }
+    private void OnSearchKeyDown(KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            Model.Query.SearchText = SearchText;
+            ExcuteQuery();
+        }
     }
     private void OnStateChanged(SelectionChangedEventArgs e)
     {
         if (e.Source is ListBox l && l.SelectedValue is RecordState s)
         {
-            Model.Query = Model.Query with { State = s };
+            Model.Query.State = s;
         }
         else
         {
-            Model.Query = Model.Query with { State = null };
+            Model.Query.State = null;
         }
-        UpdateItems();
+        ExcuteQuery();
     }
     private void OnYearChanged(SelectionChangedEventArgs e)
     {
         if (e.Source is ComboBox c && c.SelectedValue is int x)
         {
-            Model.Query = Model.Query with { Year = x };
-            UpdateItems();
+            Model.Query.Year = x;
+            ExcuteQuery();
         }
     }
     private void OnMonthChanged(SelectionChangedEventArgs e)
     {
         if (e.Source is ComboBox c && c.SelectedValue is int x)
         {
-            Model.Query = Model.Query with { Month = x };
-            UpdateItems();
+            Model.Query.Month = x;
+            ExcuteQuery();
         }
     }
     private void OnRatingChanged(SelectionChangedEventArgs e)
     {
         if (e.Source is ComboBox c && c.SelectedValue is int x)
         {
-            Model.Query = Model.Query with { Rating = x };
-            UpdateItems();
+            Model.Query.Rating = x;
+            ExcuteQuery();
         }
     }
     private void OnOrderChanged(SelectionChangedEventArgs e)
@@ -186,7 +194,7 @@ internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broad
         if (e.Source is ComboBox c && c.SelectedValue is RecordSort s)
         {
             Model.Order = s;
-            SortItems();
+            Model.Items.Sort(RecordComparsion);
         }
     }
     #endregion
@@ -195,6 +203,8 @@ internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broad
     private int[] Years = [-1];
     private readonly int[] Months = [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     private readonly int[] Ratings = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    private RecordsQuery? _cachedQuery;
+    private string SearchText { get; set; } = "";
 
     protected override void OnCreated()
     {
@@ -202,7 +212,7 @@ internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broad
         _broadcast.Broadcast.Where(e => e == BroadcastEvent.DataImported)
             .Subscribe(_ =>
             {
-                _lastQuery = null;
+                _cachedQuery = null;
             });
     }
     protected override IEnumerable<IDisposable> WhenActivate()
@@ -214,15 +224,14 @@ internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broad
         kind ??= Model.Kinds.FirstOrDefault();
         if (kind?.Id != kindId)
         {
-            Model.Query = Model.Query with { KindId = kind?.Id ?? -1 };
-            UpdateItems();
+            Model.Query.KindId = kind?.Id ?? -1;
+            ExcuteQuery();
         }
 
         return base.WhenActivate();
     }
 
     private bool _updating = false;
-    private RecordsQuery? _lastQuery;
     private void UpdatePage()
     {
         _updating = true;
@@ -262,58 +271,44 @@ internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broad
 
         UpdatePage();
     }
-    [MemberNotNullWhen(true, nameof(_lastQuery))]
-    private bool EqualQuery(RecordsQuery query)
-    {
-        if (_lastQuery == null) return false;
-
-        return _lastQuery.KindId == query.KindId
-            && _lastQuery.SearchText == query.SearchText
-            && _lastQuery.Year == query.Year
-            && _lastQuery.Month == query.Month
-            && _lastQuery.State == query.State
-            && _lastQuery.Rating == query.Rating;
-    }
-    private void UpdateItems(bool force = false)
+    private void ExcuteQuery(bool force = false)
     {
         if (Model.Query.KindId < 0 || _updating) return;
-        if (EqualQuery(Model.Query) && !force) return;
+        if (Model.Query.Equals(_cachedQuery) && !force) return;
 
-        if (Model.Query.KindId != _lastQuery?.KindId || force)
+        if (Model.Query.KindId != _cachedQuery?.KindId || force)
         {
             Years = _manager.GetYears(Model.Query.KindId).ToArray();
         }
         if (!Years.Contains(Model.Query.Year))
         {
-            Model.Query = Model.Query with { Year = -1 };
+            Model.Query.Year = -1;
         }
 
         var items = _manager.QueryRecords(Model.Query);
         Model.SelectedKind = Model.Kinds.Find(k => k.Id == Model.Query.KindId);
 
+        items.Sort(RecordComparsion);
         Model.Items.ReplaceAll(items);
-        SortItems();
-        _lastQuery = Model.Query;
+
+        Model.Query.CopyValueTo(_cachedQuery ??= new());
 
         UpdatePage();
     }
-    private void SortItems()
-    {
-        Model.Items.Sort((x, y) =>
-        {
-            var res = Model.Order switch
-            {
-                RecordSort.PublishTimeAsc => (x.PublishYear * 100 + x.PublishMonth) - (y.PublishYear * 100 + y.PublishMonth),
-                RecordSort.PublishTimeDesc => (y.PublishYear * 100 + y.PublishMonth) - (x.PublishYear * 100 + x.PublishMonth),
-                RecordSort.RatingAsc => x.Rating - y.Rating,
-                RecordSort.RatingDesc => y.Rating - x.Rating,
-                RecordSort.ModifyTimeAsc => (x.ModifyDate - y.ModifyDate).Seconds,
-                RecordSort.ModifyTimeDesc or _ => (y.ModifyDate - x.ModifyDate).Seconds,
-            };
-            return res;
-        });
-    }
 
+    private int RecordComparsion(TbRecord x, TbRecord y)
+    {
+        var res = Model.Order switch
+        {
+            RecordSort.PublishTimeAsc => (x.PublishYear * 100 + x.PublishMonth) - (y.PublishYear * 100 + y.PublishMonth),
+            RecordSort.PublishTimeDesc => (y.PublishYear * 100 + y.PublishMonth) - (x.PublishYear * 100 + x.PublishMonth),
+            RecordSort.RatingAsc => x.Rating - y.Rating,
+            RecordSort.RatingDesc => y.Rating - x.Rating,
+            RecordSort.ModifyTimeAsc => (x.ModifyDate - y.ModifyDate).Seconds,
+            RecordSort.ModifyTimeDesc or _ => (y.ModifyDate - x.ModifyDate).Seconds,
+        };
+        return res;
+    }
     internal string GetStateText(RecordState state)
     {
         var kind = Model.SelectedKind;
@@ -360,7 +355,7 @@ internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broad
         if (PzDialogManager.IsSureResult(res.Result))
         {
             _manager.InsertRecord(res.Value);
-            UpdateItems(true);
+            ExcuteQuery(true);
         }
     }
     internal async void EditRecord(TbRecord item)
@@ -376,7 +371,7 @@ internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broad
         if (PzDialogManager.IsSureResult(res.Result))
         {
             _manager.UpdateRecord(res.Value);
-            UpdateItems(true);
+            ExcuteQuery(true);
         }
     }
     internal async void DeleteRecord(TbRecord item)
@@ -386,7 +381,7 @@ internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broad
         if (PzDialogManager.IsSureResult(delete.Result))
         {
             _manager.DeleteRecord(item.Id);
-            UpdateItems(true);
+            ExcuteQuery(true);
         }
     }
 }
@@ -449,6 +444,8 @@ internal sealed class RecordItem(RecordPage Page) : MvuComponent, IListItemCompo
                         PzText(() => $"{Model.ModifyDate:yyyy-MM-dd HH:mm}").Dock(Dock.Right)
                     ),
                 PzText(() => Model.Remark)
+                    .TextWrapping(TextWrapping.WrapWithOverflow)
+                    .MaxHeight(80)
                     .FontSize(14)
                     .Foreground(DynamicColors.Get("SemiColorText3")),
                 new Uc.Rating() { Count = 10 }

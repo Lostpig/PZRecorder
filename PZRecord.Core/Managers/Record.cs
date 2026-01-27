@@ -1,4 +1,5 @@
 ﻿using PZRecorder.Core.Tables;
+using System.Diagnostics.CodeAnalysis;
 
 namespace PZRecorder.Core.Managers;
 
@@ -12,14 +13,39 @@ public enum RecordSort
     RatingDesc,
 }
 
-public record RecordsQuery
+public class RecordsQuery : IEquatable<RecordsQuery>
 {
-    public int KindId { get; init; } = -1;
-    public string SearchText { get; init; } = "";
-    public int Year { get; init; } = -1;
-    public int Month { get; init; } = -1;
-    public RecordState? State { get; init; } = null;
-    public int Rating { get; init; } = -1;
+    public int KindId { get; set; } = -1;
+    public string SearchText { get; set; } = "";
+    public int Year { get; set; } = -1;
+    public int Month { get; set; } = -1;
+    public RecordState? State { get; set; } = null;
+    public int Rating { get; set; } = -1;
+
+    public bool Equals([NotNullWhen(true)] RecordsQuery? other)
+    {
+        if (other == null) return false;
+
+        return this.KindId == other.KindId
+            && this.SearchText == other.SearchText
+            && this.Year == other.Year
+            && this.Month == other.Month
+            && this.State == other.State
+            && this.Rating == other.Rating;
+    }
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as RecordsQuery);
+    }
+    public void CopyValueTo(RecordsQuery other)
+    {
+        other.KindId = this.KindId;
+        other.SearchText = this.SearchText;
+        other.Year = this.Year;
+        other.Month = this.Month;
+        other.State = this.State;
+        other.Rating = this.Rating;
+    }
 }
 
 public class RecordManager(SqlHandler db)
@@ -69,7 +95,7 @@ public class RecordManager(SqlHandler db)
         if (query.Year >= 0) sql += $" AND publish_year = {query.Year}";
         if (query.Month >= 0) sql += $" AND publish_month = {query.Month}";
         if (query.Rating >= 0) sql += $" AND rating = {query.Rating}";
-        if (string.IsNullOrWhiteSpace(query.SearchText)) 
+        if (!string.IsNullOrWhiteSpace(query.SearchText)) 
             sql += $" AND (name like '%{query.SearchText}%' OR alias like '%{query.SearchText}%')";
 
         sql += $" ORDER BY publish_year DESC, publish_month DESC";
