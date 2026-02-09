@@ -30,16 +30,18 @@ internal sealed class Program
         ClockInManager clockInManager = new(sqlHandler);
         ProcessMonitorManager processMonitorManager = new(sqlHandler);
         ProcessMonitorService processMonitorService = new(processMonitorManager, dailyManager);
-        VariantsManager variantsManager = new(sqlHandler);
-        ImportManager importManager = new(sqlHandler);
-        ExportManager exportManager = new(sqlHandler);
-
+        TodoListManager todoListManager = new(sqlHandler);
         services.AddSingleton(sqlHandler);
         services.AddSingleton(dailyManager);
         services.AddSingleton(recordManager);
         services.AddSingleton(clockInManager);
         services.AddSingleton(processMonitorManager);
         services.AddSingleton(processMonitorService);
+        services.AddSingleton(todoListManager);
+
+        VariantsManager variantsManager = new(sqlHandler);
+        ImportManager importManager = new(sqlHandler);
+        ExportManager exportManager = new(sqlHandler);
         services.AddSingleton(variantsManager);
         services.AddSingleton(importManager);
         services.AddSingleton(exportManager);

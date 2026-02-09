@@ -145,6 +145,7 @@ internal class ClockInPage(ClockInManager _manager, BroadcastManager _broadcast)
         }
         _manager.AddRecord(collection.ClockIn.Id);
         UpdateItems();
+        _broadcast.Publish(BroadcastEvent.RemindStateChanged);
     }
     private static async void ShowRecords(ClockInCollection collection)
     {

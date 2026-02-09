@@ -7,6 +7,7 @@ using PZRecorder.Desktop.Modules.Monitor;
 using PZRecorder.Desktop.Modules.Record;
 using PZRecorder.Desktop.Modules.Settings;
 using PZRecorder.Desktop.Modules.Shared;
+using PZRecorder.Desktop.Modules.TodoList;
 using System.Reactive.Subjects;
 
 namespace PZRecorder.Desktop;
@@ -22,6 +23,7 @@ internal class Routes
         new("Monitor", () => LD.ProcessWatcher, MIcon.Monitor, typeof(MonitorPage)),
         NavItem.Separator,
         new("ClockIn", () => LD.ClockIn, MIcon.TextBoxCheckOutline, typeof(ClockInPage)),
+        new("TodoList", () => LD.TodoList, MIcon.ToDo, typeof(TodoListPage)),
         NavItem.Separator,
         new("Setting", () => LD.Setting, MIcon.Settings, typeof(SettingsPage)),
 #if DEBUG

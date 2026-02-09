@@ -13,7 +13,7 @@ public enum RecordSort
     RatingDesc,
 }
 
-public class RecordsQuery : IEquatable<RecordsQuery>
+public class RecordsQuery
 {
     public int KindId { get; set; } = -1;
     public string SearchText { get; set; } = "";
@@ -32,10 +32,6 @@ public class RecordsQuery : IEquatable<RecordsQuery>
             && this.Month == other.Month
             && this.State == other.State
             && this.Rating == other.Rating;
-    }
-    public override bool Equals(object? obj)
-    {
-        return Equals(obj as RecordsQuery);
     }
     public void CopyValueTo(RecordsQuery other)
     {

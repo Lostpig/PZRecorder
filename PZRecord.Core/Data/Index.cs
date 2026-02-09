@@ -1,5 +1,4 @@
 ﻿using PZRecorder.Core.Tables;
-using System;
 using System.Reflection;
 
 namespace PZRecorder.Core.Data;
@@ -53,17 +52,34 @@ internal class TableMeta(Type type, string name)
 
 internal class Index
 {
-    public static TableMeta[] AvailableTables()
+    private static List<TableMeta>? _tables;
+    private static List<TableMeta> Tables
     {
-        return [
-            new(typeof(Kind), "kinds"),
-            new(typeof(Record), "records"),
-            new(typeof(Daily), "dailies"),
-            new(typeof(DailyWeek), "dailyweeks"),
-            new(typeof(ClockIn), "clockin"),
-            new(typeof(ClockInRecord), "clockinrecords"),
-            new(typeof(ProcessWatch), "processwatches"),
-            new(typeof(ProcessRecord), "processrecords"),
-        ];
+        get
+        {
+            if (_tables == null)
+            {
+                _tables = [
+                    new(typeof(Kind), "kinds"),
+                    new(typeof(Record), "records"),
+                    new(typeof(Daily), "dailies"),
+                    new(typeof(DailyWeek), "dailyweeks"),
+                    new(typeof(ClockIn), "clockin"),
+                    new(typeof(ClockInRecord), "clockinrecords"),
+                    new(typeof(ProcessWatch), "processwatches"),
+                    new(typeof(ProcessRecord), "processrecords"),
+                    new(typeof(TodoList), "todolist"),
+                    new(typeof(CycleTaskKind), "cycletaskkind"),
+                    new(typeof(CycleTask), "cycletask"),
+                    new(typeof(CycleTaskItem), "cycletaskitem"),
+                ];
+            }
+            return _tables;
+        }
+    }
+
+    public static List<TableMeta> AvailableTables()
+    {
+        return Tables;
     }
 }

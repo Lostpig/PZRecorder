@@ -31,18 +31,14 @@ public sealed class SqlHandler : IDisposable
 
         var conn = new SQLiteConnection(dbPath);
 
+        var tables = Data.Index.AvailableTables();
+        foreach (var t in tables)
+        {
+            conn.CreateTable(t.TableType);
+        }
         conn.CreateTable<VariantTable>();
-        conn.CreateTable<Kind>();
-        conn.CreateTable<Record>();
-        conn.CreateTable<Daily>();
-        conn.CreateTable<DailyWeek>();
-        conn.CreateTable<ClockIn>();
-        conn.CreateTable<ClockInRecord>();
-        conn.CreateTable<ProcessWatch>();
-        conn.CreateTable<ProcessRecord>();
 
         conn.Insert(new VariantTable() { Key = Constant.DBVersionKey, Value = Constant.DBVersion.ToString() });
-
         return new SqlHandler(conn);
     }
 

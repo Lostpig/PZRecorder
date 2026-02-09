@@ -2,6 +2,6 @@
 
 public class Constant
 {
-    public const int DBVersion = 10010;
+    public const int DBVersion = 10011;
     public const string DBVersionKey = "dbversion";
 }
