@@ -12,32 +12,33 @@ using TbRecord = PZRecorder.Core.Tables.Record;
 
 internal sealed class RecordDialog : DialogContentBase<TbRecord>
 {
-    private readonly Kind _parentKind;
+    private Dictionary<int, Kind> KindsMap { get; init; }
+    private Kind ParentKind => KindsMap[Model.Kind];
     private readonly TbRecord Model;
     private readonly bool _isAdd = false;
     private BehaviorSubject<int> EpisodeCountSub;
     private BehaviorSubject<int> RatingSub;
     private DateTime PublishDate;
 
-    public RecordDialog(Kind parentKind) : base()
+    public RecordDialog(int parentKindId, List<Kind> kinds) : base()
     {
         _isAdd = true;
         Title = LD.AddRecord;
-        _parentKind = parentKind;
+        KindsMap = kinds.ToDictionary(k => k.Id);
         Model = new TbRecord()
         {
-            Kind = parentKind.Id,
-            PublishYear = 2000,
-            PublishMonth = 1,
+            Kind = parentKindId,
+            PublishYear = DateTime.Now.Year,
+            PublishMonth = DateTime.Now.Month,
         };
 
         InitMembers();
     }
-    public RecordDialog(TbRecord record, Kind parentKind) : base()
+    public RecordDialog(TbRecord record, List<Kind> kinds) : base()
     {
         _isAdd = false;
         Title = LD.EditRecord;
-        _parentKind = parentKind;
+        KindsMap = kinds.ToDictionary(k => k.Id);
         Model = new TbRecord()
         {
             Id = record.Id,
@@ -66,7 +67,7 @@ internal sealed class RecordDialog : DialogContentBase<TbRecord>
     protected override void OnCreated()
     {
         base.OnCreated();
-        Width = 480;
+        Width = 560;
         RegisterDataValidation();
     }
     protected override IEnumerable<IDisposable> WhenActivate()
@@ -117,10 +118,16 @@ internal sealed class RecordDialog : DialogContentBase<TbRecord>
                         {
                             if (e.NewDate.HasValue) PublishDate = e.NewDate.Value.DateTime;
                         }),
+                    new ComboBox()
+                        .FormLabel(() => LD.Kind)
+                        .ItemsSource(KindsMap.Values)
+                        .ItemTemplate<Kind, ComboBox>(k => PzText(k.Name))
+                        .SelectedValue(() => ParentKind)
+                        .OnSelectionChanged(ChangeKind),
                     new Uc.Divider().Content(() => LD.State),
                     new ComboBox()
                         .FormLabel(() => LD.State)
-                        .ItemsSource(Enum.GetValues<RecordState>())
+                        .ItemsSource(() => Enum.GetValues<RecordState>())
                         .ItemTemplate<RecordState, ComboBox>(s => PzText(GetStateText(s)))
                         .SelectedValue(() => Model.State)
                         .OnSelectionChanged(e => Model.State = e.ValueStruct<RecordState>() ?? RecordState.Wish),
@@ -145,7 +152,7 @@ internal sealed class RecordDialog : DialogContentBase<TbRecord>
     }
     private string GetStateText(RecordState state)
     {
-        var kind = _parentKind;
+        var kind = ParentKind;
 
         return state switch
         {
@@ -155,6 +162,12 @@ internal sealed class RecordDialog : DialogContentBase<TbRecord>
             RecordState.Giveup => string.IsNullOrEmpty(kind?.StateGiveupName) ? LD.Giveup : kind.StateGiveupName,
             _ => "-"
         };
+    }
+    private void ChangeKind(SelectionChangedEventArgs e)
+    {
+        var kind = e.ValueObj<Kind>()?.Id ?? KindsMap.First().Key;
+        Model.Kind = kind;
+        UpdateState();
     }
 
     public override PzDialogResult<TbRecord> GetResult(Uc.DialogResult btnValue)

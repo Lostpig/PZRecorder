@@ -1,5 +1,4 @@
-﻿using Avalonia.Animation;
-using PZRecorder.Desktop.Extensions;
+﻿using PZRecorder.Desktop.Extensions;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 

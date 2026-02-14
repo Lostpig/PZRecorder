@@ -351,7 +351,7 @@ internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broad
             return;
         }
 
-        var res = await PzDialogManager.ShowDialog(new RecordDialog(kind));
+        var res = await PzDialogManager.ShowDialog(new RecordDialog(kind.Id, Model.Kinds));
         if (PzDialogManager.IsSureResult(res.Result))
         {
             _manager.InsertRecord(res.Value);
@@ -360,14 +360,7 @@ internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broad
     }
     internal async void EditRecord(TbRecord item)
     {
-        var kind = Model.Kinds.Find(k => k.Id == item.Kind);
-        if (kind == null)
-        {
-            Notification.Error("Kind not found!", "Error");
-            return;
-        }
-
-        var res = await PzDialogManager.ShowDialog(new RecordDialog(item, kind));
+        var res = await PzDialogManager.ShowDialog(new RecordDialog(item, Model.Kinds));
         if (PzDialogManager.IsSureResult(res.Result))
         {
             _manager.UpdateRecord(res.Value);
