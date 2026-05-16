@@ -85,6 +85,9 @@ internal record MvuPagenationState
     public Range PageRange => ComputeRange();
     public int PageCount => ComputePageCount();
 
+    public int CurrentStart => PageRange.Start.Value + 1;
+    public int CurrentEnd => PageRange.End.Value > TotalCount ? TotalCount : PageRange.End.Value;
+
     public int ComputePageCount()
     {
         int n = TotalCount % PageSize;

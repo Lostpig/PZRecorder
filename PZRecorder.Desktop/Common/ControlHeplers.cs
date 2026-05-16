@@ -120,10 +120,8 @@ internal static class ControlHeplers
     {
         var btn = new Button()
         {
-            Padding = new Thickness(0),
+            Padding = new Thickness(8),
             CornerRadius = new CornerRadius(100),
-            Width = 40,
-            Height = 40,
             Content = MaterialIcon(icon, size),
         };
         foreach (var c in classes) btn.Classes.Add(c);

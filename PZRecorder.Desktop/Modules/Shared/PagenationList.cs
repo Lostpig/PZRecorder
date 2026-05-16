@@ -27,11 +27,18 @@ internal class PagenationList<TControl, TState> : ComponentBase
     {
         return new DockPanel()
             .Children(
-                new Uc.Pagination() { ShowPageSizeSelector = false, ShowQuickJump = true }
+                PzGrid(cols: "*, auto")
                     .Dock(Dock.Bottom)
                     .Margin(0, 4, 0, 0)
-                    .WithState(() => Pagenation)
-                    .OnPageChanged(OnPageChanged),
+                    .Children(
+                        new Uc.Pagination() { ShowPageSizeSelector = false, ShowQuickJump = true }
+                            .Col(0)
+                            .WithState(() => Pagenation)
+                            .OnPageChanged(OnPageChanged),
+                        PzText(() => $"{Pagenation.CurrentStart}-{Pagenation.CurrentEnd} / {Pagenation.TotalCount}")
+                            .Align(Aligns.VCenter, Aligns.Right)
+                            .Col(1)
+                    ),
                 _container.Dock(Dock.Top)
             );
     }
@@ -63,7 +70,6 @@ internal class PagenationList<TControl, TState> : ComponentBase
     {
         Pagenation = Pagenation with { TotalCount = _items.Count, Page = 1 };
         RenderItems();
-        UpdateState();
     }
     private void OnPageChanged(Uc.ValueChangedEventArgs<int> e)
     {
@@ -97,5 +103,7 @@ internal class PagenationList<TControl, TState> : ComponentBase
         {
             _itemsPanel.Children[i].IsVisible = false;
         }
+
+        UpdateState();
     }
 }

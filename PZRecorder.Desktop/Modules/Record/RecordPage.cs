@@ -20,12 +20,14 @@ internal sealed class RecordPageModel
     public RecordsQuery Query { get; set; } = new();
     public MvuPagenationState Pagenation { get; set; } = new();
     public ReactiveList<TbRecord> Items { get; init; } = [];
-    public RecordSort Order { get; set; } = RecordSort.ModifyTimeDesc;
+    public RecordSort Order { get; set; } = RecordSort.PublishTimeDesc;
     public Kind? SelectedKind { get; set; } = null;
 }
 
-internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broadcast) : MvuPage()
+internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broadcast, VariantsManager _variants) : MvuPage()
 {
+    const string SavedStateField = "RecordPageState";
+
     #region templete
     private TabStrip BuildTabs()
     {
@@ -158,10 +160,12 @@ internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broad
         if (e.Source is ListBox l && l.SelectedValue is RecordState s)
         {
             Model.Query.State = s;
+            _variants.SetVariant(SavedStateField, s.ToString());
         }
         else
         {
             Model.Query.State = null;
+            _variants.SetVariant(SavedStateField, "");
         }
         ExcuteQuery();
     }
@@ -209,6 +213,16 @@ internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broad
     protected override void OnCreated()
     {
         base.OnCreated();
+        var savedState = _variants.GetVariant(SavedStateField);
+        Model.Query.State = savedState switch
+        {
+            "Wish" => RecordState.Wish,
+            "Doing" => RecordState.Doing,
+            "Complete" => RecordState.Complete,
+            "Giveup" => RecordState.Giveup,
+            _ => null
+        };
+
         _broadcast.Broadcast.Where(e => e == BroadcastEvent.DataImported)
             .Subscribe(_ =>
             {
@@ -278,7 +292,7 @@ internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broad
 
         if (Model.Query.KindId != _cachedQuery?.KindId || force)
         {
-            Years = _manager.GetYears(Model.Query.KindId).ToArray();
+            Years = [-1, .. _manager.GetYears(Model.Query.KindId)];
         }
         if (!Years.Contains(Model.Query.Year))
         {
@@ -377,6 +391,11 @@ internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broad
             ExcuteQuery(true);
         }
     }
+    internal void ProgressStep(TbRecord item)
+    {
+        if (item.Episode < item.EpisodeCount) item.Episode++;
+        _manager.UpdateRecord(item);
+    }
 }
 
 internal sealed class RecordItem(RecordPage Page) : MvuComponent, IListItemComponent<TbRecord>
@@ -389,6 +408,7 @@ internal sealed class RecordItem(RecordPage Page) : MvuComponent, IListItemCompo
         RecordState.Complete => "Green",
         RecordState.Giveup or _ => "Grey",
     };
+    private bool CanProgress => Model.Episode < Model.EpisodeCount && Model.State == RecordState.Doing;
 
     private Uc.DualBadge StatusBagde()
     {
@@ -413,6 +433,11 @@ internal sealed class RecordItem(RecordPage Page) : MvuComponent, IListItemCompo
         Model = item;
         UpdateState();
     }
+    private void AddProgress()
+    {
+        Page.ProgressStep(Model);
+        UpdateState();
+    }
     protected override Control Build()
     {
         var content = VStackPanel()
@@ -420,11 +445,13 @@ internal sealed class RecordItem(RecordPage Page) : MvuComponent, IListItemCompo
             .Spacing(8)
             .TextBlock_TextWrapping(TextWrapping.Wrap)
             .Children(
-                PzText(() => Model.Name)
+                new SelectableTextBlock()
+                    .Text(() => Model.Name)
                     .Align(Aligns.VCenter)
                     .FontSize(20)
                     .Foreground(DynamicColors.Get("SemiColorLink")),
-                PzText(() => Model.Alias)
+                new SelectableTextBlock()
+                    .Text(() => Model.Alias)
                     .Margin(0, -8, 0, 0)
                     .Align(Aligns.VCenter)
                     .Foreground(DynamicColors.Get("SemiColorText2")),
@@ -432,20 +459,30 @@ internal sealed class RecordItem(RecordPage Page) : MvuComponent, IListItemCompo
                     .LastChildFill(false)
                     .HorizontalSpacing(8)
                     .Children(
-                        PzText(() => $"{Model.Episode} / {Model.EpisodeCount}").Dock(Dock.Left),
-                        PzText(() => $"{Model.PublishYear}-{Model.PublishMonth}").Dock(Dock.Left),
-                        PzText(() => $"{Model.ModifyDate:yyyy-MM-dd HH:mm}").Dock(Dock.Right)
+                        PzText(() => $"{Model.Episode} / {Model.EpisodeCount}").Align(Aligns.VCenter).Dock(Dock.Left),
+                        IconButton(MIcon.ArrowTop, size: 16, classes: "Success").Align(Aligns.VCenter).Dock(Dock.Left)
+                            .IsVisible(() => CanProgress)
+                            .Theme(StaticResource<ControlTheme>("BorderlessButton"))
+                            .OnClick(_ => AddProgress()),
+                        PzText(() => $"{Model.PublishYear}-{Model.PublishMonth}").Align(Aligns.VCenter).Dock(Dock.Right)
                     ),
                 PzText(() => Model.Remark)
                     .TextWrapping(TextWrapping.WrapWithOverflow)
                     .MaxHeight(80)
                     .FontSize(14)
                     .Foreground(DynamicColors.Get("SemiColorText3")),
-                new Uc.Rating() { Count = 10 }
-                    .DefaultValue(() => Model.Rating)
-                    .Value(() => Model.Rating)
-                    .Classes("Small")
-                    .IsEnabled(false)
+                new DockPanel()
+                    .LastChildFill(false)
+                    .HorizontalSpacing(8)
+                    .Children(
+                        new Uc.Rating() { Count = 10 }
+                            .Dock(Dock.Left)
+                            .DefaultValue(() => Model.Rating)
+                            .Value(() => Model.Rating)
+                            .Classes("Small")
+                            .IsEnabled(false),
+                        PzText(() => $"{Model.ModifyDate:yyyy-MM-dd HH:mm}", classes: "Tertiary").Dock(Dock.Right)
+                    )
             );
 
         var rightBar = new Border()

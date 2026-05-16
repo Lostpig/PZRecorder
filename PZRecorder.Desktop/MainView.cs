@@ -70,10 +70,7 @@ internal class MainView: MvuComponent
     private void CheckRemindState()
     {
         var remindCount = _clockIn.CheckReminds();
-        if (remindCount > 0)
-        {
-            PageRouter.GetNavItem("ClockIn")?.Status.OnNext(remindCount.ToString());
-        }
+        PageRouter.GetNavItem("ClockIn")?.Status.OnNext(remindCount > 0 ? remindCount.ToString() : "");
     }
 
     private NavMenuItem NavItemTemplate(NavItem p)

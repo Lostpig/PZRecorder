@@ -1,7 +1,6 @@
 ﻿using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using PZRecorder.Core.Data;
-using PZRecorder.Core.Tables;
 using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Extensions;
 using PZRecorder.Desktop.Localization;
@@ -9,7 +8,7 @@ using PZRecorder.Desktop.Modules.Shared;
 
 namespace PZRecorder.Desktop.Modules.Settings;
 
-internal sealed class SettingsPage(VariantsManager manager, Translate translate, ImportManager import, ExportManager export, ErrorProxy errProxy, BroadcastManager broadcast) : MvuPage()
+internal sealed class SettingsPage(VariantsManager _manager, Translate _translate, ImportManager _import, ExportManager _export, ErrorProxy _errProxy, BroadcastManager _broadcast) : MvuPage()
 {
     protected override StyleGroup? BuildStyles() => Shared.Styles.ListStyles();
 
@@ -66,60 +65,33 @@ internal sealed class SettingsPage(VariantsManager manager, Translate translate,
                 )
             );
     }
-    private Border BuildVariantsTable()
+    private Border BuildVariantsPanel()
     {
         return new Border()
             .Padding(16)
             .Child(
-                VStackPanel().Children(
-                    PzText(() => LD.Variants, "H4")
-                        .Theme(StaticResource<ControlTheme>("TitleTextBlock"))
-                        .Margin(0, 16),
-                    new ScrollViewer()
-                        .Content(
-                            new ItemsControl()
-                                .ItemsPanel(VStackPanel().Spacing(4))
-                                .ItemsSource(() => Variants)
-                                .ItemTemplate<VariantTable, ItemsControl>(VariantItemTemplate)
-                        )
+                HStackPanel().Children(
+                    PzButton(() => LD.Variants, "H4").OnClick(_ => ShowVariants())
                 )
-            );
-    }
-    private Grid VariantItemTemplate(VariantTable item)
-    {
-        return PzGrid(cols: "150, *")
-            .Classes("ListRow")
-            .Children(
-                PzText(item.Key).Col(0),
-                PzText(item.Value).Col(1)
             );
     }
     protected override Control Build()
     {
-        return PzGrid(rows: "auto, auto, *")
+        return PzGrid(rows: "auto, auto, auto")
             .RowSpacing(8)
             .Children(
                 BuildSettingItems().Row(0),
                 BuildDataOperatorPanel().Row(1),
-                BuildVariantsTable().Row(2)
+                BuildVariantsPanel().Row(2)
             );
     }
 
     private static readonly string[] ThemeNames = ["default", "dark", "light"];
-    private VariantTable[] Variants { get; set; } = [];
     private LanguageItem? CurrentLanguge { get; set; }
     private string CurrentTheme { get; set; } = "default";
 
-    private readonly VariantsManager _manager = manager;
-    private readonly Translate _translate = translate;
-    private readonly ImportManager _import = import;
-    private readonly ExportManager _export = export;
-    private readonly ErrorProxy _errProxy = errProxy;
-    private readonly BroadcastManager _broadcast = broadcast;
-
     protected override IEnumerable<IDisposable> WhenActivate()
     {
-        Variants = _manager.GetAll();
         CurrentLanguge = _translate.Current;
         CurrentTheme = GetThemeName();
         UpdateState();
@@ -265,5 +237,9 @@ internal sealed class SettingsPage(VariantsManager manager, Translate translate,
                 _errProxy.CatchException(ex);
             }
         }
+    }
+    private static async void ShowVariants()
+    {
+        await PzDialogManager.ShowDialog(new VariantsDialog());
     }
 }
