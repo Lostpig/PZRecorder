@@ -65,19 +65,20 @@ internal class StatisticsDialog : DialogContentBase<TbDaily>
     {
         return new Border()
             .Theme(StaticResource<ControlTheme>("CardBorder"))
+            .Padding(8)
             .Child(
                 HStackPanel(Aligns.HCenter, Aligns.VCenter)
                 .Spacing(16)
                 .Children(
                     IconButton(MIcon.ChevronLeft).OnClick(_ => ChangeYear(-1)),
-                    PzText(() => $"{Model.Year}"),
+                    PzText(() => $"{Model.Year}").Align(Aligns.VCenter),
                     IconButton(MIcon.ChevronRight).OnClick(_ => ChangeYear(1))
                 )
             );
     }
     protected override Control Build()
     {
-        return PzGrid(rows: "auto, auto, 70, auto, auto")
+        return PzGrid(rows: "auto, auto, auto, auto, auto")
             .RowSpacing(8)
             .Children(
                 VStackPanel(Aligns.Left).Row(0)

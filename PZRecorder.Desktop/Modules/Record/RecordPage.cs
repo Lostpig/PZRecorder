@@ -59,7 +59,7 @@ internal sealed class RecordPage(RecordManager _manager, BroadcastManager _broad
                     .OnTextChanged(OnSearchChanged)
                     .OnKeyDown(OnSearchKeyDown)
                     .Margin(16, 8)
-                    .Watermark(() => LD.Search),
+                    .PlaceholderText(() => LD.Search),
                 new Border().Theme(StaticResource<ControlTheme>("RadioButtonGroupBorder"))
                 .MaxWidth(284)
                 .Child(

@@ -20,6 +20,8 @@ internal record DailyWeekModel(TbDaily Daily, DailyWeek WeekData)
 }
 internal sealed class DailyPage : MvuPage
 {
+    public const string ColsDefine = "84, *, 84, 84, 84, 84, 84, 84, 84";
+
     protected override StyleGroup? BuildStyles() => Shared.Styles.ListStyles();
     private Border BuildWeekBar()
     {
@@ -32,7 +34,9 @@ internal sealed class DailyPage : MvuPage
                 .Children(
                     IconButton(MIcon.ChevronLeft).OnClick(_ => ChangeWeek(-1)),
                     PzText(() => WeekText).Align(Aligns.VCenter),
-                    IconButton(MIcon.ChevronRight).OnClick(_ => ChangeWeek(1))
+                    IconButton(MIcon.ChevronRight).OnClick(_ => ChangeWeek(1)),
+                    IconButton(MIcon.ChevronLeft).OnClick(_ => DebugToday(-1)),
+                    IconButton(MIcon.ChevronRight).OnClick(_ => DebugToday(1))
                 )
             );
     }
@@ -46,7 +50,7 @@ internal sealed class DailyPage : MvuPage
                         .TextAlignment(Avalonia.Media.TextAlignment.Center)
                         .FontSize(12)
                         .Classes("Tertiary")
-                ).Col(i + 1);
+                ).Col(i + 2);
     }
     private Grid BuildHeaderGrid()
     {
@@ -57,10 +61,10 @@ internal sealed class DailyPage : MvuPage
         }
 
 
-        return PzGrid(cols: "*, 72, 72, 72, 72, 72, 72, 72")
+        return PzGrid(cols: ColsDefine)
             .Children(
                 children: [
-                    PzText(() => LD.Name).Col(0).Margin(16, 0),
+                    PzText(() => LD.Name).Col(1).Margin(16, 0),
                     .. days
                 ]
             );
@@ -79,11 +83,11 @@ internal sealed class DailyPage : MvuPage
         return new Panel().Children(
                 new Border()
                     .Align(Aligns.Right)
-                    .Width(72)
+                    .Width(84)
                     .Background(DynamicColors.Get("SemiColorBorder"))
                     .Margin(() => TodayMarkMargin)
                     .IsVisible(() => TodayMarkVisible),
-                PzGrid(rows: "60, auto, *")
+                PzGrid(rows: "auto, auto, *")
                     .Children(
                         BuildWeekBar().Row(0),
                         BuildHeaderGrid().Row(1).Margin(0, 8, 0, 4),
@@ -143,9 +147,18 @@ internal sealed class DailyPage : MvuPage
 
         Today = td;
         var n = Today.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)Today.DayOfWeek;
-        var right = 72 * (7 - n);
+        var right = 84 * (7 - n);
         TodayMarkMargin = new Thickness(0, 60, right, 0);
     }
+    private void DebugToday(int d)
+    {
+        Today = Today.AddDays(d);
+        var n = Today.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)Today.DayOfWeek;
+        var right = 84 * (7 - n);
+        TodayMarkMargin = new Thickness(0, 60, right, 0);
+        UpdateState();
+    }
+
     private void ChangeWeek(int change)
     {
         if (change > 0) MondayDate = MondayDate.AddDays(7);
@@ -190,7 +203,7 @@ internal class DailyWeekItem : MvuComponent, IListItemComponent<DailyWeekModel>
 
     protected override Control Build()
     {
-        return PzGrid(cols: "72, *, 72, 72, 72, 72, 72, 72, 72")
+        return PzGrid(cols: DailyPage.ColsDefine)
             .Height(60)
             .Classes("ListRow")
             .Children(

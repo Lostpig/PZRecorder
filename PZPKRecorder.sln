@@ -5,15 +5,11 @@ VisualStudioVersion = 18.1.11312.151
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PZPKRecorder", "PZPKRecorder\PZPKRecorder.csproj", "{7EAE2C69-FA66-4A82-AFB9-4FD25B96E958}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PZPKRecorderGenerator", "PZPKRecorderGenerator\PZPKRecorderGenerator.csproj", "{76C507E8-3C4A-4936-A68C-142893DACFEA}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PZRecorder.Core", "PZRecord.Core\PZRecorder.Core.csproj", "{7F3E38FA-7327-4B5A-A438-C57289BC03F6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PZRecorder.Desktop", "PZRecorder.Desktop\PZRecorder.Desktop.csproj", "{22B399A6-6FF7-4B25-B931-927302206E82}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PZ.RxAvalonia", "..\PZ.RxAvalonia\PZ.RxAvalonia\PZ.RxAvalonia.csproj", "{E4A8D257-3094-6EE1-E3AB-681F63FA80FE}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanguageGenerator", "LanguageGenerator\LanguageGenerator.csproj", "{7F56016D-0451-494E-B385-D98CB86F97AF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,14 +27,6 @@ Global
 		{7EAE2C69-FA66-4A82-AFB9-4FD25B96E958}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7EAE2C69-FA66-4A82-AFB9-4FD25B96E958}.Release|x64.ActiveCfg = Release|Any CPU
 		{7EAE2C69-FA66-4A82-AFB9-4FD25B96E958}.Release|x64.Build.0 = Release|Any CPU
-		{76C507E8-3C4A-4936-A68C-142893DACFEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{76C507E8-3C4A-4936-A68C-142893DACFEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{76C507E8-3C4A-4936-A68C-142893DACFEA}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{76C507E8-3C4A-4936-A68C-142893DACFEA}.Debug|x64.Build.0 = Debug|Any CPU
-		{76C507E8-3C4A-4936-A68C-142893DACFEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{76C507E8-3C4A-4936-A68C-142893DACFEA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{76C507E8-3C4A-4936-A68C-142893DACFEA}.Release|x64.ActiveCfg = Release|Any CPU
-		{76C507E8-3C4A-4936-A68C-142893DACFEA}.Release|x64.Build.0 = Release|Any CPU
 		{7F3E38FA-7327-4B5A-A438-C57289BC03F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7F3E38FA-7327-4B5A-A438-C57289BC03F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F3E38FA-7327-4B5A-A438-C57289BC03F6}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -63,14 +51,6 @@ Global
 		{E4A8D257-3094-6EE1-E3AB-681F63FA80FE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E4A8D257-3094-6EE1-E3AB-681F63FA80FE}.Release|x64.ActiveCfg = Release|Any CPU
 		{E4A8D257-3094-6EE1-E3AB-681F63FA80FE}.Release|x64.Build.0 = Release|Any CPU
-		{7F56016D-0451-494E-B385-D98CB86F97AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7F56016D-0451-494E-B385-D98CB86F97AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7F56016D-0451-494E-B385-D98CB86F97AF}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{7F56016D-0451-494E-B385-D98CB86F97AF}.Debug|x64.Build.0 = Debug|Any CPU
-		{7F56016D-0451-494E-B385-D98CB86F97AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7F56016D-0451-494E-B385-D98CB86F97AF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7F56016D-0451-494E-B385-D98CB86F97AF}.Release|x64.ActiveCfg = Release|Any CPU
-		{7F56016D-0451-494E-B385-D98CB86F97AF}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

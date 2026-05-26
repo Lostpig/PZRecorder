@@ -9,6 +9,7 @@ using PZRecorder.Desktop.Common;
 using PZRecorder.Desktop.Localization;
 using PZRecorder.Desktop.Modules.Shared;
 using Semi.Avalonia;
+using ClassicDiagnostics.Avalonia;
 
 namespace PZRecorder.Desktop;
 
@@ -82,7 +83,7 @@ internal sealed class Program
             .AfterSetup(b =>
             {
                 b.Instance?.Styles.Add(new SemiTheme());
-                b.Instance?.Styles.Add(new Ursa.Themes.Semi.SemiTheme());
+                b.Instance?.Styles.Add(new Ursa.Themes.Semi.UrsaSemiTheme());
                 b.Instance?.Styles.Add(new MaterialIconStyles(null));
             })
 #if DEBUG

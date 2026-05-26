@@ -7,48 +7,42 @@
     <Nullable>enable</Nullable>
     <RootNamespace>PZRecorder.Desktop</RootNamespace>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <Version>0.1.5</Version>
+    <Version>0.1.6</Version>
     <VersionSuffix>beta</VersionSuffix>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <PublishReadyToRun>true</PublishReadyToRun>
-    <Platforms>AnyCPU;x64</Platforms>
     <ApplicationIcon>pz-recorder-icon.ico</ApplicationIcon>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Update="Localization\*.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 
   <ItemGroup>
     <AvaloniaResource Include="pz-recorder-icon.ico" />
   </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="12.0.3" />
+        <PackageReference Include="Avalonia.Desktop" Version="12.0.3" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.3" />
+        <PackageReference Include="Irihi.Ursa" Version="2.0.0" />
+        <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="2.0.0" />
+        <PackageReference Include="Material.Icons.Avalonia" Version="3.0.2" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
+        <PackageReference Include="Semi.Avalonia" Version="12.0.3" />
+        <PackageReference Include="ClassicDiagnostics.Avalonia" Version="0.0.2-preview" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.3.10" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.10" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.10" />
-    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.10">
-      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
-      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Irihi.Ursa" Version="1.14.1" />
-    <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.14.1" />
-    <PackageReference Include="Material.Icons.Avalonia" Version="2.4.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
-    <PackageReference Include="Semi.Avalonia" Version="11.3.7.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\PZ.RxAvalonia\PZ.RxAvalonia\PZ.RxAvalonia.csproj" />
-    <ProjectReference Include="..\PZRecord.Core\PZRecorder.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\PZPKRecorderGenerator\PZPKRecorderGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    <AdditionalFiles Include="Localization\languages.json" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\PZRecord.Core\PZRecorder.Core.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+	    <ProjectReference Include="..\..\PZ.RxAvalonia\PZ.RxAvalonia\PZ.RxAvalonia.csproj" />
+    </ItemGroup>
+	
+    <ItemGroup>
+	    <ProjectReference Include="..\..\PZ.RxAvalonia\PZ.LocalizationGenerator\PZ.LocalizationGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	    <AdditionalFiles Include="Localization\languages.json" />
+    </ItemGroup>
+    <ItemGroup>
+	    <None Update="Localization\*.json">
+		    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	    </None>
+    </ItemGroup>
 </Project>

@@ -86,7 +86,7 @@ public class PzDialog<T> : ComponentBase, IDialogContext
     public event EventHandler<object?>? RequestClose;
     public void Close()
     {
-        
+        RequestClose?.Invoke(this, _content.GetResult(DialogResult.Cancel));
     }
 }
 
@@ -161,7 +161,7 @@ public static class PzDialogManager
         };
 
         var dialog = new PzDialog<T>(content);
-        var result = await OverlayDialog.ShowCustomModal<PzDialogResult<T>>(dialog, dialog, options: semiOpts);
+        var result = await OverlayDialog.ShowCustomAsync<PzDialogResult<T>>(dialog, dialog, options: semiOpts);
 
         return result!;
     }

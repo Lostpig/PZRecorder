@@ -42,7 +42,7 @@ internal class NavItem(string key, Func<string> pageNameGetter, MIcon icon, Type
     public string PageName => _getter();
     public BehaviorSubject<string> Status { get; init; } = new("");
 
-    public static NavItem Separator = new("Separator", () => "", MIcon.Block, null);
+    public static NavItem Separator = new("Separator", () => "", MIcon.Block, typeof(NotFoundPage));
 }
 
 internal class PageRouter

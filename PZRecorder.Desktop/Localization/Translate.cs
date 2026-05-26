@@ -2,7 +2,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using PZPKRecorder.Localization;
+using PZ.Localization;
 
 namespace PZRecorder.Desktop.Localization;
 
@@ -83,7 +83,7 @@ internal class Translate
         var fields = JsonSerializer.Deserialize<Dictionary<string, string>>(langJson);
         if (fields != null)
         {
-            LocalizeDict.Update(fields);
+            LocalizeDict.__UpdateDict(fields);
         }
         else
         {
